@@ -1,0 +1,10 @@
+{
+  "extends": "@expenzo/typescript-config/react-native.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts", "css.d.ts"],
+  "exclude": ["node_modules", ".expo"]
+}

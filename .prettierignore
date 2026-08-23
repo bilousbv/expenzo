@@ -1,0 +1,11 @@
+node_modules
+pnpm-lock.yaml
+.next
+.expo
+.turbo
+dist
+build
+out
+android
+ios
+next-env.d.ts

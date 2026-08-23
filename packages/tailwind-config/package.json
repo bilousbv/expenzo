@@ -1,0 +1,16 @@
+{
+  "name": "@expenzo/tailwind-config",
+  "version": "0.0.0",
+  "private": true,
+  "main": "theme.js",
+  "exports": {
+    ".": "./theme.js",
+    "./theme": "./theme.js"
+  },
+  "files": [
+    "theme.js"
+  ],
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@expenzo/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@expenzo/ui": "workspace:*",
+    "next": "^16.3.2",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@expenzo/eslint-config": "workspace:*",
+    "@expenzo/tailwind-config": "workspace:*",
+    "@expenzo/typescript-config": "workspace:*",
+    "@types/node": "^22.19.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.4",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.39.5",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19",
+    "typescript": "~6.0.3"
+  }
+}

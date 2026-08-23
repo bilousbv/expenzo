@@ -1,0 +1,11 @@
+{
+  "name": "@expenzo/typescript-config",
+  "version": "0.0.0",
+  "private": true,
+  "files": [
+    "base.json",
+    "nextjs.json",
+    "react-native.json",
+    "react-library.json"
+  ]
+}

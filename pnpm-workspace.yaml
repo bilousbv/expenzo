@@ -1,0 +1,10 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Metro (React Native) does not follow pnpm's symlinked store reliably,
+# so the mobile app needs a flat node_modules tree.
+nodeLinker: hoisted
+
+allowBuilds:
+  unrs-resolver: true

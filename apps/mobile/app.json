@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Expenzo",
+    "slug": "expenzo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "expenzo",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.expenzo.app"
+    },
+    "android": {
+      "package": "com.expenzo.app",
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
