@@ -3,7 +3,10 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    // Explicit, so hoisted @types/* packages from other workspaces cannot
+    // leak global type declarations into this program.
+    "types": ["react", "nativewind/types", "node"]
   },
   "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts", "css.d.ts"],
   "exclude": ["node_modules", ".expo"]

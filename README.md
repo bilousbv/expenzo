@@ -36,6 +36,8 @@ pnpm dev          # web on :3000 and the Expo dev server
 pnpm build        # production build of the web app
 pnpm lint         # ESLint across every workspace
 pnpm check-types  # tsc --noEmit across every workspace
+pnpm test         # unit tests across every workspace
+pnpm test:e2e     # Playwright against a production build of the web app
 pnpm format       # Prettier write
 ```
 
@@ -45,6 +47,29 @@ Mobile only:
 pnpm --filter @expenzo/mobile dev
 ```
 
+## Testing
+
+| Workspace     | Runner                      | Covers                                                        |
+| ------------- | --------------------------- | ------------------------------------------------------------- |
+| `packages/ui` | Vitest (jsdom)              | shared logic and the web `.tsx` component variants            |
+| `apps/web`    | Vitest (jsdom) + Playwright | app components and browser end-to-end flows                   |
+| `apps/mobile` | jest-expo                   | mobile code and the `.native.tsx` variants, via `@expenzo/ui` |
+
+The two runners resolve the platform split for free. Vite's default extension
+list omits `.native.tsx`, so Vitest always gets the web half; `jest-expo/ios`
+orders `native.tsx` ahead of `tsx`, so jest always gets the native half. Native
+components are therefore tested _from_ `apps/mobile`, which is the real
+integration path.
+
+Playwright needs its browser once per machine:
+
+```bash
+pnpm --filter @expenzo/web exec playwright install chromium
+```
+
+It runs against `next start` on port 3100 — deliberately not 3000, so a running
+`pnpm dev` is never hijacked.
+
 ## Notes
 
 - pnpm uses `nodeLinker: hoisted` (see `pnpm-workspace.yaml`) because Metro does
@@ -53,3 +78,7 @@ pnpm --filter @expenzo/mobile dev
   `pnpm --filter @expenzo/mobile exec expo install --check`.
 - The shared ESLint config avoids type-aware rules, since `eslint-config-next`
   substitutes its own parser that does not forward `parserOptions.project`.
+- Never add `@types/jest`. The hoisted linker puts every `@types/*` package in
+  the root `node_modules/@types`, where TypeScript picks it up for every
+  program — jest's global `expect` would then collide with Vitest's. Mobile
+  tests import from `@jest/globals` instead.

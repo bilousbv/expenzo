@@ -12,7 +12,9 @@ export default function Home() {
 
       <Card className="gap-gutter">
         <p className="text-sm text-content-muted">Total spent</p>
-        <p className="text-4xl font-semibold">{formatCurrency(totalCents)}</p>
+        <p data-testid="total-spent" className="text-4xl font-semibold">
+          {formatCurrency(totalCents)}
+        </p>
       </Card>
 
       <div className="flex gap-3">

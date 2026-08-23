@@ -1,8 +1,14 @@
 {
   "extends": "@expenzo/typescript-config/react-library.json",
   "compilerOptions": {
-    "types": ["react", "nativewind/types"]
+    "types": ["react", "nativewind/types", "node"]
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "eslint.config.mjs"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "eslint.config.mjs",
+    "vitest.config.ts",
+    "vitest.setup.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

@@ -34,9 +34,20 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# tests
+coverage/
+playwright-report/
+blob-report/
+test-results/
+.playwright/
+playwright/.cache/
+
 # editor / os
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# claude code (the skills directory itself is tracked)
+.claude/settings.local.json

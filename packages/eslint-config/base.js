@@ -35,8 +35,8 @@ export const baseConfig = [
     },
   },
   {
-    // Build tooling (metro, babel, tailwind, postcss) must stay CommonJS.
-    files: ['**/*.config.{js,cjs}', '**/*.cjs'],
+    // Build and test tooling (metro, babel, tailwind, postcss, jest) is CommonJS.
+    files: ['**/*.config.{js,cjs}', '**/*.setup.{js,cjs}', '**/*.cjs'],
     languageOptions: {
       sourceType: 'commonjs',
       globals: globals.node,

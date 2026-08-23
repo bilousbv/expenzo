@@ -9,3 +9,7 @@ out
 android
 ios
 next-env.d.ts
+coverage
+playwright-report
+blob-report
+test-results

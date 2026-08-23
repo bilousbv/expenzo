@@ -8,3 +8,5 @@ nodeLinker: hoisted
 
 allowBuilds:
   unrs-resolver: true
+  esbuild: true
+  playwright: true
