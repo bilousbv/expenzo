@@ -10,6 +10,12 @@ Turborepo monorepo, pnpm workspaces. `apps/web` (Next.js), `apps/mobile` (Expo),
 
 Verify changes with `pnpm format:check`, `pnpm lint`, `pnpm check-types`, `pnpm test` and — when web-visible behaviour changed — `pnpm test:e2e`, all from the root.
 
+## Feature workflow
+
+Feature work goes through the `feature-workflow` skill in [.claude/skills/feature-workflow](.claude/skills/feature-workflow/SKILL.md), invoked as `/start-feature` and `/finish-feature` or by saying "start feature" / "finish feature".
+
+Start it automatically when beginning execution of an approved plan, before the first edit. Its rules in brief: branch per feature off the trunk, tests written before the implementation and observed failing first, and the full gate green before anything is committed. Pushes and pull requests always need explicit confirmation.
+
 ### Constraints worth remembering
 
 - pnpm runs with `nodeLinker: hoisted`; Metro breaks under the default symlinked store.
