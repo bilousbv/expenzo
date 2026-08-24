@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SUPABASE_CLI_VERSION: 2.115.0
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      # `supabase start` runs `db reset`, replaying every migration from zero.
+      # That is the check that migrations stay replayable — the failure mode
+      # that otherwise only shows up in production.
+      - name: Start Supabase
+        run: supabase start
+
+      # `supabase status -o env` emits ANON_KEY="…" / API_URL="…"; the app-facing
+      # names differ, so map them explicitly rather than sourcing it wholesale.
+      - name: Export Supabase env
+        run: |
+          eval "$(supabase status -o env)"
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "EXPO_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "EXPO_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "E2E_TEST_EMAIL=e2e@expenzo.test"
+            echo "E2E_TEST_PASSWORD=${{ secrets.E2E_TEST_PASSWORD || 'local-dev-password' }}"
+          } >> "$GITHUB_ENV"
+
+      - run: supabase db lint
+
+      - name: Database tests (pgTAP)
+        run: supabase test db
+
+      # TODO(M1.3): add `pnpm db:types:check` here once packages/supabase-types
+      # exists. It proves the committed generated types match the live schema.
+
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm check-types
+      - run: pnpm test
+
+      - run: pnpm --filter @expenzo/web exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7

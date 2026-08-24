@@ -25,3 +25,6 @@ Start it automatically when beginning execution of an approved plan, before the 
 - Shared components are split `Foo.tsx` (web) / `Foo.native.tsx` (native) around a common `Foo.styles.ts`. Add both halves when adding a component — and a test for each: Vitest in `packages/ui` covers the web half, jest-expo in `apps/mobile` covers the native half.
 - Never add `@types/jest`; under the hoisted linker it leaks jest's globals into the Vitest programs. Mobile tests import from `@jest/globals`.
 - Playwright needs a one-time `pnpm --filter @expenzo/web exec playwright install chromium`.
+- Supabase runs locally in Docker on ports **54421–54424** (not the defaults), so it can coexist with another local Supabase project. Schema work is verified with `pnpm db:reset && pnpm db:lint && pnpm db:test`.
+- Row-level security is tested with pgTAP in `supabase/tests/`, not TypeScript — only SQL can cheaply assert "this user sees zero rows".
+- Anything production needs (system categories, the service catalogue) goes in a **migration**. `supabase/seed.sql` only runs locally.

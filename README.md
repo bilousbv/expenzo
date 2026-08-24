@@ -47,6 +47,30 @@ Mobile only:
 pnpm --filter @expenzo/mobile dev
 ```
 
+## Local database
+
+The backend is Supabase, run locally in Docker. Docker must be running first.
+
+```bash
+pnpm db:start    # boot the stack (first run pulls images)
+pnpm db:status   # URLs and keys for your .env files
+pnpm db:reset    # replay every migration from zero, then seed
+pnpm db:lint     # schema linter
+pnpm db:test     # pgTAP tests, including row-level security
+pnpm db:stop
+```
+
+Ports are **54421–54424**, not Supabase's usual 54321–54324, so this stack can
+run alongside another local Supabase project. Studio is on
+<http://127.0.0.1:54423> and the local mail catcher on <http://127.0.0.1:54424>.
+
+Copy `apps/web/.env.example` to `apps/web/.env.local` and
+`apps/mobile/.env.example` to `apps/mobile/.env`, then fill them from
+`pnpm db:status`.
+
+Reference data that production needs — system categories, the service catalogue
+— belongs in a **migration**, not `seed.sql`, which only runs locally.
+
 ## Testing
 
 | Workspace     | Runner                      | Covers                                                        |
