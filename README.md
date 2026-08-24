@@ -47,6 +47,21 @@ Mobile only:
 pnpm --filter @expenzo/mobile dev
 ```
 
+The mobile app uses **expo-router**, so its routes are files under
+`apps/mobile/src/app` and mirror the web app's App Router tree. There is no
+`App.tsx` or `index.js`: `"main": "expo-router/entry"` mounts the route tree.
+
+Keep route files thin — they compose components and call hooks, nothing more —
+and test the components they render instead. Deep links come for free from the
+`expenzo://` scheme, which is what wallet capture will use in M6.
+
+Install native packages with `expo install`, never `pnpm add`: it pins to what
+the SDK expects, which is often _older_ than npm's latest.
+
+```bash
+pnpm --filter @expenzo/mobile exec expo install <package>
+```
+
 ## Local database
 
 The backend is Supabase, run locally in Docker. Docker must be running first.

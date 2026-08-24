@@ -15,8 +15,6 @@
       "package": "com.expenzo.app",
       "edgeToEdgeEnabled": true
     },
-    "web": {
-      "bundler": "metro"
-    }
+    "plugins": ["expo-router"]
   }
 }
