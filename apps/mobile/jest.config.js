@@ -15,7 +15,7 @@ module.exports = {
     '/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community' +
       '|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation' +
       '|@sentry/react-native|native-base|standard-navigation' +
-      '|nativewind|react-native-css-interop|@expenzo/ui|@expenzo/domain))',
+      '|nativewind|react-native-css-interop|@expenzo/ui|@expenzo/data|@expenzo/supabase-types))',
     '/node_modules/react-native-reanimated/plugin/',
     '/node_modules/@react-native/babel-preset/',
   ],
@@ -23,7 +23,8 @@ module.exports = {
     // Pins the entry through the workspace symlink regardless of how
     // jest-resolve treats realpaths under pnpm's hoisted linker.
     '^@expenzo/ui$': '<rootDir>/../../packages/ui/src/index.ts',
-    '^@expenzo/domain$': '<rootDir>/../../packages/domain/src/index.ts',
+    '^@expenzo/data$': '<rootDir>/../../packages/data/src/index.ts',
+    '^@expenzo/supabase-types$': '<rootDir>/../../packages/supabase-types/src/index.ts',
   },
   collectCoverageFrom: ['**/*.{ts,tsx}', '!**/node_modules/**', '!**/coverage/**'],
 };

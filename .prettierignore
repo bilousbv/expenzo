@@ -13,3 +13,5 @@ coverage
 playwright-report
 blob-report
 test-results
+supabase/.temp
+supabase/.branches

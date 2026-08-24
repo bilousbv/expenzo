@@ -10,3 +10,7 @@ allowBuilds:
   unrs-resolver: true
   esbuild: true
   playwright: true
+
+minimumReleaseAgeExclude:
+  - '@tanstack/query-core@5.102.2'
+  - '@tanstack/react-query@5.102.2'
