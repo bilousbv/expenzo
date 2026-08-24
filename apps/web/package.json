@@ -13,7 +13,12 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@expenzo/data": "workspace:*",
+    "@expenzo/supabase-types": "workspace:*",
     "@expenzo/ui": "workspace:*",
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.112.3",
+    "@tanstack/react-query": "^5.102.2",
     "next": "^16.3.2",
     "react": "19.2.3",
     "react-dom": "19.2.3"
