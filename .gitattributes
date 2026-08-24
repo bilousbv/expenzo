@@ -1,0 +1,31 @@
+# Normalise line endings to LF in the repository AND in the working tree, on
+# every platform. Without this, `core.autocrlf=true` on a Windows clone checks
+# files out as CRLF, which fights `endOfLine: "lf"` in prettier.config.mjs and
+# makes untouched files show up as modified on every branch switch.
+#
+# This overrides core.autocrlf, so it works without anyone editing their local
+# git config.
+* text=auto eol=lf
+
+# Shell scripts must keep LF or they will not run.
+*.sh text eol=lf
+
+# Files that are genuinely binary and must never be transformed.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.avif binary
+*.ico  binary
+*.pdf  binary
+*.ttf  binary
+*.otf  binary
+*.woff  binary
+*.woff2 binary
+*.jks  binary
+*.keystore binary
+
+# Generated. Collapse it in diffs and skip it in language statistics.
+pnpm-lock.yaml linguist-generated=true -diff
+packages/supabase-types/src/database.types.ts linguist-generated=true
