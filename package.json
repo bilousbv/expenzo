@@ -22,7 +22,7 @@
     "db:diff": "supabase db diff -f",
     "db:lint": "supabase db lint",
     "db:test": "supabase test db",
-    "db:types": "supabase gen types typescript --local --schema public -o packages/supabase-types/src/database.types.ts",
+    "db:types": "node scripts/gen-db-types.mjs",
     "db:types:check": "pnpm db:types && git diff --exit-code packages/supabase-types/src/database.types.ts"
   },
   "devDependencies": {

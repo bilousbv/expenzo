@@ -59,8 +59,9 @@ jobs:
       - name: Database tests (pgTAP)
         run: supabase test db
 
-      # TODO(M1.3): add `pnpm db:types:check` here once packages/supabase-types
-      # exists. It proves the committed generated types match the live schema.
+      # Proves the committed generated types still match the live schema, so a
+      # migration can never land without its types.
+      - run: pnpm db:types:check
 
       - run: pnpm format:check
       - run: pnpm lint
