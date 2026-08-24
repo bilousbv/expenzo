@@ -41,6 +41,10 @@ blob-report/
 test-results/
 .playwright/
 playwright/.cache/
+# Saved end-to-end session cookies — real access tokens. Regenerated each run.
+# Leading ** matters: a pattern containing a slash is anchored to this file's
+# directory, so a bare `e2e/.auth/` would never match apps/web/e2e/.auth/.
+**/e2e/.auth/
 
 # editor / os
 .DS_Store
