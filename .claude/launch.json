@@ -6,6 +6,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@expenzo/web", "dev"],
       "port": 3000
+    },
+    {
+      "name": "mobile",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@expenzo/mobile", "exec", "expo", "start", "--host", "lan"],
+      "port": 8081
     }
   ]
 }

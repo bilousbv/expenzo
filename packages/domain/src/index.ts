@@ -25,6 +25,15 @@ export type { MatchCandidate } from './dedup';
 export { slugify } from './slug';
 
 export {
+  credentialsSchema,
+  emailSchema,
+  oauthProviderSchema,
+  passwordSchema,
+  registrationSchema,
+} from './schemas/auth';
+export type { Credentials, OAuthProvider, Registration } from './schemas/auth';
+
+export {
   createExpenseInput,
   currencyCodeSchema,
   expenseFilter,

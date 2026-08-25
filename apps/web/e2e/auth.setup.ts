@@ -73,8 +73,15 @@ setup('authenticate', async ({ page }) => {
   await fetch(`${MAIL_API}/messages`, { method: 'DELETE' }).catch(() => undefined);
 
   await page.goto('/login');
-  await page.getByLabel(/email/i).fill(email);
-  await page.getByRole('button', { name: /send.*link/i }).click();
+
+  // The magic link is now the secondary path — password sign-in is the default
+  // — so it has to be revealed first. Locators are scoped to that section
+  // because the page carries a second email field for the password form.
+  await page.getByTestId('show-magic-link').click();
+
+  const magicLink = page.getByTestId('magic-link');
+  await magicLink.getByLabel(/email/i).fill(email);
+  await magicLink.getByRole('button', { name: /send.*link/i }).click();
 
   await expect(page.getByTestId('login-sent')).toContainText(/check your email/i);
 
