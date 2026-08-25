@@ -14,6 +14,7 @@ export type ExpenseRow = Pick<
   | 'id'
   | 'household_id'
   | 'created_by'
+  | 'direction'
   | 'amount_minor'
   | 'currency'
   | 'base_amount_minor'
@@ -24,7 +25,7 @@ export type ExpenseRow = Pick<
 >;
 
 const COLUMNS =
-  'id, household_id, created_by, amount_minor, currency, base_amount_minor, category_id, merchant, note, occurred_on';
+  'id, household_id, created_by, direction, amount_minor, currency, base_amount_minor, category_id, merchant, note, occurred_on';
 
 export const DEFAULT_PAGE_SIZE = 25;
 
@@ -106,6 +107,7 @@ export async function createExpense(
       household_id: householdId,
       created_by: userId,
 
+      direction: parsed.direction,
       amount_minor: parsed.amountMinor,
       currency: parsed.currency,
 

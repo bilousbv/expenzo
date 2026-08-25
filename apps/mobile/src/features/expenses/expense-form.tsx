@@ -1,5 +1,5 @@
 import { createExpenseInput, type CreateExpenseInput } from '@expenzo/domain';
-import { AmountField, Button, CategoryPicker, type CategoryOption } from '@expenzo/ui';
+import { AmountField, Button, CategorySelect, type CategoryOption } from '@expenzo/ui';
 import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 
@@ -27,6 +27,7 @@ export function ExpenseForm({
   const [amountMinor, setAmountMinor] = useState<number | null>(null);
   const [amountKey, setAmountKey] = useState(0);
 
+  const [direction, setDirection] = useState<'spend' | 'income'>('spend');
   const [occurredOn, setOccurredOn] = useState(today);
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
   const [merchant, setMerchant] = useState('');
@@ -43,6 +44,7 @@ export function ExpenseForm({
     const parsed = createExpenseInput.safeParse({
       amountMinor,
       currency,
+      direction,
       occurredOn,
       categoryId,
       merchant,
@@ -71,6 +73,27 @@ export function ExpenseForm({
 
   return (
     <View className="gap-gutter">
+      {/* Spending or income. A direction rather than a signed amount: the
+          amount column is constrained positive, and carrying both a sign and a
+          direction invites rows where the two disagree. */}
+      <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel="Direction"
+        className="flex-row gap-2"
+      >
+        {(['spend', 'income'] as const).map((option) => (
+          <Button
+            key={option}
+            testID={`direction-${option}`}
+            variant={direction === option ? 'primary' : 'secondary'}
+            size="sm"
+            onPress={() => setDirection(option)}
+          >
+            {option === 'spend' ? 'Spending' : 'Income'}
+          </Button>
+        ))}
+      </View>
+
       <AmountField
         key={amountKey}
         currency={currency}
@@ -89,11 +112,10 @@ export function ExpenseForm({
         className={inputClass}
       />
 
-      <CategoryPicker
+      <CategorySelect
         options={categories}
         value={categoryId}
         onChange={setCategoryId}
-        label="Category"
         disabled={disabled}
       />
 

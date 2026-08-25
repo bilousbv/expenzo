@@ -103,3 +103,39 @@ export function weekBounds(
 }
 
 export { addDays, toIsoDate };
+
+/** The periods the dashboard offers, in the order they are shown. */
+export const PERIOD_PRESETS = ['this-month', 'last-month', 'this-week'] as const;
+
+export type PeriodPreset = (typeof PERIOD_PRESETS)[number];
+
+export const PERIOD_PRESET_LABELS: Record<PeriodPreset, string> = {
+  'this-month': 'This month',
+  'last-month': 'Last month',
+  'this-week': 'This week',
+};
+
+/**
+ * The date range a named period covers, in the household's timezone.
+ *
+ * Resolved here rather than in each screen so the web and native dashboards
+ * cannot disagree about when last month started — and so "last month" on the
+ * first of January is December of the previous year rather than month zero.
+ */
+export function presetRange(
+  preset: PeriodPreset,
+  instant: string | Date,
+  timeZone: string,
+): DateRange {
+  if (preset === 'this-week') return weekBounds(instant, timeZone);
+  if (preset === 'this-month') return monthBounds(instant, timeZone);
+
+  const { year, month } = parseIsoDate(localDateIn(instant, timeZone));
+  const previousMonth = month === 1 ? 12 : month - 1;
+  const previousYear = month === 1 ? year - 1 : year;
+
+  return {
+    start: toIsoDate(previousYear, previousMonth, 1),
+    end: toIsoDate(previousYear, previousMonth, daysInMonth(previousYear, previousMonth)),
+  };
+}

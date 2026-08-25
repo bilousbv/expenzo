@@ -62,7 +62,7 @@ describe('ExpenseForm', () => {
     const onCreate = renderForm();
 
     await userEvent.type(screen.getByLabelText('Amount'), '12.50');
-    await userEvent.click(screen.getByRole('radio', { name: 'Dining out' }));
+    await userEvent.selectOptions(screen.getByLabelText('Category'), DINING);
     await userEvent.click(screen.getByRole('button', { name: ADD }));
 
     await waitFor(() =>
@@ -168,5 +168,32 @@ describe('ExpenseForm', () => {
 
     expect(onCreate).toHaveBeenCalledTimes(1);
     release();
+  });
+
+  // Income and spending share one form; the direction carries the meaning and
+  // the amount stays positive either way.
+  it('defaults to spending', async () => {
+    const onCreate = renderForm();
+
+    await userEvent.type(screen.getByLabelText('Amount'), '12.50');
+    await userEvent.click(screen.getByRole('button', { name: ADD }));
+
+    await waitFor(() =>
+      expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ direction: 'spend' })),
+    );
+  });
+
+  it('records income without making the amount negative', async () => {
+    const onCreate = renderForm();
+
+    await userEvent.click(screen.getByTestId('direction-income'));
+    await userEvent.type(screen.getByLabelText('Amount'), '2000');
+    await userEvent.click(screen.getByRole('button', { name: ADD }));
+
+    await waitFor(() =>
+      expect(onCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ direction: 'income', amountMinor: 200000 }),
+      ),
+    );
   });
 });

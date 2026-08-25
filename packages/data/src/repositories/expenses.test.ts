@@ -77,6 +77,7 @@ function row(overrides: Partial<ExpenseRow> = {}): ExpenseRow {
     id: 'e1',
     household_id: HOUSEHOLD,
     created_by: USER,
+    direction: 'spend',
     amount_minor: 1250,
     currency: 'USD',
     base_amount_minor: 1250,
