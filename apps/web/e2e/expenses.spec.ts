@@ -114,3 +114,76 @@ test.describe('expenses', () => {
     await expect(page.getByTestId('expense-row').filter({ hasText: merchant })).toHaveCount(0);
   });
 });
+
+test.describe('multi-currency', () => {
+  // The household is in dollars. An expense in euros keeps its own amount and
+  // contributes a converted one to the totals, so the two figures are both
+  // shown and are deliberately different.
+  test('records an expense in another currency', async ({ page }) => {
+    const merchant = uniqueMerchant('Paris');
+
+    await page.goto('/');
+    await openDialog(page);
+
+    await page.getByLabel('Currency').selectOption('EUR');
+    await page.getByLabel('Amount').fill('20');
+
+    // The preview reads in the currency being typed, not the household's.
+    await expect(page.getByTestId('amount-preview')).toHaveText('€20.00');
+
+    await page.getByLabel('Merchant').fill(merchant);
+    await page.getByRole('button', { name: 'Add expense' }).click();
+    await expect(page.getByTestId('expense-dialog')).toBeHidden();
+
+    const row = page.getByTestId('expense-row').filter({ hasText: merchant });
+    await expect(row.getByTestId('expense-amount')).toHaveText('€20.00');
+    await expect(row.getByTestId('expense-base-amount')).toContainText('$');
+  });
+
+  // The conversion is the database's, at the rate for the day the expense
+  // happened, and it is frozen on the row. A rate of one would show the same
+  // number twice.
+  test('converts it into the household currency', async ({ page }) => {
+    const merchant = uniqueMerchant('Berlin');
+
+    await page.goto('/');
+    await openDialog(page);
+
+    await page.getByLabel('Currency').selectOption('EUR');
+    await page.getByLabel('Amount').fill('100');
+    await page.getByLabel('Merchant').fill(merchant);
+    await page.getByRole('button', { name: 'Add expense' }).click();
+
+    const row = page.getByTestId('expense-row').filter({ hasText: merchant });
+    const converted = await row.getByTestId('expense-base-amount').textContent();
+
+    expect(converted).not.toContain('100.00');
+  });
+
+  // An expense in the household's own currency needs no rate and no second
+  // figure. Showing "$12.50 ≈ $12.50" would be noise on every ordinary row.
+  test('shows no converted figure for the household currency', async ({ page }) => {
+    const merchant = uniqueMerchant('Local');
+
+    await page.goto('/');
+    await addExpense(page, '12.50', merchant);
+
+    const row = page.getByTestId('expense-row').filter({ hasText: merchant });
+    await expect(row.getByTestId('expense-amount')).toHaveText('$12.50');
+    await expect(row.getByTestId('expense-base-amount')).toHaveCount(0);
+  });
+
+  // Typing 1000 as dollars and then switching to yen must not file a hundred
+  // thousand yen: the exponent is part of what the text means.
+  test('re-reads the amount when the currency changes', async ({ page }) => {
+    await page.goto('/');
+    await openDialog(page);
+
+    await page.getByLabel('Amount').fill('1000');
+    await expect(page.getByTestId('amount-preview')).toHaveText('$1,000.00');
+
+    await page.getByLabel('Currency').selectOption('JPY');
+
+    await expect(page.getByTestId('amount-preview')).toHaveText('¥1,000');
+  });
+});

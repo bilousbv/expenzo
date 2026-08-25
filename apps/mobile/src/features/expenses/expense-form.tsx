@@ -1,13 +1,26 @@
 import { createExpenseInput, type CreateExpenseInput } from '@expenzo/domain';
-import { AmountField, Button, CategorySelect, type CategoryOption } from '@expenzo/ui';
+import {
+  AmountField,
+  Button,
+  CategorySelect,
+  CurrencySelect,
+  type CategoryOption,
+} from '@expenzo/ui';
 import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 
 export interface ExpenseFormProps {
+  /** The household's base currency, and the default for a new expense. */
   currency: string;
   /** Today's date in the household timezone, resolved by the caller. */
   today: string;
   categories: CategoryOption[];
+  /**
+   * Everything the rate table can convert. Absent, or holding only the
+   * household's own currency, means there is nothing to choose and no control
+   * is rendered.
+   */
+  currencies?: string[];
   onCreate: (input: CreateExpenseInput) => Promise<void>;
   disabled?: boolean;
   /** M6 opens this screen from a wallet payment, where only the amount is left to type. */
@@ -20,6 +33,7 @@ export function ExpenseForm({
   currency,
   today,
   categories,
+  currencies,
   onCreate,
   disabled = false,
   autoFocusAmount = true,
@@ -28,6 +42,9 @@ export function ExpenseForm({
   const [amountKey, setAmountKey] = useState(0);
 
   const [direction, setDirection] = useState<'spend' | 'income'>('spend');
+  // Kept after a save, like the merchant: entering one foreign expense usually
+  // means entering several.
+  const [chosenCurrency, setChosenCurrency] = useState(currency);
   const [occurredOn, setOccurredOn] = useState(today);
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
   const [merchant, setMerchant] = useState('');
@@ -43,7 +60,7 @@ export function ExpenseForm({
 
     const parsed = createExpenseInput.safeParse({
       amountMinor,
-      currency,
+      currency: chosenCurrency,
       direction,
       occurredOn,
       categoryId,
@@ -96,11 +113,23 @@ export function ExpenseForm({
 
       <AmountField
         key={amountKey}
-        currency={currency}
+        currency={chosenCurrency}
         onChange={setAmountMinor}
         disabled={disabled}
         autoFocus={autoFocusAmount}
       />
+
+      {/* Only worth rendering when there is something to choose. Before the
+          first rate sync there is only the household's own currency, and a
+          picker holding one item is furniture. */}
+      {currencies && currencies.length > 1 ? (
+        <CurrencySelect
+          currencies={currencies}
+          value={chosenCurrency}
+          onChange={setChosenCurrency}
+          disabled={disabled}
+        />
+      ) : null}
 
       <Text className="text-sm font-medium text-content-muted">Date</Text>
       <TextInput

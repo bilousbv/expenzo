@@ -15,13 +15,14 @@ const categories: CategoryOption[] = [
   { id: DINING, name: 'Dining out', color: '#f97316', icon: null },
 ];
 
-function renderForm(onCreate = vi.fn().mockResolvedValue(undefined)) {
+function renderForm(onCreate = vi.fn().mockResolvedValue(undefined), currencies?: string[]) {
   render(
     <ExpenseForm
       currency="USD"
       timeZone="Europe/Madrid"
       today="2026-08-25"
       categories={categories}
+      currencies={currencies}
       onCreate={onCreate}
     />,
   );
@@ -181,6 +182,49 @@ describe('ExpenseForm', () => {
     await waitFor(() =>
       expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ direction: 'spend' })),
     );
+  });
+
+  // A household with one currency has nothing to choose, and a dropdown with a
+  // single item in it is furniture.
+  it('offers no currency control when only the household currency is available', () => {
+    renderForm();
+
+    expect(screen.queryByLabelText('Currency')).not.toBeInTheDocument();
+  });
+
+  it('defaults to the household currency when others are available', () => {
+    renderForm(vi.fn().mockResolvedValue(undefined), ['EUR', 'GBP', 'USD']);
+
+    expect(screen.getByLabelText('Currency')).toHaveValue('USD');
+  });
+
+  // The expense keeps the currency it was entered in. The conversion into the
+  // household's base currency happens in the database, once, at write time.
+  it('sends the chosen currency rather than the household one', async () => {
+    const onCreate = renderForm(vi.fn().mockResolvedValue(undefined), ['EUR', 'GBP', 'USD']);
+
+    await userEvent.selectOptions(screen.getByLabelText('Currency'), 'EUR');
+    await userEvent.type(screen.getByLabelText('Amount'), '20');
+    await userEvent.click(screen.getByRole('button', { name: ADD }));
+
+    await waitFor(() =>
+      expect(onCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ currency: 'EUR', amountMinor: 2000 }),
+      ),
+    );
+  });
+
+  // Entering one foreign expense usually means entering several, and the
+  // preview has to keep reading in the currency being typed.
+  it('keeps the chosen currency after a successful add', async () => {
+    renderForm(vi.fn().mockResolvedValue(undefined), ['EUR', 'USD']);
+
+    await userEvent.selectOptions(screen.getByLabelText('Currency'), 'EUR');
+    await userEvent.type(screen.getByLabelText('Amount'), '20');
+    await userEvent.click(screen.getByRole('button', { name: ADD }));
+
+    await waitFor(() => expect(screen.getByLabelText('Amount')).toHaveValue(''));
+    expect(screen.getByLabelText('Currency')).toHaveValue('EUR');
   });
 
   it('records income without making the amount negative', async () => {

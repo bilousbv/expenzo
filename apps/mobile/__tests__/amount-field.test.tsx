@@ -75,6 +75,21 @@ describe('AmountField (native)', () => {
     expect(onChange).toHaveBeenLastCalledWith(1000);
   });
 
+  // The exponent is part of the reading, so switching currency after typing
+  // changes what the same text means. Without re-reading, "1000" typed as
+  // dollars stays 100000 minor units and is then filed as 100000 yen.
+  it('re-reads what was typed when the currency changes', () => {
+    const onChange = jest.fn<Change>();
+    const { rerender } = render(<AmountField currency="USD" onChange={onChange} />);
+
+    fireEvent.changeText(screen.getByTestId('amount-field'), '1000');
+    expect(onChange).toHaveBeenLastCalledWith(100000);
+
+    rerender(<AmountField currency="JPY" onChange={onChange} />);
+
+    expect(onChange).toHaveBeenLastCalledWith(1000);
+  });
+
   // decimal-pad carries the separator key; the plain numeric pad does not, and
   // an amount field without a decimal point is not much use.
   it('asks for the decimal keypad', () => {

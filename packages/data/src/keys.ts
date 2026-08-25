@@ -28,6 +28,12 @@ export const queryKeys = {
   categories: {
     all: (householdId: string) => ['categories', householdId] as const,
   },
+  // Rates are reference data shared by every household, so this key is scoped
+  // by base currency rather than by household — there is nothing in it that
+  // switching household could leak.
+  currencies: {
+    supported: (baseCurrency: string) => ['currencies', baseCurrency] as const,
+  },
   limits: {
     all: (householdId: string) => ['limits', householdId] as const,
   },

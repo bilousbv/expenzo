@@ -166,7 +166,7 @@ export type Database = {
         }
         Insert: {
           amount_minor: number
-          base_amount_minor: number
+          base_amount_minor?: number
           category_id?: string | null
           created_at?: string
           created_by: string
@@ -235,6 +235,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      fx_rates: {
+        Row: {
+          as_of: string
+          base: string
+          fetched_at: string
+          quote: string
+          rate: number
+          source: string
+        }
+        Insert: {
+          as_of: string
+          base: string
+          fetched_at?: string
+          quote: string
+          rate: number
+          source?: string
+        }
+        Update: {
+          as_of?: string
+          base?: string
+          fetched_at?: string
+          quote?: string
+          rate?: number
+          source?: string
+        }
+        Relationships: []
       }
       household_invitations: {
         Row: {

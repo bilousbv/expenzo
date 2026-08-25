@@ -7,6 +7,11 @@ export type { ExpenseListFilter, SummaryWindow } from './keys';
 export { createLimit, deleteLimit, listLimits, updateLimit } from './repositories/limits';
 export type { SpendingLimitRow } from './repositories/limits';
 
+export { listSupportedCurrencies, upsertEcbRates } from './repositories/fx';
+export type { FxSyncResult } from './repositories/fx';
+
+export { useSupportedCurrencies } from './hooks/use-currencies';
+
 export { getCategorySpend, getPeriodSummary } from './repositories/summary';
 export type { CategorySpend, PeriodSummary, SummaryArgs } from './repositories/summary';
 

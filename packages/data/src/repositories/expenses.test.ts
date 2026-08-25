@@ -202,16 +202,28 @@ describe('createExpense', () => {
     expect(recorder.inserted?.created_by).toBe(USER);
   });
 
-  // Until M1.8 there is no rate table, so an expense is recorded in the
-  // household's own currency at a rate of one. base_amount_minor is not null,
-  // so it has to be written either way.
-  it('sets the base amount equal to the amount at a rate of one', async () => {
+  // The conversion into the household's base currency belongs to the database.
+  // base_amount_minor is what every household total is summed from, and a
+  // client that lies about it cannot be told from one that is merely wrong, so
+  // the trigger recomputes whatever arrives. Sending a value would only
+  // advertise that it is trusted.
+  it('leaves the converted amount to the database', async () => {
     const { db, recorder } = fakeDb({ data: row(), error: null });
 
     await createExpense(db, HOUSEHOLD, USER, input);
 
-    expect(recorder.inserted?.base_amount_minor).toBe(1250);
-    expect(recorder.inserted?.fx_rate).toBe(1);
+    expect(recorder.inserted).not.toHaveProperty('base_amount_minor');
+    expect(recorder.inserted).not.toHaveProperty('fx_rate');
+  });
+
+  // The currency the user chose, not the household's. Overwriting it here would
+  // convert every foreign expense at a rate of one.
+  it('sends the currency the expense was entered in', async () => {
+    const { db, recorder } = fakeDb({ data: row(), error: null });
+
+    await createExpense(db, HOUSEHOLD, USER, { ...input, currency: 'EUR' });
+
+    expect(recorder.inserted?.currency).toBe('EUR');
   });
 
   it('validates through the shared schema', async () => {

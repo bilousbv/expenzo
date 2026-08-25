@@ -1,4 +1,9 @@
-import { useCategories, useCreateExpense, useCurrentHousehold } from '@expenzo/data';
+import {
+  useCategories,
+  useCreateExpense,
+  useCurrentHousehold,
+  useSupportedCurrencies,
+} from '@expenzo/data';
 import { localDateIn, type CreateExpenseInput } from '@expenzo/domain';
 import { Card, type CategoryOption } from '@expenzo/ui';
 import { router } from 'expo-router';
@@ -22,6 +27,8 @@ export default function NewExpenseScreen() {
 
   const categories = useCategories(householdId);
   const create = useCreateExpense(householdId, session?.user.id);
+  // Held for a day: rates change daily, the set of quoted currencies does not.
+  const currencies = useSupportedCurrencies(household.data?.base_currency);
 
   const options: CategoryOption[] = (categories.data ?? []).map((category) => ({
     id: category.id,
@@ -45,6 +52,7 @@ export default function NewExpenseScreen() {
             currency={household.data?.base_currency ?? 'USD'}
             today={localDateIn(new Date(), timeZone)}
             categories={options}
+            currencies={currencies.data}
             onCreate={handleCreate}
             disabled={!householdId}
           />
