@@ -1,3 +1,4 @@
+export { AmountField } from './amount-field';
 export { Button } from './button';
 export { Card } from './card';
 export { CategoryPicker } from './category-picker';
@@ -9,6 +10,7 @@ export { formatCurrency } from './format';
 export { buttonContainerClass, buttonLabelClass } from './button.styles';
 export type { ButtonProps, ButtonSize, ButtonVariant } from './button.styles';
 export type { CardProps } from './card.styles';
+export type { AmountFieldProps } from './amount-field.styles';
 
 export {
   categoryChipClass,

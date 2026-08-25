@@ -40,13 +40,21 @@ export const createExpenseInput = z.object({
   note: optionalText,
 });
 
-export type CreateExpenseInput = z.infer<typeof createExpenseInput>;
+/**
+ * The shape a caller supplies, not the shape parsing produces.
+ *
+ * `z.infer` would give the output: visibility already defaulted, and merchant
+ * present but possibly undefined. Callers hold neither, so the input type is
+ * the honest one for a function signature. Repositories work with the parsed
+ * value, whose type is inferred at the parse call.
+ */
+export type CreateExpenseInput = z.input<typeof createExpenseInput>;
 
 export const updateExpenseInput = createExpenseInput.partial().extend({
   id: uuidSchema,
 });
 
-export type UpdateExpenseInput = z.infer<typeof updateExpenseInput>;
+export type UpdateExpenseInput = z.input<typeof updateExpenseInput>;
 
 export const expenseScopeSchema = z.enum(['all', 'personal', 'shared']);
 
@@ -63,4 +71,4 @@ export const expenseFilter = z
     path: ['to'],
   });
 
-export type ExpenseFilter = z.infer<typeof expenseFilter>;
+export type ExpenseFilter = z.input<typeof expenseFilter>;

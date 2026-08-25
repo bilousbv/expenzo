@@ -36,6 +36,12 @@ function RootNavigator() {
           name="categories"
           options={{ headerShown: true, title: 'Categories', presentation: 'modal' }}
         />
+        {/* Its own route because M6 deep-links straight here from a wallet
+            payment: expenzo://expense/new. */}
+        <Stack.Screen
+          name="expense/new"
+          options={{ headerShown: true, title: 'New expense', presentation: 'modal' }}
+        />
       </Stack.Protected>
 
       <Stack.Protected guard={!session}>
