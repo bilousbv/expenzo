@@ -424,7 +424,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accept_household_invitation: { Args: { token: string }; Returns: string }
+      create_household_invitation: {
+        Args: { invitee_email: string }
+        Returns: string
+      }
     }
     Enums: {
       expense_source: "manual" | "receipt_scan" | "email" | "wallet" | "import"
