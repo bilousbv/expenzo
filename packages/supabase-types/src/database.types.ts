@@ -149,6 +149,7 @@ export type Database = {
           currency: string
           dedup_fingerprint: string | null
           deleted_at: string | null
+          direction: Database["public"]["Enums"]["expense_direction"]
           fx_rate: number
           fx_rate_date: string | null
           household_id: string
@@ -172,6 +173,7 @@ export type Database = {
           currency: string
           dedup_fingerprint?: string | null
           deleted_at?: string | null
+          direction?: Database["public"]["Enums"]["expense_direction"]
           fx_rate?: number
           fx_rate_date?: string | null
           household_id: string
@@ -195,6 +197,7 @@ export type Database = {
           currency?: string
           dedup_fingerprint?: string | null
           deleted_at?: string | null
+          direction?: Database["public"]["Enums"]["expense_direction"]
           fx_rate?: number
           fx_rate_date?: string | null
           household_id?: string
@@ -416,20 +419,84 @@ export type Database = {
           },
         ]
       }
+      spending_limits: {
+        Row: {
+          amount_minor: number
+          category_id: string | null
+          created_at: string
+          created_by: string
+          household_id: string
+          id: string
+          period: Database["public"]["Enums"]["limit_period"]
+          updated_at: string
+        }
+        Insert: {
+          amount_minor: number
+          category_id?: string | null
+          created_at?: string
+          created_by: string
+          household_id: string
+          id?: string
+          period?: Database["public"]["Enums"]["limit_period"]
+          updated_at?: string
+        }
+        Update: {
+          amount_minor?: number
+          category_id?: string | null
+          created_at?: string
+          created_by?: string
+          household_id?: string
+          id?: string
+          period?: Database["public"]["Enums"]["limit_period"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spending_limits_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spending_limits_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       accept_household_invitation: { Args: { token: string }; Returns: string }
+      category_summary: {
+        Args: { from_on: string; member?: string; to_on: string }
+        Returns: {
+          category_id: string
+          total_minor: number
+        }[]
+      }
       create_household_invitation: {
         Args: { invitee_email: string }
         Returns: string
       }
+      expense_summary: {
+        Args: { from_on: string; member?: string; to_on: string }
+        Returns: {
+          direction: Database["public"]["Enums"]["expense_direction"]
+          total_minor: number
+        }[]
+      }
     }
     Enums: {
+      expense_direction: "spend" | "income"
       expense_source: "manual" | "receipt_scan" | "email" | "wallet" | "import"
       invitation_status: "pending" | "accepted" | "revoked" | "expired"
+      limit_period: "weekly" | "monthly" | "yearly"
       member_role: "owner" | "adult" | "viewer"
       member_status: "active" | "removed"
       review_status: "confirmed" | "needs_review" | "rejected"
@@ -560,8 +627,10 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      expense_direction: ["spend", "income"],
       expense_source: ["manual", "receipt_scan", "email", "wallet", "import"],
       invitation_status: ["pending", "accepted", "revoked", "expired"],
+      limit_period: ["weekly", "monthly", "yearly"],
       member_role: ["owner", "adult", "viewer"],
       member_status: ["active", "removed"],
       review_status: ["confirmed", "needs_review", "rejected"],

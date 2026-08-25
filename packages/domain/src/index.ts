@@ -11,10 +11,13 @@ export {
   localDateIn,
   monthBounds,
   parseIsoDate,
+  PERIOD_PRESET_LABELS,
+  PERIOD_PRESETS,
+  presetRange,
   toIsoDate,
   weekBounds,
 } from './period';
-export type { DateRange, IsoDate, WeekStart } from './period';
+export type { DateRange, IsoDate, PeriodPreset, WeekStart } from './period';
 
 export { nextRenewalOn, upcomingRenewals } from './renewal';
 export type { RenewalCadence, RenewalSchedule } from './renewal';
@@ -36,8 +39,22 @@ export {
 export type { Credentials, OAuthProvider, Registration } from './schemas/auth';
 
 export {
+  createLimitInput,
+  limitPeriodSchema,
+  limitProgress,
+  updateLimitInput,
+} from './schemas/limit';
+export type {
+  CreateLimitInput,
+  LimitPeriod,
+  LimitProgress,
+  UpdateLimitInput,
+} from './schemas/limit';
+
+export {
   createExpenseInput,
   currencyCodeSchema,
+  expenseDirectionSchema,
   expenseFilter,
   isoDateSchema,
   updateExpenseInput,

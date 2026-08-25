@@ -91,3 +91,26 @@ describe('expenseFilter', () => {
     expect(expenseFilter.safeParse({ from: '2026-03-31', to: '2026-03-01' }).success).toBe(false);
   });
 });
+
+describe('direction', () => {
+  it('defaults to spending', () => {
+    expect(createExpenseInput.parse(valid).direction).toBe('spend');
+  });
+
+  it('accepts income', () => {
+    expect(createExpenseInput.parse({ ...valid, direction: 'income' }).direction).toBe('income');
+  });
+
+  // The amount stays positive either way. A signed amount and a direction are
+  // two ways of saying the same thing, and carrying both invites rows where
+  // they disagree.
+  it('does not permit a negative amount for income', () => {
+    expect(
+      createExpenseInput.safeParse({ ...valid, direction: 'income', amountMinor: -500 }).success,
+    ).toBe(false);
+  });
+
+  it('rejects a direction it does not know', () => {
+    expect(createExpenseInput.safeParse({ ...valid, direction: 'refund' }).success).toBe(false);
+  });
+});

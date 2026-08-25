@@ -25,7 +25,15 @@ const optionalText = z
     return trimmed ? trimmed : undefined;
   });
 
+/**
+ * Spending or income. A direction column rather than a signed amount: carrying
+ * both a sign and a direction invites rows where the two disagree, and the
+ * amount column is constrained positive.
+ */
+export const expenseDirectionSchema = z.enum(['spend', 'income']);
+
 export const createExpenseInput = z.object({
+  direction: expenseDirectionSchema.default('spend'),
   amountMinor: z
     .number()
     .int('Amount must be a whole number of minor units')
