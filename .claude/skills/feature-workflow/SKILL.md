@@ -107,8 +107,15 @@ dates, no author names. If the branch already exists, append `-2`, `-3`.
    pnpm lint
    pnpm check-types
    pnpm test
-   pnpm test:e2e      # only when apps/web or packages/ui changed
+   pnpm db:test            # only when supabase/ changed
+   pnpm db:types:check     # only when supabase/migrations/ changed
+   pnpm test:e2e           # only when apps/web or packages/ui changed
    ```
+
+   `db:types:check` is not optional after a migration. A schema change that
+   lands without its regenerated types leaves every consumer type-checking
+   against a schema that no longer exists, and CI will reject it. Run
+   `pnpm db:types` and commit the result as part of the same change.
 
    `references/verification.md` has the per-step remedies and the known
    failures worth recognising on sight.

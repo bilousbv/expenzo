@@ -1,0 +1,107 @@
+'use client';
+
+import { buttonContainerClass, buttonLabelClass } from '@expenzo/ui';
+import { useId, useState, type FormEvent } from 'react';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export interface InviteFormProps {
+  /** Returns the one-time invitation token. */
+  onInvite: (email: string) => Promise<string>;
+  origin: string;
+}
+
+export function InviteForm({ onInvite, origin }: InviteFormProps) {
+  const emailId = useId();
+  const [email, setEmail] = useState('');
+  const [token, setToken] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+
+    const trimmed = email.trim();
+    setError(null);
+
+    if (!EMAIL_PATTERN.test(trimmed)) {
+      setError('Enter a valid email address.');
+      return;
+    }
+
+    setPending(true);
+    try {
+      setToken(await onInvite(trimmed));
+      setEmail('');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not create the invitation.');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  if (token) {
+    const link = `${origin}/invite/${token}`;
+
+    return (
+      <div className="flex flex-col gap-gutter">
+        <p className="text-sm text-content-muted">
+          Send this link to the person you are inviting. It works once and expires in 14 days.
+        </p>
+
+        <code
+          data-testid="invite-link"
+          className="break-all rounded-card border border-brand-100 bg-white px-4 py-3 text-sm text-content"
+        >
+          {link}
+        </code>
+
+        {/* The token is a bearer credential: anyone with the link can join, so
+            it should not sit on screen after it has been handed over. */}
+        <button
+          type="button"
+          onClick={() => setToken(null)}
+          className={buttonContainerClass('secondary', 'md')}
+        >
+          <span className={buttonLabelClass('secondary', 'md')}>Done</span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-gutter" noValidate>
+      <label htmlFor={emailId} className="text-sm font-medium text-content-muted">
+        Email
+      </label>
+
+      <input
+        id={emailId}
+        name="email"
+        type="email"
+        autoComplete="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        aria-invalid={error ? true : undefined}
+        className="rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500"
+        placeholder="them@example.com"
+      />
+
+      <button
+        type="submit"
+        disabled={pending}
+        className={buttonContainerClass('primary', 'md', pending)}
+      >
+        <span className={buttonLabelClass('primary', 'md')}>
+          {pending ? 'Inviting…' : 'Invite'}
+        </span>
+      </button>
+
+      {error ? (
+        <p role="alert" data-testid="invite-error" className="text-sm text-red-600">
+          {error}
+        </p>
+      ) : null}
+    </form>
+  );
+}
