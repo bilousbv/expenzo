@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { localDateIn, monthBounds, weekBounds } from './period';
+import { localDateIn, monthBounds, presetRange, weekBounds } from './period';
 
 describe('localDateIn', () => {
   // The single most important behaviour in this file. An expense entered at
@@ -73,5 +73,54 @@ describe('weekBounds', () => {
       start: '2026-03-15',
       end: '2026-03-21',
     });
+  });
+});
+
+describe('presetRange', () => {
+  const MADRID = 'Europe/Madrid';
+
+  it('covers the whole of the current month', () => {
+    expect(presetRange('this-month', '2026-03-15T12:00:00Z', MADRID)).toEqual({
+      start: '2026-03-01',
+      end: '2026-03-31',
+    });
+  });
+
+  it('covers the whole of the previous month', () => {
+    expect(presetRange('last-month', '2026-03-15T12:00:00Z', MADRID)).toEqual({
+      start: '2026-02-01',
+      end: '2026-02-28',
+    });
+  });
+
+  // Month zero does not exist. Naive arithmetic on the month number gives
+  // 2026-00-01, which is either a crash or silently December of the wrong year.
+  it('rolls back across the new year', () => {
+    expect(presetRange('last-month', '2026-01-05T12:00:00Z', MADRID)).toEqual({
+      start: '2025-12-01',
+      end: '2025-12-31',
+    });
+  });
+
+  it('gets February right in a leap year', () => {
+    expect(presetRange('last-month', '2024-03-10T12:00:00Z', MADRID)).toEqual({
+      start: '2024-02-01',
+      end: '2024-02-29',
+    });
+  });
+
+  it('covers the current week, Monday to Sunday', () => {
+    // 2026-03-15 is a Sunday.
+    expect(presetRange('this-week', '2026-03-15T12:00:00Z', MADRID)).toEqual({
+      start: '2026-03-09',
+      end: '2026-03-15',
+    });
+  });
+
+  // The instant is 23:30 UTC on the 31st, which is already the 1st in Madrid.
+  // Resolving the period in the household's timezone is the whole point.
+  it('uses the household timezone rather than UTC', () => {
+    expect(presetRange('this-month', '2026-03-31T23:30:00Z', MADRID).start).toBe('2026-04-01');
+    expect(presetRange('this-month', '2026-03-31T23:30:00Z', 'UTC').start).toBe('2026-03-01');
   });
 });

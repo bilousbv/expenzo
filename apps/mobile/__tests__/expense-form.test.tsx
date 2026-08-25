@@ -52,7 +52,9 @@ describe('ExpenseForm (native)', () => {
     renderForm(onCreate);
 
     fireEvent.changeText(screen.getByTestId('amount-field'), '12.50');
-    fireEvent.press(screen.getByTestId(`category-chip-${DINING}`));
+    // The category is a dropdown now: open it, then take an option.
+    fireEvent.press(screen.getByTestId('category-select'));
+    fireEvent.press(screen.getByTestId(`category-select-option-${DINING}`));
     fireEvent.press(screen.getByTestId('expense-submit'));
 
     await waitFor(() =>

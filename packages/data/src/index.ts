@@ -2,7 +2,16 @@ export { SupabaseProvider, useSupabase } from './provider';
 export type { SupabaseProviderProps } from './provider';
 
 export { queryKeys } from './keys';
-export type { ExpenseListFilter } from './keys';
+export type { ExpenseListFilter, SummaryWindow } from './keys';
+
+export { createLimit, deleteLimit, listLimits, updateLimit } from './repositories/limits';
+export type { SpendingLimitRow } from './repositories/limits';
+
+export { getCategorySpend, getPeriodSummary } from './repositories/summary';
+export type { CategorySpend, PeriodSummary, SummaryArgs } from './repositories/summary';
+
+export { useCreateLimit, useDeleteLimit, useLimits, useUpdateLimit } from './hooks/use-limits';
+export { useCategorySpend, usePeriodSummary } from './hooks/use-summary';
 
 export {
   archiveCategory,

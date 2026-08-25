@@ -6,6 +6,13 @@
  * prefix, and there is no way to read another household's cached data.
  */
 
+/** The period a summary covers, plus an optional author. */
+export interface SummaryWindow {
+  readonly from: string;
+  readonly to: string;
+  readonly memberId?: string;
+}
+
 export interface ExpenseListFilter {
   readonly from?: string;
   readonly to?: string;
@@ -20,6 +27,16 @@ export const queryKeys = {
   },
   categories: {
     all: (householdId: string) => ['categories', householdId] as const,
+  },
+  limits: {
+    all: (householdId: string) => ['limits', householdId] as const,
+  },
+  summary: {
+    all: (householdId: string) => ['summary', householdId] as const,
+    period: (householdId: string, window: SummaryWindow) =>
+      ['summary', householdId, 'period', window] as const,
+    categories: (householdId: string, window: SummaryWindow) =>
+      ['summary', householdId, 'categories', window] as const,
   },
   expenses: {
     all: (householdId: string) => ['expenses', householdId] as const,

@@ -1,5 +1,10 @@
 import type { CreateExpenseInput, ExpenseFilter } from '@expenzo/domain';
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 
 import { queryKeys } from '../keys';
 import { useSupabase } from '../provider';
@@ -10,6 +15,22 @@ import {
   type ExpenseCursor,
   type ExpensePage,
 } from '../repositories/expenses';
+
+/**
+ * Everything a change to one expense invalidates.
+ *
+ * The dashboard totals come from their own aggregate query, so invalidating
+ * only the list leaves the budget showing a figure that no longer includes the
+ * expense the user just added — which reads as the app having ignored them.
+ */
+function invalidateExpenseViews(client: QueryClient, householdId: string | undefined) {
+  const id = householdId ?? '';
+
+  return Promise.all([
+    client.invalidateQueries({ queryKey: queryKeys.expenses.all(id) }),
+    client.invalidateQueries({ queryKey: queryKeys.summary.all(id) }),
+  ]);
+}
 
 export interface UseExpensesOptions {
   householdId: string | undefined;
@@ -58,8 +79,7 @@ export function useCreateExpense(householdId: string | undefined, userId: string
     // Invalidating the collection prefix rather than one filtered list: a new
     // expense can belong to any filter currently on screen, and the server
     // fills in the columns the triggers own.
-    onSuccess: () =>
-      client.invalidateQueries({ queryKey: queryKeys.expenses.all(householdId ?? '') }),
+    onSuccess: () => invalidateExpenseViews(client, householdId),
   });
 }
 
@@ -69,7 +89,6 @@ export function useDeleteExpense(householdId: string | undefined) {
 
   return useMutation({
     mutationFn: (id: string) => deleteExpense(db, id),
-    onSuccess: () =>
-      client.invalidateQueries({ queryKey: queryKeys.expenses.all(householdId ?? '') }),
+    onSuccess: () => invalidateExpenseViews(client, householdId),
   });
 }

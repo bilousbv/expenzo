@@ -16,6 +16,7 @@ function expenseRow(id: string, occurredOn = '2026-08-25') {
     id,
     household_id: HOUSEHOLD,
     created_by: USER,
+    direction: 'spend',
     amount_minor: 1250,
     currency: 'USD',
     base_amount_minor: 1250,

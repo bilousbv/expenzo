@@ -5,7 +5,7 @@ import {
   AmountField,
   buttonContainerClass,
   buttonLabelClass,
-  CategoryPicker,
+  CategorySelect,
   type CategoryOption,
 } from '@expenzo/ui';
 import { useId, useState, type FormEvent } from 'react';
@@ -39,6 +39,7 @@ export function ExpenseForm({
   const [amountMinor, setAmountMinor] = useState<number | null>(null);
   const [amountKey, setAmountKey] = useState(0);
 
+  const [direction, setDirection] = useState<'spend' | 'income'>('spend');
   const [occurredOn, setOccurredOn] = useState(today);
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
   const [merchant, setMerchant] = useState('');
@@ -57,6 +58,7 @@ export function ExpenseForm({
     const parsed = createExpenseInput.safeParse({
       amountMinor,
       currency,
+      direction,
       occurredOn,
       categoryId,
       merchant,
@@ -85,6 +87,29 @@ export function ExpenseForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-gutter" noValidate>
+      {/* Spending or income. A direction rather than a signed amount: the
+          amount column is constrained positive, and carrying both a sign and a
+          direction invites rows where the two disagree. */}
+      <div role="radiogroup" aria-label="Direction" className="flex flex-row gap-2">
+        {(['spend', 'income'] as const).map((option) => (
+          <button
+            key={option}
+            type="button"
+            role="radio"
+            aria-checked={direction === option}
+            data-testid={`direction-${option}`}
+            onClick={() => setDirection(option)}
+            className={buttonContainerClass(direction === option ? 'primary' : 'secondary', 'sm')}
+          >
+            <span
+              className={buttonLabelClass(direction === option ? 'primary' : 'secondary', 'sm')}
+            >
+              {option === 'spend' ? 'Spending' : 'Income'}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <AmountField
         key={amountKey}
         currency={currency}
@@ -105,11 +130,10 @@ export function ExpenseForm({
         className={inputClass}
       />
 
-      <CategoryPicker
+      <CategorySelect
         options={categories}
         value={categoryId}
         onChange={setCategoryId}
-        label="Category"
         disabled={disabled}
       />
 
