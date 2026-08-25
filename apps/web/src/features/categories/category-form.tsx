@@ -1,0 +1,117 @@
+'use client';
+
+import { createCategoryInput, type CreateCategoryInput } from '@expenzo/domain';
+import { buttonContainerClass, buttonLabelClass, categoryDotStyle } from '@expenzo/ui';
+import { useId, useState, type FormEvent } from 'react';
+
+/** Named because a colour needs an accessible name; the hex is not one. */
+export const PALETTE = [
+  { name: 'Blue', hex: '#337dff' },
+  { name: 'Orange', hex: '#f97316' },
+  { name: 'Teal', hex: '#14b8a6' },
+  { name: 'Purple', hex: '#8b5cf6' },
+  { name: 'Pink', hex: '#ec4899' },
+  { name: 'Green', hex: '#22c55e' },
+  { name: 'Red', hex: '#ef4444' },
+  { name: 'Slate', hex: '#64748b' },
+] as const;
+
+export interface CategoryFormProps {
+  onCreate: (input: CreateCategoryInput) => Promise<void>;
+  /** Set while the household this category would belong to is still loading. */
+  disabled?: boolean;
+}
+
+export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) {
+  const nameId = useId();
+  const [name, setName] = useState('');
+  const [color, setColor] = useState<string>(PALETTE[0].hex);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+
+    // Guarding here as well as with the attribute: a second submit landing
+    // before the re-render creates two categories, and one of them then loses
+    // the unique index for reasons the user cannot see. The household check is
+    // the same idea one layer up — the insert is scoped by an id that arrives
+    // from its own query, and submitting before it lands used to surface as
+    // "No household is loaded yet".
+    if (pending || disabled) return;
+
+    setError(null);
+
+    // The same schema the repository validates against, so the browser and the
+    // database agree on what a category is.
+    const parsed = createCategoryInput.safeParse({ name, color });
+
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? 'That category is not valid.');
+      return;
+    }
+
+    setPending(true);
+    try {
+      await onCreate(parsed.data);
+      setName('');
+    } catch (cause) {
+      // Deliberately not clearing the field: whatever went wrong, retyping the
+      // name is not part of the fix.
+      setError(cause instanceof Error ? cause.message : 'Could not add the category.');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-gutter" noValidate>
+      <label htmlFor={nameId} className="text-sm font-medium text-content-muted">
+        Name
+      </label>
+
+      <input
+        id={nameId}
+        name="name"
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        aria-invalid={error ? true : undefined}
+        placeholder="Coffee"
+        className="rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500"
+      />
+
+      <div role="radiogroup" aria-label="Colour" className="flex flex-row flex-wrap gap-2">
+        {PALETTE.map((swatch) => (
+          <button
+            key={swatch.hex}
+            type="button"
+            role="radio"
+            aria-checked={color === swatch.hex}
+            aria-label={swatch.name}
+            onClick={() => setColor(swatch.hex)}
+            style={categoryDotStyle(swatch.hex)}
+            className={`h-8 w-8 rounded-full border-2 ${
+              color === swatch.hex ? 'border-content' : 'border-transparent'
+            }`}
+          />
+        ))}
+      </div>
+
+      <button
+        type="submit"
+        disabled={pending || disabled}
+        className={buttonContainerClass('primary', 'md', pending || disabled)}
+      >
+        <span className={buttonLabelClass('primary', 'md')}>
+          {pending ? 'Adding…' : 'Add category'}
+        </span>
+      </button>
+
+      {error ? (
+        <p role="alert" data-testid="category-error" className="text-sm text-red-600">
+          {error}
+        </p>
+      ) : null}
+    </form>
+  );
+}

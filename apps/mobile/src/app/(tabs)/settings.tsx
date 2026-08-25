@@ -1,6 +1,7 @@
 import { Button, Card } from '@expenzo/ui';
 import { useSupabase } from '@expenzo/data';
 import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -61,6 +62,17 @@ export default function SettingsTab() {
               </View>
             ))
           )}
+        </Card>
+
+        <Card className="gap-gutter">
+          <Text className="text-lg font-semibold text-content">Categories</Text>
+          <Button
+            testID="open-categories"
+            variant="secondary"
+            onPress={() => router.push('/categories')}
+          >
+            Manage categories
+          </Button>
         </Card>
 
         <Card className="gap-gutter">

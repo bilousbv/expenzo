@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@expenzo/data": "workspace:*",
+    "@expenzo/domain": "workspace:*",
     "@expenzo/supabase-types": "workspace:*",
     "@expenzo/ui": "workspace:*",
     "@supabase/ssr": "^0.12.4",

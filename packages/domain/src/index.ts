@@ -22,6 +22,8 @@ export type { RenewalCadence, RenewalSchedule } from './renewal';
 export { matchScore, normalizeMerchant, stringSimilarity } from './dedup';
 export type { MatchCandidate } from './dedup';
 
+export { slugify } from './slug';
+
 export {
   createExpenseInput,
   currencyCodeSchema,
@@ -33,3 +35,6 @@ export {
   visibilitySchema,
 } from './schemas/expense';
 export type { CreateExpenseInput, ExpenseFilter, UpdateExpenseInput } from './schemas/expense';
+
+export { createCategoryInput, hexColorSchema, updateCategoryInput } from './schemas/category';
+export type { CreateCategoryInput, UpdateCategoryInput } from './schemas/category';

@@ -1,5 +1,6 @@
 export { Button } from './button';
 export { Card } from './card';
+export { CategoryPicker } from './category-picker';
 export { cn } from './cn';
 export { formatCurrency } from './format';
 
@@ -8,3 +9,11 @@ export { formatCurrency } from './format';
 export { buttonContainerClass, buttonLabelClass } from './button.styles';
 export type { ButtonProps, ButtonSize, ButtonVariant } from './button.styles';
 export type { CardProps } from './card.styles';
+
+export {
+  categoryChipClass,
+  categoryChipLabelClass,
+  categoryDotClass,
+  categoryDotStyle,
+} from './category-chip.styles';
+export type { CategoryOption, CategoryPickerProps } from './category-picker.styles';

@@ -30,6 +30,12 @@ function RootNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={!!session}>
         <Stack.Screen name="(tabs)" />
+        {/* Pushed from Settings rather than given a tab: it is configuration,
+            not somewhere anybody navigates to daily. */}
+        <Stack.Screen
+          name="categories"
+          options={{ headerShown: true, title: 'Categories', presentation: 'modal' }}
+        />
       </Stack.Protected>
 
       <Stack.Protected guard={!session}>
