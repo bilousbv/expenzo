@@ -1,7 +1,7 @@
 import { createExpenseInput, type CreateExpenseInput } from '@expenzo/domain';
 import { AmountField, Button, CategoryPicker, type CategoryOption } from '@expenzo/ui';
 import { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 
 export interface ExpenseFormProps {
   currency: string;
@@ -31,7 +31,6 @@ export function ExpenseForm({
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
   const [merchant, setMerchant] = useState('');
   const [note, setNote] = useState('');
-  const [personal, setPersonal] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -45,7 +44,6 @@ export function ExpenseForm({
       amountMinor,
       currency,
       occurredOn,
-      visibility: personal ? 'personal' : 'shared',
       categoryId,
       merchant,
       note,
@@ -110,24 +108,6 @@ export function ExpenseForm({
 
       <Text className="text-sm font-medium text-content-muted">Note</Text>
       <TextInput testID="expense-note" value={note} onChangeText={setNote} className={inputClass} />
-
-      {/* Shared by default: a household ledger is the point, so keeping an
-          expense to yourself is the deliberate choice. */}
-      <Pressable
-        testID="expense-personal"
-        accessibilityRole="switch"
-        accessibilityState={{ checked: personal }}
-        accessibilityLabel="Personal"
-        onPress={() => setPersonal((value) => !value)}
-        className="flex-row items-center gap-2"
-      >
-        <View
-          className={`h-5 w-5 rounded border ${
-            personal ? 'border-brand-600 bg-brand-600' : 'border-brand-200 bg-white'
-          }`}
-        />
-        <Text className="text-sm text-content">Personal</Text>
-      </Pressable>
 
       <Button testID="expense-submit" disabled={pending || disabled} onPress={handleSubmit}>
         {pending ? 'Adding…' : 'Add expense'}

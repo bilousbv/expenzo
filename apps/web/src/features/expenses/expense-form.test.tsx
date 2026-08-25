@@ -95,29 +95,18 @@ describe('ExpenseForm', () => {
     );
   });
 
-  // Shared is the default because a household ledger is the point. Personal has
-  // to be a deliberate choice.
-  it('defaults to a shared expense', async () => {
+  // Every member of a household sees every expense, so there is nothing to
+  // choose here any more and nothing to send.
+  it('offers no privacy control and sends no visibility', async () => {
     const onCreate = renderForm();
+
+    expect(screen.queryByLabelText('Personal')).not.toBeInTheDocument();
 
     await userEvent.type(screen.getByLabelText('Amount'), '12.50');
     await userEvent.click(screen.getByRole('button', { name: ADD }));
 
-    await waitFor(() =>
-      expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ visibility: 'shared' })),
-    );
-  });
-
-  it('can be marked personal', async () => {
-    const onCreate = renderForm();
-
-    await userEvent.type(screen.getByLabelText('Amount'), '12.50');
-    await userEvent.click(screen.getByLabelText('Personal'));
-    await userEvent.click(screen.getByRole('button', { name: ADD }));
-
-    await waitFor(() =>
-      expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ visibility: 'personal' })),
-    );
+    await waitFor(() => expect(onCreate).toHaveBeenCalled());
+    expect(onCreate.mock.calls[0]?.[0]).not.toHaveProperty('visibility');
   });
 
   it('refuses to submit without an amount', async () => {

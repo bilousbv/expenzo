@@ -6,7 +6,6 @@ const valid = {
   amountMinor: 1250,
   currency: 'USD',
   occurredOn: '2026-03-15',
-  visibility: 'shared' as const,
   categoryId: '00000000-0000-4000-8000-000000000001',
   merchant: 'Blue Bottle Coffee',
 };
@@ -16,9 +15,13 @@ describe('createExpenseInput', () => {
     expect(createExpenseInput.parse(valid)).toMatchObject(valid);
   });
 
-  it('defaults visibility to shared', () => {
-    const { visibility: _omitted, ...withoutVisibility } = valid;
-    expect(createExpenseInput.parse(withoutVisibility).visibility).toBe('shared');
+  // Every member of a household sees every expense, so there is no visibility
+  // to carry. Anything still sending one is out of date and should be ignored
+  // rather than quietly stored.
+  it('has no visibility field', () => {
+    const parsed = createExpenseInput.parse({ ...valid, visibility: 'personal' });
+
+    expect(parsed).not.toHaveProperty('visibility');
   });
 
   it('rejects a zero or negative amount', () => {
@@ -44,10 +47,6 @@ describe('createExpenseInput', () => {
     );
   });
 
-  it('rejects an unknown visibility', () => {
-    expect(createExpenseInput.safeParse({ ...valid, visibility: 'secret' }).success).toBe(false);
-  });
-
   it('trims the merchant and treats blank as absent', () => {
     expect(createExpenseInput.parse({ ...valid, merchant: '  Tesco  ' }).merchant).toBe('Tesco');
     expect(createExpenseInput.parse({ ...valid, merchant: '   ' }).merchant).toBeUndefined();
@@ -66,20 +65,26 @@ describe('createExpenseInput', () => {
 });
 
 describe('expenseFilter', () => {
-  it('defaults to showing everything', () => {
-    expect(expenseFilter.parse({}).scope).toBe('all');
+  it('narrows nothing by default', () => {
+    expect(expenseFilter.parse({})).toEqual({});
   });
 
-  it('accepts a date range and a category', () => {
+  // Scope is gone with the personal/shared split. memberId is the author
+  // filter, and the only narrowing left that is about people rather than dates.
+  it('has no scope field', () => {
+    expect(expenseFilter.parse({ scope: 'personal' })).not.toHaveProperty('scope');
+  });
+
+  it('accepts a date range, a category and an author', () => {
     const parsed = expenseFilter.parse({
       from: '2026-03-01',
       to: '2026-03-31',
       categoryId: valid.categoryId,
-      scope: 'personal',
+      memberId: '00000000-0000-4000-8000-000000000002',
     });
 
     expect(parsed.from).toBe('2026-03-01');
-    expect(parsed.scope).toBe('personal');
+    expect(parsed.memberId).toBe('00000000-0000-4000-8000-000000000002');
   });
 
   it('rejects a range whose end precedes its start', () => {

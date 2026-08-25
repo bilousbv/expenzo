@@ -6,6 +6,7 @@ import {
   useCurrentHousehold,
   useDeleteExpense,
   useExpenses,
+  useHouseholdMembers,
 } from '@expenzo/data';
 import type { CreateExpenseInput, ExpenseFilter } from '@expenzo/domain';
 import { localDateIn } from '@expenzo/domain';
@@ -22,25 +23,26 @@ import { useMemo, useState } from 'react';
 
 import { ExpenseForm } from './expense-form';
 
-const SCOPES = [
-  { value: 'all', label: 'Everything' },
-  { value: 'shared', label: 'Shared' },
-  { value: 'personal', label: 'Personal' },
-] as const;
-
 export function ExpenseList({ userId }: { userId: string | undefined }) {
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
   const currency = household.data?.base_currency ?? 'USD';
   const timeZone = household.data?.timezone ?? 'UTC';
 
-  const [scope, setScope] = useState<ExpenseFilter['scope']>('all');
-  const filter = useMemo(() => ({ scope }), [scope]);
+  // The author filter. Every member sees every expense, so this narrows the
+  // list rather than deciding what is reachable.
+  const [memberId, setMemberId] = useState<string | undefined>(undefined);
+  const filter = useMemo<ExpenseFilter>(() => (memberId ? { memberId } : {}), [memberId]);
 
   const categories = useCategories(householdId);
+  const members = useHouseholdMembers(householdId);
   const expenses = useExpenses({ householdId, filter });
   const create = useCreateExpense(householdId, userId);
   const remove = useDeleteExpense(householdId);
+
+  const authorFor = new Map(
+    (members.data ?? []).map((member) => [member.userId, member.displayName]),
+  );
 
   const options: CategoryOption[] = (categories.data ?? []).map((category) => ({
     id: category.id,
@@ -83,24 +85,42 @@ export function ExpenseList({ userId }: { userId: string | undefined }) {
         </div>
         <p className="text-xs text-content-muted">Total of the {rows.length} shown</p>
 
-        <div role="radiogroup" aria-label="Scope" className="flex flex-row gap-2">
-          {SCOPES.map((option) => (
+        <div role="radiogroup" aria-label="Author" className="flex flex-row flex-wrap gap-2">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={memberId === undefined}
+            data-testid="author-all"
+            onClick={() => setMemberId(undefined)}
+            className={buttonContainerClass(memberId === undefined ? 'primary' : 'secondary', 'sm')}
+          >
+            <span
+              className={buttonLabelClass(memberId === undefined ? 'primary' : 'secondary', 'sm')}
+            >
+              Everyone
+            </span>
+          </button>
+
+          {(members.data ?? []).map((member) => (
             <button
-              key={option.value}
+              key={member.userId}
               type="button"
               role="radio"
-              aria-checked={scope === option.value}
-              data-testid={`scope-${option.value}`}
-              onClick={() => setScope(option.value)}
+              aria-checked={memberId === member.userId}
+              data-testid={`author-${member.userId}`}
+              onClick={() => setMemberId(member.userId)}
               className={buttonContainerClass(
-                scope === option.value ? 'primary' : 'secondary',
+                memberId === member.userId ? 'primary' : 'secondary',
                 'sm',
               )}
             >
               <span
-                className={buttonLabelClass(scope === option.value ? 'primary' : 'secondary', 'sm')}
+                className={buttonLabelClass(
+                  memberId === member.userId ? 'primary' : 'secondary',
+                  'sm',
+                )}
               >
-                {option.label}
+                {member.displayName}
               </span>
             </button>
           ))}
@@ -139,7 +159,12 @@ export function ExpenseList({ userId }: { userId: string | undefined }) {
                         'Uncategorised'
                       )}
                       <span>{row.occurred_on}</span>
-                      {row.visibility === 'personal' ? <span>Personal</span> : null}
+                      {/* The author, which replaced the personal/shared badge.
+                          A member whose profile is not readable still needs
+                          something in this slot. */}
+                      <span data-testid="expense-author">
+                        {authorFor.get(row.created_by) ?? 'Member'}
+                      </span>
                     </span>
                   </div>
 

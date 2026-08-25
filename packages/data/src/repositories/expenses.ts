@@ -14,7 +14,6 @@ export type ExpenseRow = Pick<
   | 'id'
   | 'household_id'
   | 'created_by'
-  | 'visibility'
   | 'amount_minor'
   | 'currency'
   | 'base_amount_minor'
@@ -25,7 +24,7 @@ export type ExpenseRow = Pick<
 >;
 
 const COLUMNS =
-  'id, household_id, created_by, visibility, amount_minor, currency, base_amount_minor, category_id, merchant, note, occurred_on';
+  'id, household_id, created_by, amount_minor, currency, base_amount_minor, category_id, merchant, note, occurred_on';
 
 export const DEFAULT_PAGE_SIZE = 25;
 
@@ -54,14 +53,14 @@ export async function listExpenses(
 ): Promise<ExpensePage> {
   let query = db.from('expenses').select(COLUMNS).is('deleted_at', null);
 
-  const { from, to, categoryId, memberId, scope } = filter as ExpenseFilter;
+  const { from, to, categoryId, memberId } = filter as ExpenseFilter;
 
   if (from) query = query.gte('occurred_on', from);
   if (to) query = query.lte('occurred_on', to);
   if (categoryId) query = query.eq('category_id', categoryId);
+  // The author filter. Every member sees every expense, so this narrows the
+  // list rather than deciding what is reachable.
   if (memberId) query = query.eq('created_by', memberId);
-  // 'all' is the absence of a filter, not a value to compare against.
-  if (scope && scope !== 'all') query = query.eq('visibility', scope);
 
   if (cursor) {
     // Strictly after the cursor in (occurred_on desc, id desc) order: an
@@ -117,7 +116,6 @@ export async function createExpense(
       fx_rate: 1,
 
       occurred_on: parsed.occurredOn,
-      visibility: parsed.visibility,
       category_id: parsed.categoryId ?? null,
       merchant: parsed.merchant ?? null,
       note: parsed.note ?? null,

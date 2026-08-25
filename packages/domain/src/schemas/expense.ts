@@ -16,8 +16,6 @@ export const uuidSchema = z
   .string()
   .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'Must be a UUID');
 
-export const visibilitySchema = z.enum(['personal', 'shared']);
-
 /** Blank strings become absent, so the database stores NULL rather than ''. */
 const optionalText = z
   .string()
@@ -34,7 +32,6 @@ export const createExpenseInput = z.object({
     .positive('Amount must be greater than zero'),
   currency: currencyCodeSchema,
   occurredOn: isoDateSchema,
-  visibility: visibilitySchema.default('shared'),
   categoryId: uuidSchema.optional(),
   merchant: optionalText,
   note: optionalText,
@@ -43,8 +40,9 @@ export const createExpenseInput = z.object({
 /**
  * The shape a caller supplies, not the shape parsing produces.
  *
- * `z.infer` would give the output: visibility already defaulted, and merchant
- * present but possibly undefined. Callers hold neither, so the input type is
+ * `z.infer` would give the output, with merchant present but possibly
+ * undefined and every blank string already dropped. Callers hold neither of
+ * those, so the input type is
  * the honest one for a function signature. Repositories work with the parsed
  * value, whose type is inferred at the parse call.
  */
@@ -56,15 +54,16 @@ export const updateExpenseInput = createExpenseInput.partial().extend({
 
 export type UpdateExpenseInput = z.input<typeof updateExpenseInput>;
 
-export const expenseScopeSchema = z.enum(['all', 'personal', 'shared']);
-
+/**
+ * `memberId` is the author filter. There is no scope any more: every member
+ * sees every expense, so the only meaningful narrowing is "whose".
+ */
 export const expenseFilter = z
   .object({
     from: isoDateSchema.optional(),
     to: isoDateSchema.optional(),
     categoryId: uuidSchema.optional(),
     memberId: uuidSchema.optional(),
-    scope: expenseScopeSchema.default('all'),
   })
   .refine((filter) => !filter.from || !filter.to || filter.from <= filter.to, {
     message: 'Range end must not precede its start',

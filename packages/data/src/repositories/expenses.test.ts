@@ -77,7 +77,6 @@ function row(overrides: Partial<ExpenseRow> = {}): ExpenseRow {
     id: 'e1',
     household_id: HOUSEHOLD,
     created_by: USER,
-    visibility: 'shared',
     amount_minor: 1250,
     currency: 'USD',
     base_amount_minor: 1250,
@@ -129,18 +128,12 @@ describe('listExpenses', () => {
     expect(recorder.filters).toContainEqual(['eq', 'created_by', USER]);
   });
 
-  it('filters by scope', async () => {
+  // Every member sees every expense, so the author filter narrows the list
+  // rather than deciding what is reachable. There is no scope any more.
+  it('never filters on visibility, which no longer exists', async () => {
     const { db, recorder } = fakeDb({ data: [row()], error: null });
 
-    await listExpenses(db, { scope: 'personal' });
-
-    expect(recorder.filters).toContainEqual(['eq', 'visibility', 'personal']);
-  });
-
-  it('applies no visibility filter for the default scope', async () => {
-    const { db, recorder } = fakeDb({ data: [row()], error: null });
-
-    await listExpenses(db, { scope: 'all' });
+    await listExpenses(db, { memberId: USER });
 
     expect(recorder.filters.some(([, column]) => column === 'visibility')).toBe(false);
   });
@@ -195,7 +188,6 @@ describe('createExpense', () => {
     amountMinor: 1250,
     currency: 'USD',
     occurredOn: '2026-08-25',
-    visibility: 'shared' as const,
     categoryId: CATEGORY,
     merchant: 'Blue Bottle',
   };

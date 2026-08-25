@@ -162,7 +162,6 @@ export type Database = {
           review_status: Database["public"]["Enums"]["review_status"]
           source: Database["public"]["Enums"]["expense_source"]
           updated_at: string
-          visibility: Database["public"]["Enums"]["visibility"]
         }
         Insert: {
           amount_minor: number
@@ -186,7 +185,6 @@ export type Database = {
           review_status?: Database["public"]["Enums"]["review_status"]
           source?: Database["public"]["Enums"]["expense_source"]
           updated_at?: string
-          visibility?: Database["public"]["Enums"]["visibility"]
         }
         Update: {
           amount_minor?: number
@@ -210,7 +208,6 @@ export type Database = {
           review_status?: Database["public"]["Enums"]["review_status"]
           source?: Database["public"]["Enums"]["expense_source"]
           updated_at?: string
-          visibility?: Database["public"]["Enums"]["visibility"]
         }
         Relationships: [
           {
@@ -436,7 +433,6 @@ export type Database = {
       member_role: "owner" | "adult" | "viewer"
       member_status: "active" | "removed"
       review_status: "confirmed" | "needs_review" | "rejected"
-      visibility: "personal" | "shared"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -569,7 +565,6 @@ export const Constants = {
       member_role: ["owner", "adult", "viewer"],
       member_status: ["active", "removed"],
       review_status: ["confirmed", "needs_review", "rejected"],
-      visibility: ["personal", "shared"],
     },
   },
 } as const
