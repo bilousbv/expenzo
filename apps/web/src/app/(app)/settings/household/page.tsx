@@ -1,5 +1,6 @@
 import { Card } from '@expenzo/ui';
 import { headers } from 'next/headers';
+import Link from 'next/link';
 
 import { HouseholdInvite } from '@/features/household/household-invite';
 import { createClient } from '@/lib/supabase/server';
@@ -56,6 +57,13 @@ export default async function HouseholdSettingsPage() {
       <Card className="gap-gutter">
         <h2 className="text-lg font-semibold text-content">Invite someone</h2>
         <HouseholdInvite origin={origin} />
+      </Card>
+
+      <Card className="gap-gutter">
+        <h2 className="text-lg font-semibold text-content">Categories</h2>
+        <Link href="/settings/categories" className="text-brand-600 underline">
+          Manage categories
+        </Link>
       </Card>
     </main>
   );

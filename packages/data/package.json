@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@expenzo/domain": "workspace:*",
     "@expenzo/supabase-types": "workspace:*"
   },
   "peerDependencies": {
