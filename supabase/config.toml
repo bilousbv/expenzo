@@ -160,14 +160,34 @@ site_url = "http://127.0.0.1:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
+# This is an exact-match allow-list, and a redirect that is not on it does not
+# error — GoTrue silently falls back to site_url. That failure mode cost real
+# time: `pnpm dev` prints localhost:3000, the app built its emailRedirectTo from
+# window.location.origin, the address was not listed, and every magic link
+# quietly landed on the site root instead of /auth/callback. The code was never
+# exchanged and the user simply arrived back at the login page.
+#
+# localhost and 127.0.0.1 are different origins to both the browser and this
+# list, so both spellings of every port have to be here.
+#
+# The `/**` entries are load-bearing, not belt-and-braces. The callback URL
+# carries `?next=`, and an exact entry stops matching once a query string is
+# appended — inconsistently, too: 127.0.0.1 tolerated the query while localhost
+# did not. The wildcard form is the documented way to allow a query, and it
+# behaves the same for every host.
 additional_redirect_urls = [
   "http://127.0.0.1:3000",
-  "http://127.0.0.1:3000/auth/callback",
+  "http://127.0.0.1:3000/**",
+  "http://localhost:3000",
+  "http://localhost:3000/**",
   # Playwright's webServer runs the production build on a separate port.
   "http://127.0.0.1:3100",
-  "http://127.0.0.1:3100/auth/callback",
+  "http://127.0.0.1:3100/**",
+  "http://localhost:3100",
+  "http://localhost:3100/**",
   # Expo deep link, matching `scheme` in apps/mobile/app.json.
   "expenzo://auth/callback",
+  "expenzo://auth/callback/**",
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
@@ -187,7 +207,9 @@ enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts
 enable_manual_linking = false
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
-minimum_password_length = 6
+# Kept in step with passwordSchema in packages/domain/src/schemas/auth.ts. If the
+# two drift, the browser accepts a password the server then refuses.
+minimum_password_length = 8
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
 password_requirements = ""
@@ -332,6 +354,10 @@ max_frequency = "5s"
 # Apple and Google stay disabled until real credentials exist; both are flipped on
 # in M1.5. Sign in with Apple is not optional once Google is offered — App Store
 # guideline 4.8 requires it. Secrets come from the environment, never from git.
+# To turn Apple on: set this to true and put the Services ID and the signed JWT
+# secret in the environment. `enabled` cannot be env()-substituted — the CLI
+# parses this file as TOML before expanding, and a string where a boolean
+# belongs fails with "unexpected character 'n' while scanning for a number".
 [auth.external.apple]
 enabled = false
 client_id = "env(SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID)"
@@ -347,6 +373,8 @@ skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
 email_optional = false
 
+# To turn Google on: set this to true and put the client id and secret in the
+# environment. See the note on [auth.external.apple] about env() and booleans.
 [auth.external.google]
 enabled = false
 client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"

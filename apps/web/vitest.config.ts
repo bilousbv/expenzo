@@ -15,6 +15,7 @@ export default defineConfig({
       // and stops Vite pre-bundling it as an ordinary node_modules dependency.
       '@expenzo/ui': path.resolve(__dirname, '../../packages/ui/src/index.ts'),
       '@expenzo/data': path.resolve(__dirname, '../../packages/data/src/index.ts'),
+      '@expenzo/domain': path.resolve(__dirname, '../../packages/domain/src/index.ts'),
       '@expenzo/supabase-types': path.resolve(
         __dirname,
         '../../packages/supabase-types/src/index.ts',

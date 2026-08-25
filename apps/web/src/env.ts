@@ -5,9 +5,13 @@
  * producing an `undefined` URL and a confusing fetch error on the first query.
  */
 
+import type { OAuthProvider } from '@expenzo/domain';
+
 export interface WebEnv {
   readonly NEXT_PUBLIC_SUPABASE_URL: string;
   readonly NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+  /** Only the third-party providers that actually have credentials configured. */
+  readonly oauthProviders: readonly OAuthProvider[];
 }
 
 type Source = Record<string, string | undefined>;
@@ -34,7 +38,23 @@ export function parseWebEnv(source: Source): WebEnv {
   return {
     NEXT_PUBLIC_SUPABASE_URL: url,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: required(source, 'NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+    oauthProviders: parseProviders(source),
   };
+}
+
+/**
+ * Next inlines these as strings, so every value arrives as text. Only an
+ * explicit "true" counts: "false" and "0" are both truthy strings, and turning
+ * a provider on by accident produces a button that can only fail.
+ */
+function parseProviders(source: Source): OAuthProvider[] {
+  const providers: OAuthProvider[] = [];
+
+  // Google first, matching the order the buttons render in.
+  if (source.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH?.trim() === 'true') providers.push('google');
+  if (source.NEXT_PUBLIC_ENABLE_APPLE_AUTH?.trim() === 'true') providers.push('apple');
+
+  return providers;
 }
 
 let cached: WebEnv | null = null;
@@ -45,6 +65,8 @@ export function env(): WebEnv {
   cached ??= parseWebEnv({
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH,
+    NEXT_PUBLIC_ENABLE_APPLE_AUTH: process.env.NEXT_PUBLIC_ENABLE_APPLE_AUTH,
   });
 
   return cached;

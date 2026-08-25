@@ -34,6 +34,7 @@ function RootNavigator() {
 
       <Stack.Protected guard={!session}>
         <Stack.Screen name="(auth)/sign-in" />
+        <Stack.Screen name="(auth)/register" />
       </Stack.Protected>
 
       {/* Reachable either way: it is what completes the sign-in. */}

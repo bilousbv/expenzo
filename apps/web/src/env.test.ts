@@ -9,7 +9,7 @@ const valid = {
 
 describe('parseWebEnv', () => {
   it('accepts a complete environment', () => {
-    expect(parseWebEnv(valid)).toEqual(valid);
+    expect(parseWebEnv(valid)).toEqual({ ...valid, oauthProviders: [] });
   });
 
   // A missing variable should fail at startup with the variable's name, rather
@@ -30,5 +30,40 @@ describe('parseWebEnv', () => {
     expect(() => parseWebEnv({ ...valid, NEXT_PUBLIC_SUPABASE_URL: 'not-a-url' })).toThrow(
       /NEXT_PUBLIC_SUPABASE_URL/,
     );
+  });
+
+  // Apple and Google are configured in supabase/config.toml but disabled until
+  // real credentials exist. A button for a provider that is off can only fail,
+  // so the flags decide whether it is rendered at all.
+  it('offers no third-party providers by default', () => {
+    expect(parseWebEnv(valid).oauthProviders).toEqual([]);
+  });
+
+  it('enables a provider when its flag is set', () => {
+    expect(
+      parseWebEnv({ ...valid, NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: 'true' }).oauthProviders,
+    ).toEqual(['google']);
+  });
+
+  // Google before Apple, matching the order the buttons are rendered in.
+  it('keeps a stable order when both are enabled', () => {
+    expect(
+      parseWebEnv({
+        ...valid,
+        NEXT_PUBLIC_ENABLE_APPLE_AUTH: 'true',
+        NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: 'true',
+      }).oauthProviders,
+    ).toEqual(['google', 'apple']);
+  });
+
+  // Next inlines these as strings, so every value arrives as text. Only an
+  // explicit "true" counts — "false", "0" and a stray empty string must not
+  // switch a provider on.
+  it('treats anything other than "true" as off', () => {
+    for (const value of ['false', '0', '', 'yes', undefined]) {
+      expect(
+        parseWebEnv({ ...valid, NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: value }).oauthProviders,
+      ).toEqual([]);
+    }
   });
 });

@@ -23,6 +23,15 @@ export { matchScore, normalizeMerchant, stringSimilarity } from './dedup';
 export type { MatchCandidate } from './dedup';
 
 export {
+  credentialsSchema,
+  emailSchema,
+  oauthProviderSchema,
+  passwordSchema,
+  registrationSchema,
+} from './schemas/auth';
+export type { Credentials, OAuthProvider, Registration } from './schemas/auth';
+
+export {
   createExpenseInput,
   currencyCodeSchema,
   expenseFilter,
