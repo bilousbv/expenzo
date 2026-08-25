@@ -5,7 +5,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(29);
+select plan(28);
 
 -- Tables
 select has_table('public', 'profiles', 'profiles exists');
@@ -76,7 +76,8 @@ select has_index(
 );
 
 -- Enum types
-select has_type('public', 'visibility', 'visibility enum exists');
+-- `visibility` was dropped when the personal/shared split went; that it is gone
+-- is asserted in rls_expenses.test.sql, next to the behaviour that replaced it.
 select has_type('public', 'member_role', 'member_role enum exists');
 select has_type('public', 'expense_source', 'expense_source enum exists');
 

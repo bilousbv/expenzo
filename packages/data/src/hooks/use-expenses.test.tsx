@@ -16,7 +16,6 @@ function expenseRow(id: string, occurredOn = '2026-08-25') {
     id,
     household_id: HOUSEHOLD,
     created_by: USER,
-    visibility: 'shared',
     amount_minor: 1250,
     currency: 'USD',
     base_amount_minor: 1250,
@@ -129,19 +128,17 @@ describe('useExpenses', () => {
     const client = newQueryClient();
     const { db } = fakeDb([[expenseRow('a')]]);
 
-    renderHook(() => useExpenses({ householdId: HOUSEHOLD, filter: { scope: 'personal' } }), {
+    renderHook(() => useExpenses({ householdId: HOUSEHOLD, filter: { memberId: USER } }), {
       wrapper: wrapper(db, client),
     });
 
     await waitFor(() =>
       expect(
-        client.getQueryData(queryKeys.expenses.list(HOUSEHOLD, { scope: 'personal' })),
+        client.getQueryData(queryKeys.expenses.list(HOUSEHOLD, { memberId: USER })),
       ).toBeDefined(),
     );
 
-    expect(
-      client.getQueryData(queryKeys.expenses.list(HOUSEHOLD, { scope: 'shared' })),
-    ).toBeUndefined();
+    expect(client.getQueryData(queryKeys.expenses.list(HOUSEHOLD, {}))).toBeUndefined();
   });
 
   it('does not run until the household id is known', () => {

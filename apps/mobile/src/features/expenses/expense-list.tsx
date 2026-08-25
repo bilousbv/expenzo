@@ -1,4 +1,10 @@
-import { useCategories, useCurrentHousehold, useDeleteExpense, useExpenses } from '@expenzo/data';
+import {
+  useCategories,
+  useCurrentHousehold,
+  useDeleteExpense,
+  useExpenses,
+  useHouseholdMembers,
+} from '@expenzo/data';
 import type { ExpenseFilter } from '@expenzo/domain';
 import {
   Button,
@@ -11,23 +17,24 @@ import {
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-const SCOPES = [
-  { value: 'all', label: 'All' },
-  { value: 'shared', label: 'Shared' },
-  { value: 'personal', label: 'Personal' },
-] as const;
-
 export function ExpenseListView() {
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
   const currency = household.data?.base_currency ?? 'USD';
 
-  const [scope, setScope] = useState<ExpenseFilter['scope']>('all');
-  const filter = useMemo(() => ({ scope }), [scope]);
+  // The author filter. Every member sees every expense, so this narrows the
+  // list rather than deciding what is reachable.
+  const [memberId, setMemberId] = useState<string | undefined>(undefined);
+  const filter = useMemo<ExpenseFilter>(() => (memberId ? { memberId } : {}), [memberId]);
 
   const categories = useCategories(householdId);
+  const members = useHouseholdMembers(householdId);
   const expenses = useExpenses({ householdId, filter });
   const remove = useDeleteExpense(householdId);
+
+  const authorFor = new Map(
+    (members.data ?? []).map((member) => [member.userId, member.displayName]),
+  );
 
   const options: CategoryOption[] = (categories.data ?? []).map((category) => ({
     id: category.id,
@@ -52,16 +59,29 @@ export function ExpenseListView() {
         </Text>
       </Card>
 
-      <View accessibilityRole="radiogroup" accessibilityLabel="Scope" className="flex-row gap-2">
-        {SCOPES.map((option) => (
+      <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel="Author"
+        className="flex-row flex-wrap gap-2"
+      >
+        <Button
+          testID="author-all"
+          variant={memberId === undefined ? 'primary' : 'secondary'}
+          size="sm"
+          onPress={() => setMemberId(undefined)}
+        >
+          Everyone
+        </Button>
+
+        {(members.data ?? []).map((member) => (
           <Button
-            key={option.value}
-            testID={`scope-${option.value}`}
-            variant={scope === option.value ? 'primary' : 'secondary'}
+            key={member.userId}
+            testID={`author-${member.userId}`}
+            variant={memberId === member.userId ? 'primary' : 'secondary'}
             size="sm"
-            onPress={() => setScope(option.value)}
+            onPress={() => setMemberId(member.userId)}
           >
-            {option.label}
+            {member.displayName}
           </Button>
         ))}
       </View>
@@ -92,9 +112,12 @@ export function ExpenseListView() {
                         style={categoryDotStyle(category.color)}
                       />
                     ) : null}
-                    <Text className="text-xs text-content-muted">
-                      {category?.name ?? 'Uncategorised'} · {row.occurred_on}
-                      {row.visibility === 'personal' ? ' · Personal' : ''}
+                    {/* The author, which replaced the personal/shared badge. A
+                        member whose profile is not readable still needs
+                        something in this slot. */}
+                    <Text testID="expense-author" className="text-xs text-content-muted">
+                      {category?.name ?? 'Uncategorised'} · {row.occurred_on} ·{' '}
+                      {authorFor.get(row.created_by) ?? 'Member'}
                     </Text>
                   </View>
                 </View>

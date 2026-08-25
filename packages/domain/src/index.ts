@@ -39,11 +39,9 @@ export {
   createExpenseInput,
   currencyCodeSchema,
   expenseFilter,
-  expenseScopeSchema,
   isoDateSchema,
   updateExpenseInput,
   uuidSchema,
-  visibilitySchema,
 } from './schemas/expense';
 export type { CreateExpenseInput, ExpenseFilter, UpdateExpenseInput } from './schemas/expense';
 

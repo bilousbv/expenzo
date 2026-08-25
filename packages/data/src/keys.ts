@@ -7,7 +7,6 @@
  */
 
 export interface ExpenseListFilter {
-  readonly scope?: 'all' | 'personal' | 'shared';
   readonly from?: string;
   readonly to?: string;
   readonly categoryId?: string;

@@ -42,7 +42,6 @@ describe('ExpenseForm (native)', () => {
           amountMinor: 1250,
           currency: 'USD',
           occurredOn: '2026-08-25',
-          visibility: 'shared',
         }),
       ),
     );
@@ -61,17 +60,19 @@ describe('ExpenseForm (native)', () => {
     );
   });
 
-  it('can be marked personal', async () => {
+  // Every member of a household sees every expense, so there is nothing to
+  // choose here any more and nothing to send.
+  it('offers no privacy control and sends no visibility', async () => {
     const onCreate = jest.fn<Create>().mockResolvedValue(undefined);
     renderForm(onCreate);
 
+    expect(screen.queryByTestId('expense-personal')).toBeNull();
+
     fireEvent.changeText(screen.getByTestId('amount-field'), '12.50');
-    fireEvent.press(screen.getByTestId('expense-personal'));
     fireEvent.press(screen.getByTestId('expense-submit'));
 
-    await waitFor(() =>
-      expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ visibility: 'personal' })),
-    );
+    await waitFor(() => expect(onCreate).toHaveBeenCalled());
+    expect(onCreate.mock.calls[0]?.[0]).not.toHaveProperty('visibility');
   });
 
   it('refuses to submit without an amount', async () => {

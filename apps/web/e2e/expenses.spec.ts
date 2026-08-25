@@ -61,23 +61,46 @@ test.describe('expenses', () => {
     await expect(row).toContainText('Groceries');
   });
 
-  test('keeps a personal expense out of the shared list', async ({ page }) => {
-    const merchant = uniqueMerchant('Private');
+  // Every member sees every expense now, so the row carries its author instead
+  // of a privacy badge. There is no way to enter one that anybody is hidden
+  // from — which is the whole point of the change.
+  test('attributes each expense to its author', async ({ page }) => {
+    const merchant = uniqueMerchant('Attributed');
 
     await page.goto('/');
 
     await page.getByLabel('Amount').fill('9.99');
     await page.getByLabel('Merchant').fill(merchant);
-    await page.getByLabel('Personal').check();
     await page.getByRole('button', { name: 'Add expense' }).click();
 
-    await expect(page.getByTestId('expense-row').filter({ hasText: merchant })).toBeVisible();
+    const row = page.getByTestId('expense-row').filter({ hasText: merchant });
+    await expect(row).toBeVisible();
+    await expect(row.getByTestId('expense-author')).not.toBeEmpty();
 
-    await page.getByTestId('scope-shared').click();
-    await expect(page.getByTestId('expense-row').filter({ hasText: merchant })).toHaveCount(0);
+    // The form no longer offers a privacy control at all.
+    await expect(page.getByLabel('Personal')).toHaveCount(0);
+  });
 
-    await page.getByTestId('scope-personal').click();
-    await expect(page.getByTestId('expense-row').filter({ hasText: merchant })).toBeVisible();
+  test('narrows the list to one author and back', async ({ page }) => {
+    const merchant = uniqueMerchant('Mine');
+
+    await page.goto('/');
+
+    await page.getByLabel('Amount').fill('4.00');
+    await page.getByLabel('Merchant').fill(merchant);
+    await page.getByRole('button', { name: 'Add expense' }).click();
+
+    const row = page.getByTestId('expense-row').filter({ hasText: merchant });
+    await expect(row).toBeVisible();
+
+    // The signed-in member is the only one in this household, so filtering to
+    // them keeps the row and "Everyone" brings the unfiltered list back.
+    const authorButtons = page.getByRole('radio');
+    await authorButtons.nth(1).click();
+    await expect(row).toBeVisible();
+
+    await page.getByTestId('author-all').click();
+    await expect(row).toBeVisible();
   });
 
   test('refuses an amount that is not a number', async ({ page }) => {

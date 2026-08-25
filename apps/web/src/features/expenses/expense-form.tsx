@@ -33,7 +33,6 @@ export function ExpenseForm({
   const dateId = useId();
   const merchantId = useId();
   const noteId = useId();
-  const personalId = useId();
 
   // The amount field owns its own text; this is only the parsed reading. It is
   // keyed so a successful add resets the text as well as the number.
@@ -44,7 +43,6 @@ export function ExpenseForm({
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
   const [merchant, setMerchant] = useState('');
   const [note, setNote] = useState('');
-  const [personal, setPersonal] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -60,7 +58,6 @@ export function ExpenseForm({
       amountMinor,
       currency,
       occurredOn,
-      visibility: personal ? 'personal' : 'shared',
       categoryId,
       merchant,
       note,
@@ -138,19 +135,6 @@ export function ExpenseForm({
         onChange={(event) => setNote(event.target.value)}
         className={inputClass}
       />
-
-      {/* Shared by default: a household ledger is the point, so keeping an
-          expense to yourself is the deliberate choice. */}
-      <label htmlFor={personalId} className="flex flex-row items-center gap-2 text-sm text-content">
-        <input
-          id={personalId}
-          name="personal"
-          type="checkbox"
-          checked={personal}
-          onChange={(event) => setPersonal(event.target.checked)}
-        />
-        Personal
-      </label>
 
       <button
         type="submit"
