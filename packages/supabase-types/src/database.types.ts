@@ -321,7 +321,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          owner_id: string
+          owner_id: string | null
           timezone: string
           updated_at: string
           week_starts_on: number
@@ -331,7 +331,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
-          owner_id: string
+          owner_id?: string | null
           timezone?: string
           updated_at?: string
           week_starts_on?: number
@@ -341,7 +341,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          owner_id?: string
+          owner_id?: string | null
           timezone?: string
           updated_at?: string
           week_starts_on?: number
