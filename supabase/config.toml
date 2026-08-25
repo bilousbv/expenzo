@@ -185,9 +185,18 @@ additional_redirect_urls = [
   "http://127.0.0.1:3100/**",
   "http://localhost:3100",
   "http://localhost:3100/**",
-  # Expo deep link, matching `scheme` in apps/mobile/app.json.
+  # Expo deep link, matching `scheme` in apps/mobile/app.json. This is what a
+  # development or production build registers.
   "expenzo://auth/callback",
   "expenzo://auth/callback/**",
+  # Expo Go does not get the custom scheme — it serves the app under
+  # exp://<lan-ip>:8081/--/auth/callback, where the address changes with the
+  # network. Without this the magic link on a physical device fails exactly the
+  # way it failed on localhost: silently, by falling back to site_url.
+  #
+  # Local only. This file configures the Docker stack; production redirect URLs
+  # are set in the dashboard and must never carry a wildcard this broad.
+  "exp://**",
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
