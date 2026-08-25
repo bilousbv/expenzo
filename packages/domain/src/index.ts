@@ -24,6 +24,8 @@ export type { MatchCandidate } from './dedup';
 
 export { slugify } from './slug';
 
+export { formatMinorUnits, parseAmountInput } from './amount';
+
 export {
   credentialsSchema,
   emailSchema,

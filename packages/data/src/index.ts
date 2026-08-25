@@ -12,6 +12,17 @@ export {
 } from './repositories/categories';
 export type { CategoryRow } from './repositories/categories';
 
+export {
+  createExpense,
+  deleteExpense,
+  listExpenses,
+  DEFAULT_PAGE_SIZE,
+} from './repositories/expenses';
+export type { ExpenseCursor, ExpensePage, ExpenseRow } from './repositories/expenses';
+
+export { useCreateExpense, useDeleteExpense, useExpenses } from './hooks/use-expenses';
+export type { UseExpensesOptions } from './hooks/use-expenses';
+
 export { getCurrentHousehold } from './repositories/households';
 export type { HouseholdRow } from './repositories/households';
 

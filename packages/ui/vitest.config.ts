@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
@@ -6,6 +8,13 @@ import { defineConfig } from 'vitest/config';
 // the React Native halves are covered from apps/mobile under jest-expo.
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      // @expenzo/domain ships TypeScript source. Aliasing at the entry file
+      // keeps resolution deterministic across the hoisted-linker symlink.
+      '@expenzo/domain': path.resolve(__dirname, '../domain/src/index.ts'),
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: false,
