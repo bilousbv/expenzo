@@ -113,11 +113,21 @@ test.describe('registration', () => {
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  // No credentials are configured locally, so neither button should be there to
-  // click. A provider that is off produces a button that can only fail.
-  test('shows no third-party buttons when none are configured', async ({ page }) => {
+  // A provider that is off produces a button that can only fail, so the buttons
+  // have to match what is configured. Asserting a flat zero was the same test
+  // for as long as nobody had credentials, and turned red the day someone did —
+  // the flags are read here from the same .env.local the build read, so this
+  // holds whether a provider is on or off.
+  test('shows exactly the third-party buttons that are configured', async ({ page }) => {
+    const configured = [
+      process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH,
+      process.env.NEXT_PUBLIC_ENABLE_APPLE_AUTH,
+    ].filter((flag) => flag?.trim() === 'true');
+
     await page.goto('/login');
 
-    await expect(page.getByRole('button', { name: /continue with/i })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /continue with/i })).toHaveCount(
+      configured.length,
+    );
   });
 });

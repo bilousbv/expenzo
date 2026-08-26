@@ -385,7 +385,7 @@ email_optional = false
 # To turn Google on: set this to true and put the client id and secret in the
 # environment. See the note on [auth.external.apple] about env() and booleans.
 [auth.external.google]
-enabled = false
+enabled = true
 client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
 redirect_uri = ""
