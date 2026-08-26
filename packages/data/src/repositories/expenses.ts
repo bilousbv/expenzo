@@ -111,12 +111,12 @@ export async function createExpense(
       amount_minor: parsed.amountMinor,
       currency: parsed.currency,
 
-      // No rate table until M1.8, so an expense is recorded in the household's
-      // own currency at a rate of one. base_amount_minor is NOT NULL, so it has
-      // to be written either way.
-      base_amount_minor: parsed.amountMinor,
-      fx_rate: 1,
-
+      // base_amount_minor, fx_rate and fx_rate_date are deliberately absent.
+      // The expenses_set_base_amount trigger converts into the household's base
+      // currency at the rate for the day the expense happened, and overwrites
+      // anything a client sends — that figure is what every household total is
+      // summed from, and a client that is lying about it cannot be told from
+      // one that is merely wrong.
       occurred_on: parsed.occurredOn,
       category_id: parsed.categoryId ?? null,
       merchant: parsed.merchant ?? null,

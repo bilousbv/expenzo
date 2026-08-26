@@ -4,6 +4,9 @@ export type { CurrencyCode } from './currency';
 export { addMoney, compareMoney, isZeroMoney, money, negateMoney, sumMoney } from './money';
 export type { Money } from './money';
 
+export { convertMinor, deriveRate, parseEcbDailyXml } from './fx';
+export type { EcbDailyRates } from './fx';
+
 export {
   addDays,
   daysInMonth,

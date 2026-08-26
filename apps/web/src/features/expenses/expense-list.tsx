@@ -33,6 +33,7 @@ export function ExpenseList({
 }) {
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
+  const baseCurrency = household.data?.base_currency;
 
   const categories = useCategories(householdId);
   const members = useHouseholdMembers(householdId);
@@ -89,15 +90,29 @@ export function ExpenseList({
                 </div>
 
                 <div className="flex flex-row items-center gap-3">
-                  {/* Income is signed here for the reader's benefit only — the
-                      stored amount is positive and the direction carries the
-                      meaning. */}
-                  <span
-                    data-testid="expense-amount"
-                    className={income ? 'text-green-700' : 'text-content'}
-                  >
-                    {income ? '+' : ''}
-                    {formatCurrency(row.amount_minor, row.currency)}
+                  <span className="flex flex-col items-end">
+                    {/* Income is signed here for the reader's benefit only — the
+                        stored amount is positive and the direction carries the
+                        meaning. */}
+                    <span
+                      data-testid="expense-amount"
+                      className={income ? 'text-green-700' : 'text-content'}
+                    >
+                      {income ? '+' : ''}
+                      {formatCurrency(row.amount_minor, row.currency)}
+                    </span>
+
+                    {/* What this row contributed to the totals above. Shown only
+                        when it differs, so the common case stays uncluttered
+                        and a foreign amount never looks like it was ignored. */}
+                    {baseCurrency && row.currency !== baseCurrency ? (
+                      <span
+                        data-testid="expense-base-amount"
+                        className="text-xs text-content-muted"
+                      >
+                        ≈ {formatCurrency(row.base_amount_minor, baseCurrency)}
+                      </span>
+                    ) : null}
                   </span>
                   <button
                     type="button"

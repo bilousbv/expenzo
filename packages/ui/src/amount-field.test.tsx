@@ -74,6 +74,22 @@ describe('AmountField (web)', () => {
     expect(screen.getByTestId('amount-preview')).toHaveTextContent('¥1,000');
   });
 
+  // The exponent is part of the reading, so switching currency after typing
+  // changes what the same text means. Without re-reading, "1000" typed as
+  // dollars stays 100000 minor units and is then filed as 100000 yen.
+  it('re-reads what was typed when the currency changes', async () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<AmountField currency="USD" onChange={onChange} />);
+
+    await userEvent.type(screen.getByLabelText('Amount'), '1000');
+    expect(onChange).toHaveBeenLastCalledWith(100000);
+
+    rerender(<AmountField currency="JPY" onChange={onChange} />);
+
+    expect(onChange).toHaveBeenLastCalledWith(1000);
+    expect(screen.getByTestId('amount-preview')).toHaveTextContent('¥1,000');
+  });
+
   it('shows an initial amount in editable form', () => {
     render(<AmountField currency="USD" valueMinor={1250} onChange={vi.fn()} />);
 

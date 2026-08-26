@@ -8,6 +8,7 @@ import {
   useHouseholdMembers,
   useLimits,
   usePeriodSummary,
+  useSupportedCurrencies,
 } from '@expenzo/data';
 import {
   localDateIn,
@@ -49,6 +50,8 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
   const members = useHouseholdMembers(householdId);
   const categories = useCategories(householdId);
   const limits = useLimits(householdId);
+  // Held for a day: rates change daily, the set of quoted currencies does not.
+  const currencies = useSupportedCurrencies(household.data?.base_currency);
   const summary = usePeriodSummary(householdId, window);
   const categorySpend = useCategorySpend(householdId, window);
   const create = useCreateExpense(householdId, userId);
@@ -201,6 +204,7 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
           timeZone={timeZone}
           today={localDateIn(new Date(), timeZone)}
           categories={options}
+          currencies={currencies.data}
           onCreate={handleCreate}
           disabled={!householdId}
         />

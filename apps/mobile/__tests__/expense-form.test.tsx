@@ -16,12 +16,13 @@ const categories: CategoryOption[] = [
   { id: DINING, name: 'Dining out', color: '#f97316', icon: null },
 ];
 
-function renderForm(onCreate: jest.Mock<Create>) {
+function renderForm(onCreate: jest.Mock<Create>, currencies?: string[]) {
   render(
     <ExpenseForm
       currency="USD"
       today="2026-08-25"
       categories={categories}
+      currencies={currencies}
       onCreate={onCreate}
       autoFocusAmount={false}
     />,
@@ -113,6 +114,32 @@ describe('ExpenseForm (native)', () => {
     await waitFor(() => expect(onCreate).toHaveBeenCalled());
     expect(screen.getByTestId('expense-merchant').props.value).toBe('Blue Bottle');
     expect(screen.getByTestId('amount-field').props.value).toBe('');
+  });
+
+  // A household with one currency has nothing to choose, and a picker holding a
+  // single item is furniture.
+  it('offers no currency control when only the household currency is available', () => {
+    renderForm(jest.fn<Create>());
+
+    expect(screen.queryByTestId('currency-select')).toBeNull();
+  });
+
+  // The expense keeps the currency it was entered in. The conversion into the
+  // household's base currency happens in the database, once, at write time.
+  it('sends the chosen currency rather than the household one', async () => {
+    const onCreate = jest.fn<Create>().mockResolvedValue(undefined);
+    renderForm(onCreate, ['EUR', 'USD']);
+
+    fireEvent.press(screen.getByTestId('currency-select'));
+    fireEvent.press(screen.getByTestId('currency-select-option-EUR'));
+    fireEvent.changeText(screen.getByTestId('amount-field'), '20');
+    fireEvent.press(screen.getByTestId('expense-submit'));
+
+    await waitFor(() =>
+      expect(onCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ currency: 'EUR', amountMinor: 2000 }),
+      ),
+    );
   });
 
   it('surfaces a failure without losing what was typed', async () => {

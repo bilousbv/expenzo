@@ -19,6 +19,7 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 export function ExpenseListView({ filter }: { filter: ExpenseFilter }) {
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
+  const baseCurrency = household.data?.base_currency;
 
   const categories = useCategories(householdId);
   const members = useHouseholdMembers(householdId);
@@ -65,16 +66,27 @@ export function ExpenseListView({ filter }: { filter: ExpenseFilter }) {
               </View>
 
               <View className="flex-row items-center gap-3">
-                {/* Income is signed here for the reader's benefit only — the
-                    stored amount is positive and the direction carries the
-                    meaning. */}
-                <Text
-                  testID="expense-amount"
-                  className={income ? 'text-green-700' : 'text-content'}
-                >
-                  {income ? '+' : ''}
-                  {formatCurrency(row.amount_minor, row.currency)}
-                </Text>
+                <View className="items-end">
+                  {/* Income is signed here for the reader's benefit only — the
+                      stored amount is positive and the direction carries the
+                      meaning. */}
+                  <Text
+                    testID="expense-amount"
+                    className={income ? 'text-green-700' : 'text-content'}
+                  >
+                    {income ? '+' : ''}
+                    {formatCurrency(row.amount_minor, row.currency)}
+                  </Text>
+
+                  {/* What this row contributed to the totals above. Shown only
+                      when it differs, so the common case stays uncluttered and a
+                      foreign amount never looks like it was ignored. */}
+                  {baseCurrency && row.currency !== baseCurrency ? (
+                    <Text testID="expense-base-amount" className="text-xs text-content-muted">
+                      ≈ {formatCurrency(row.base_amount_minor, baseCurrency)}
+                    </Text>
+                  ) : null}
+                </View>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`Delete ${row.merchant ?? 'expense'}`}

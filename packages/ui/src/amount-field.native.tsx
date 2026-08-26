@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 
 import {
@@ -28,10 +28,20 @@ export function AmountField({
   const reading = readAmount(text, currency);
   const showError = touched && !reading.incomplete && reading.minor === null;
 
-  function handleChange(next: string) {
-    setText(next);
-    onChange(readAmount(next, currency).minor);
-  }
+  // The reading is reported from an effect rather than from the change handler,
+  // because the currency is part of it: the exponent decides what the same text
+  // means. "1000" is 100000 minor units in dollars and 1000 in yen, so a
+  // currency change with nothing retyped still has to reach the parent.
+  // Undefined rather than the first reading, so mounting reports too: a parent
+  // holding a stale amount from a previous open is worse than a redundant call.
+  const reported = useRef<number | null | undefined>(undefined);
+
+  useEffect(() => {
+    if (reported.current === reading.minor) return;
+
+    reported.current = reading.minor;
+    onChange(reading.minor);
+  }, [reading.minor, onChange]);
 
   return (
     <View className={className}>
@@ -45,7 +55,7 @@ export function AmountField({
         autoFocus={autoFocus}
         editable={!disabled}
         value={text}
-        onChangeText={handleChange}
+        onChangeText={setText}
         onBlur={() => setTouched(true)}
         placeholder="0"
         className={amountInputClass(showError)}

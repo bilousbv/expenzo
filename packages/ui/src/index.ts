@@ -3,6 +3,7 @@ export { Button } from './button';
 export { Card } from './card';
 export { CategoryPicker } from './category-picker';
 export { CategorySelect } from './category-select';
+export { CurrencySelect } from './currency-select';
 export { cn } from './cn';
 export { formatCurrency } from './format';
 
@@ -21,3 +22,4 @@ export {
 } from './category-chip.styles';
 export type { CategoryOption, CategoryPickerProps } from './category-picker.styles';
 export type { CategorySelectProps } from './category-select.styles';
+export type { CurrencySelectProps } from './currency-select.styles';
