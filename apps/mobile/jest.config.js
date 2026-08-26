@@ -29,4 +29,12 @@ module.exports = {
     '^@expenzo/supabase-types$': '<rootDir>/../../packages/supabase-types/src/index.ts',
   },
   collectCoverageFrom: ['**/*.{ts,tsx}', '!**/node_modules/**', '!**/coverage/**'],
+  // The first React Native render in a file costs around 850ms locally and
+  // every render after it 11-76ms, so whichever test happens to be first pays
+  // a one-off it did nothing to earn. On a shared CI runner with jest workers
+  // competing that cleared jest's 5s default and failed the first test in
+  // expense-form.test.tsx on timing alone — nothing asserted wrong, it never
+  // reached the assertion. Twenty seconds absorbs the cold start and still
+  // catches a test that genuinely hangs.
+  testTimeout: 20_000,
 };
