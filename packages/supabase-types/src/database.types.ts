@@ -446,6 +446,33 @@ export type Database = {
           },
         ]
       }
+      service_catalogue: {
+        Row: {
+          category_hint: string | null
+          created_at: string
+          domain: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          category_hint?: string | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          category_hint?: string | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       spending_limits: {
         Row: {
           amount_minor: number
@@ -494,6 +521,91 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          amount_minor: number
+          anchor_day: number
+          cadence: Database["public"]["Enums"]["subscription_cadence"]
+          category_id: string | null
+          created_at: string
+          created_by: string
+          currency: string
+          deleted_at: string | null
+          household_id: string
+          id: string
+          interval_count: number
+          name: string
+          next_renewal_on: string | null
+          notes: string | null
+          service_id: string | null
+          started_on: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount_minor: number
+          anchor_day: number
+          cadence: Database["public"]["Enums"]["subscription_cadence"]
+          category_id?: string | null
+          created_at?: string
+          created_by: string
+          currency: string
+          deleted_at?: string | null
+          household_id: string
+          id?: string
+          interval_count?: number
+          name: string
+          next_renewal_on?: string | null
+          notes?: string | null
+          service_id?: string | null
+          started_on: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount_minor?: number
+          anchor_day?: number
+          cadence?: Database["public"]["Enums"]["subscription_cadence"]
+          category_id?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string
+          deleted_at?: string | null
+          household_id?: string
+          id?: string
+          interval_count?: number
+          name?: string
+          next_renewal_on?: string | null
+          notes?: string | null
+          service_id?: string | null
+          started_on?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "service_catalogue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -527,6 +639,13 @@ export type Database = {
       member_role: "owner" | "adult" | "viewer"
       member_status: "active" | "removed"
       review_status: "confirmed" | "needs_review" | "rejected"
+      subscription_cadence:
+        | "weekly"
+        | "monthly"
+        | "quarterly"
+        | "semiannual"
+        | "yearly"
+      subscription_status: "active" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -661,6 +780,14 @@ export const Constants = {
       member_role: ["owner", "adult", "viewer"],
       member_status: ["active", "removed"],
       review_status: ["confirmed", "needs_review", "rejected"],
+      subscription_cadence: [
+        "weekly",
+        "monthly",
+        "quarterly",
+        "semiannual",
+        "yearly",
+      ],
+      subscription_status: ["active", "cancelled"],
     },
   },
 } as const

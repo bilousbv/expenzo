@@ -2,6 +2,7 @@ import {
   createCategoryInput,
   createExpenseInput,
   createLimitInput,
+  createSubscriptionInput,
   credentialsSchema,
   expenseFilter,
   registrationSchema,
@@ -57,6 +58,43 @@ const REJECTED: [string, ZodType, unknown][] = [
   ['category, punctuation only', createCategoryInput, { name: '---', color: '#337dff' }],
   ['category, bad colour', createCategoryInput, { name: 'Coffee', color: 'blue' }],
   ['limit, zero', createLimitInput, { amountMinor: 0, period: 'monthly' }],
+  [
+    'subscription, blank name',
+    createSubscriptionInput,
+    {
+      name: '  ',
+      amountMinor: 100,
+      currency: 'USD',
+      cadence: 'monthly',
+      anchorDay: 12,
+      startedOn: '2026-01-12',
+    },
+  ],
+  [
+    'subscription, impossible billing day',
+    createSubscriptionInput,
+    {
+      name: 'Netflix',
+      amountMinor: 100,
+      currency: 'USD',
+      cadence: 'monthly',
+      anchorDay: 32,
+      startedOn: '2026-01-12',
+    },
+  ],
+  [
+    'subscription, interval below one',
+    createSubscriptionInput,
+    {
+      name: 'Netflix',
+      amountMinor: 100,
+      currency: 'USD',
+      cadence: 'monthly',
+      intervalCount: 0,
+      anchorDay: 12,
+      startedOn: '2026-01-12',
+    },
+  ],
   ['filter, reversed range', expenseFilter, { from: '2026-08-31', to: '2026-08-01' }],
 ];
 

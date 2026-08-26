@@ -22,6 +22,9 @@ export default async function Home() {
       <div className="flex flex-row items-baseline justify-between">
         <h1 className="text-3xl font-bold text-content">{t('common.appName')}</h1>
         <div className="flex flex-row gap-3">
+          <Link href="/subscriptions" className="text-sm text-brand-600 underline">
+            {t('nav.subscriptions')}
+          </Link>
           <Link href="/settings/limits" className="text-sm text-brand-600 underline">
             {t('nav.limits')}
           </Link>

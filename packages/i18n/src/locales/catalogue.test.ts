@@ -68,6 +68,9 @@ describe('catalogue parity', () => {
   const IDENTICAL_ON_PURPOSE = new Set([
     // A proper noun. Translating the product's own name would be a bug.
     'common.appName',
+    // A brand, used as the example of what to type. Netflix is called Netflix
+    // in Ukrainian, and a transliteration would look like a mistake.
+    'subscriptions.namePlaceholder',
   ]);
 
   it('does not leave Ukrainian values identical to their English source', () => {

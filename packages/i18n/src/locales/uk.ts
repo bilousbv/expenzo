@@ -88,6 +88,7 @@ export const uk: Messages & {
     signIn: 'Вхід · Expenzo',
     register: 'Створення акаунта · Expenzo',
     invite: 'Приєднання до домогосподарства · Expenzo',
+    subscriptions: 'Підписки · Expenzo',
     description: 'Облік витрат у браузері та на телефоні.',
   },
 
@@ -140,6 +141,39 @@ export const uk: Messages & {
     errors: {
       invalid: 'Перевірте витрату та спробуйте ще раз.',
       addFailed: 'Не вдалося додати витрату.',
+    },
+  },
+
+  cadence: {
+    weekly: 'Щотижня',
+    monthly: 'Щомісяця',
+    quarterly: 'Щокварталу',
+    semiannual: 'Раз на пів року',
+    yearly: 'Щороку',
+  },
+
+  subscriptions: {
+    title: 'Підписки',
+    add: 'Додати підписку',
+    adding: 'Додавання…',
+    heading: 'Додати підписку',
+    service: 'Сервіс',
+    serviceUnlisted: 'Немає у списку',
+    name: 'Назва',
+    namePlaceholder: 'Netflix',
+    amount: 'Сума',
+    billingCycle: 'Періодичність',
+    startedOn: 'Початок',
+    nextCharge: 'Наступний платіж {{date}}',
+    perYear: '{{amount}} на рік',
+    none: 'Ще нічого немає. Додайте те, за що домогосподарство платить щомісяця.',
+    cancelled: 'Скасовано',
+    cancelLabel: 'Скасувати {{name}}',
+    reactivateLabel: 'Відновити {{name}}',
+    deleteLabel: 'Видалити {{name}}',
+    errors: {
+      invalid: 'Перевірте підписку та спробуйте ще раз.',
+      addFailed: 'Не вдалося додати підписку.',
     },
   },
 
@@ -238,6 +272,12 @@ export const uk: Messages & {
     },
     limit: {
       positive: 'Ліміт має бути більшим за нуль',
+    },
+    subscription: {
+      nameRequired: 'Дайте підписці назву',
+      nameTooLong: 'Ця назва задовга',
+      anchorDay: 'День списання має бути від 1 до 31',
+      intervalCount: 'Інтервал має бути щонайменше один',
     },
   },
 };

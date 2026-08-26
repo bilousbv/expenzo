@@ -83,6 +83,7 @@ export const en = {
     signIn: 'Sign in · Expenzo',
     register: 'Create an account · Expenzo',
     invite: 'Join a household · Expenzo',
+    subscriptions: 'Subscriptions · Expenzo',
     description: 'Track expenses on web and mobile.',
   },
 
@@ -133,6 +134,39 @@ export const en = {
     errors: {
       invalid: 'Check the expense and try again.',
       addFailed: 'Could not add the expense.',
+    },
+  },
+
+  cadence: {
+    weekly: 'Weekly',
+    monthly: 'Monthly',
+    quarterly: 'Quarterly',
+    semiannual: 'Every six months',
+    yearly: 'Yearly',
+  },
+
+  subscriptions: {
+    title: 'Subscriptions',
+    add: 'Add subscription',
+    adding: 'Adding…',
+    heading: 'Add a subscription',
+    service: 'Service',
+    serviceUnlisted: 'Not listed',
+    name: 'Name',
+    namePlaceholder: 'Netflix',
+    amount: 'Amount',
+    billingCycle: 'Billing cycle',
+    startedOn: 'Started on',
+    nextCharge: 'Next {{date}}',
+    perYear: '{{amount}} a year',
+    none: 'Nothing recorded yet. Add what the household pays for monthly.',
+    cancelled: 'Cancelled',
+    cancelLabel: 'Cancel {{name}}',
+    reactivateLabel: 'Reactivate {{name}}',
+    deleteLabel: 'Delete {{name}}',
+    errors: {
+      invalid: 'Check the subscription and try again.',
+      addFailed: 'Could not add the subscription.',
     },
   },
 
@@ -239,6 +273,12 @@ export const en = {
     },
     limit: {
       positive: 'A limit has to be greater than zero',
+    },
+    subscription: {
+      nameRequired: 'Give the subscription a name',
+      nameTooLong: 'That name is too long',
+      anchorDay: 'The billing day must be between 1 and 31',
+      intervalCount: 'The interval must be at least one',
     },
   },
 };
