@@ -1,5 +1,6 @@
 import { Button } from '@expenzo/ui';
 import { useState } from 'react';
+import { useTranslation } from '@expenzo/i18n';
 import { Text, TextInput, View } from 'react-native';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -9,6 +10,7 @@ export interface SignInFormProps {
 }
 
 export function SignInForm({ onSubmit }: SignInFormProps) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -24,7 +26,7 @@ export function SignInForm({ onSubmit }: SignInFormProps) {
     setError(null);
 
     if (!EMAIL_PATTERN.test(trimmed)) {
-      setError('Enter a valid email address.');
+      setError(t('auth.errors.invalidEmail'));
       return;
     }
 
@@ -33,7 +35,7 @@ export function SignInForm({ onSubmit }: SignInFormProps) {
       await onSubmit(trimmed);
       setSent(true);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not send the link. Try again.');
+      setError(cause instanceof Error ? cause.message : t('auth.errors.sendLinkFailed'));
     } finally {
       setPending(false);
     }
@@ -50,12 +52,12 @@ export function SignInForm({ onSubmit }: SignInFormProps) {
         autoCapitalize="none"
         autoComplete="email"
         keyboardType="email-address"
-        placeholder="you@example.com"
+        placeholder={t('auth.emailPlaceholder')}
         className="rounded-card border border-brand-100 bg-white px-4 py-3 text-content"
       />
 
       <Button testID="sign-in-submit" disabled={pending} onPress={handleSubmit}>
-        {pending ? 'Sending…' : 'Send magic link'}
+        {t(pending ? 'auth.sendingMagicLink' : 'auth.sendMagicLink')}
       </Button>
 
       {error ? (
@@ -66,7 +68,7 @@ export function SignInForm({ onSubmit }: SignInFormProps) {
 
       {sent && !error ? (
         <Text testID="sign-in-sent" className="text-sm text-content-muted">
-          Check your email for a sign-in link.
+          {t('auth.magicLinkSent')}
         </Text>
       ) : null}
     </View>

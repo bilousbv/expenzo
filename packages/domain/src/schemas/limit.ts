@@ -15,10 +15,10 @@ export const createLimitInput = z.object({
   categoryId: uuidSchema.optional(),
   amountMinor: z
     .number()
-    .int('Amount must be a whole number of minor units')
+    .int('validation.amount.integer')
     // A limit of zero is not a limit; it is a ban, and the check constraint on
     // the column says the same.
-    .positive('A limit has to be greater than zero'),
+    .positive('validation.limit.positive'),
   period: limitPeriodSchema.default('monthly'),
 });
 
@@ -26,7 +26,7 @@ export type CreateLimitInput = z.input<typeof createLimitInput>;
 
 export const updateLimitInput = z.object({
   id: uuidSchema,
-  amountMinor: z.number().int().positive('A limit has to be greater than zero'),
+  amountMinor: z.number().int().positive('validation.limit.positive'),
 });
 
 export type UpdateLimitInput = z.input<typeof updateLimitInput>;

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from '@expenzo/i18n';
 import { buttonContainerClass, buttonLabelClass } from '@expenzo/ui';
 import { useId, useState, type FormEvent } from 'react';
 
@@ -12,6 +13,7 @@ export interface InviteFormProps {
 }
 
 export function InviteForm({ onInvite, origin }: InviteFormProps) {
+  const { t } = useTranslation();
   const emailId = useId();
   const [email, setEmail] = useState('');
   const [token, setToken] = useState<string | null>(null);
@@ -25,7 +27,7 @@ export function InviteForm({ onInvite, origin }: InviteFormProps) {
     setError(null);
 
     if (!EMAIL_PATTERN.test(trimmed)) {
-      setError('Enter a valid email address.');
+      setError(t('auth.errors.invalidEmail'));
       return;
     }
 
@@ -34,7 +36,7 @@ export function InviteForm({ onInvite, origin }: InviteFormProps) {
       setToken(await onInvite(trimmed));
       setEmail('');
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not create the invitation.');
+      setError(cause instanceof Error ? cause.message : t('household.errors.inviteFailed'));
     } finally {
       setPending(false);
     }
@@ -45,9 +47,7 @@ export function InviteForm({ onInvite, origin }: InviteFormProps) {
 
     return (
       <div className="flex flex-col gap-gutter">
-        <p className="text-sm text-content-muted">
-          Send this link to the person you are inviting. It works once and expires in 14 days.
-        </p>
+        <p className="text-sm text-content-muted">{t('household.linkExplainer')}</p>
 
         <code
           data-testid="invite-link"
@@ -63,7 +63,7 @@ export function InviteForm({ onInvite, origin }: InviteFormProps) {
           onClick={() => setToken(null)}
           className={buttonContainerClass('secondary', 'md')}
         >
-          <span className={buttonLabelClass('secondary', 'md')}>Done</span>
+          <span className={buttonLabelClass('secondary', 'md')}>{t('common.done')}</span>
         </button>
       </div>
     );
@@ -72,7 +72,7 @@ export function InviteForm({ onInvite, origin }: InviteFormProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-gutter" noValidate>
       <label htmlFor={emailId} className="text-sm font-medium text-content-muted">
-        Email
+        {t('auth.email')}
       </label>
 
       <input
@@ -84,7 +84,7 @@ export function InviteForm({ onInvite, origin }: InviteFormProps) {
         onChange={(event) => setEmail(event.target.value)}
         aria-invalid={error ? true : undefined}
         className="rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500"
-        placeholder="them@example.com"
+        placeholder={t('household.emailPlaceholder')}
       />
 
       <button
@@ -93,7 +93,7 @@ export function InviteForm({ onInvite, origin }: InviteFormProps) {
         className={buttonContainerClass('primary', 'md', pending)}
       >
         <span className={buttonLabelClass('primary', 'md')}>
-          {pending ? 'Inviting…' : 'Invite'}
+          {t(pending ? 'household.inviting' : 'household.invite')}
         </span>
       </button>
 

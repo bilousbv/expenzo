@@ -1,11 +1,13 @@
 import { expect, test } from '@playwright/test';
 
+import { ENGLISH_COOKIE, SIGNED_OUT_IN_ENGLISH } from './locale';
+
 /**
  * Registration and password sign-in, driven against the real auth server.
  *
  * These run signed out, so they discard the storageState the other specs share.
  */
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({ storageState: SIGNED_OUT_IN_ENGLISH });
 
 function uniqueEmail() {
   return `register-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}@expenzo.test`;
@@ -43,6 +45,9 @@ test.describe('registration', () => {
     await expect(page).toHaveURL(/\/$/);
 
     await context.clearCookies();
+    // clearCookies takes the language preference with the session, which is
+    // correct behaviour and would drop the rest of this test into Ukrainian.
+    await context.addCookies([ENGLISH_COOKIE]);
     await page.goto('/login');
 
     await page.getByLabel('Email').fill(email);
@@ -65,6 +70,9 @@ test.describe('registration', () => {
     await expect(page).toHaveURL(/\/$/);
 
     await context.clearCookies();
+    // clearCookies takes the language preference with the session, which is
+    // correct behaviour and would drop the rest of this test into Ukrainian.
+    await context.addCookies([ENGLISH_COOKIE]);
     await page.goto('/login');
 
     await page.getByLabel('Email').fill(email.toUpperCase());

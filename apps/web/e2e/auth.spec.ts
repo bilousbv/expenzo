@@ -1,8 +1,10 @@
 import { expect, test } from '@playwright/test';
 
+import { SIGNED_OUT_IN_ENGLISH } from './locale';
+
 // This spec deliberately runs without the saved session, so it can prove the
 // guard actually bites.
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({ storageState: SIGNED_OUT_IN_ENGLISH });
 
 test.describe('authentication', () => {
   test('sends an unauthenticated visitor to the login page', async ({ page }) => {

@@ -1,9 +1,14 @@
 import { Card } from '@expenzo/ui';
 import Link from 'next/link';
 
+import { getTranslations } from '@/lib/i18n/server';
 import { createClient } from '@/lib/supabase/server';
 
-export const metadata = { title: 'Join a household · Expenzo' };
+export async function generateMetadata() {
+  const { t } = await getTranslations();
+
+  return { title: t('pageTitle.invite') };
+}
 
 /**
  * Redeeming an invitation.
@@ -13,6 +18,7 @@ export const metadata = { title: 'Join a household · Expenzo' };
  * want, since accepting has to attribute the membership to someone.
  */
 export default async function AcceptInvitePage({ params }: { params: Promise<{ token: string }> }) {
+  const { t } = await getTranslations();
   const { token } = await params;
   const supabase = await createClient();
 
@@ -22,16 +28,13 @@ export default async function AcceptInvitePage({ params }: { params: Promise<{ t
     return (
       <main className="flex min-h-screen items-center justify-center p-gutter">
         <Card className="w-full max-w-sm gap-gutter">
-          <h1 className="text-2xl font-bold text-content">That invitation did not work</h1>
+          <h1 className="text-2xl font-bold text-content">{t('invite.failed')}</h1>
           <p role="alert" data-testid="invite-error" className="text-sm text-red-600">
             {error.message}
           </p>
-          <p className="text-sm text-content-muted">
-            Invitation links work once and expire after 14 days. Ask whoever invited you to send a
-            new one.
-          </p>
+          <p className="text-sm text-content-muted">{t('invite.explainer')}</p>
           <Link href="/" className="text-sm text-brand-600">
-            Back to your expenses
+            {t('nav.backToExpenses')}
           </Link>
         </Card>
       </main>
@@ -42,13 +45,11 @@ export default async function AcceptInvitePage({ params }: { params: Promise<{ t
     <main className="flex min-h-screen items-center justify-center p-gutter">
       <Card className="w-full max-w-sm gap-gutter">
         <h1 className="text-2xl font-bold text-content" data-testid="invite-accepted">
-          You have joined the household
+          {t('household.joined')}
         </h1>
-        <p className="text-sm text-content-muted">
-          Shared expenses and subscriptions are now visible to you.
-        </p>
+        <p className="text-sm text-content-muted">{t('household.joinedExplainer')}</p>
         <Link href="/" className="text-sm text-brand-600">
-          Go to your expenses
+          {t('nav.goToExpenses')}
         </Link>
       </Card>
     </main>

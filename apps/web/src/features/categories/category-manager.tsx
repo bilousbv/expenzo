@@ -14,6 +14,8 @@ import {
   categoryDotStyle,
 } from '@expenzo/ui';
 
+import { useTranslation } from '@expenzo/i18n';
+
 import { CategoryForm } from './category-form';
 
 /**
@@ -21,6 +23,7 @@ import { CategoryForm } from './category-form';
  * presentational component that tests can drive without a client.
  */
 export function CategoryManager() {
+  const { t } = useTranslation();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
 
@@ -49,7 +52,7 @@ export function CategoryManager() {
       ) : null}
 
       <section className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium text-content-muted">Your categories</h3>
+        <h3 className="text-sm font-medium text-content-muted">{t('categories.yours')}</h3>
 
         {custom.length === 0 ? (
           <p data-testid="no-custom-categories" className="text-sm text-content-muted">
@@ -72,7 +75,7 @@ export function CategoryManager() {
                     uncategorise every expense that ever used it. */}
                 <button
                   type="button"
-                  aria-label={`Archive ${category.name}`}
+                  aria-label={t('categories.archiveLabel', { name: category.name })}
                   disabled={archive.isPending}
                   onClick={() => archive.mutate(category.id)}
                   className="text-sm text-content-muted"
@@ -86,7 +89,7 @@ export function CategoryManager() {
       </section>
 
       <section className="flex flex-col gap-2">
-        <h3 className="text-sm font-medium text-content-muted">Built in</h3>
+        <h3 className="text-sm font-medium text-content-muted">{t('categories.builtIn')}</h3>
 
         <ul className="flex flex-row flex-wrap gap-2">
           {system.map((category) => (

@@ -1,6 +1,7 @@
 import { Card } from '@expenzo/ui';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@expenzo/i18n';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,20 +14,31 @@ import { supabase } from '../../lib/supabase';
  * URL bar for it to watch — so the code is exchanged explicitly here.
  */
 export default function AuthCallbackScreen() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ code?: string; error_description?: string }>();
-  const [error, setError] = useState<string | null>(null);
+  // The key rather than the finished sentence: translating inside the effect
+  // would make it depend on , and a new  arrives whenever the language
+  // changes — which would re-run the exchange with a code already spent.
+  //  is false for messages from the auth server, which arrive as
+  // prose and are not ours to look up.
+  // The key rather than the finished sentence: translating inside the effect
+  // would make it depend on `t`, and a new `t` arrives whenever the language
+  // changes — which would re-run the exchange with a code already spent.
+  // `translate` is false for messages from the auth server, which arrive as
+  // prose and are not ours to look up.
+  const [error, setError] = useState<{ translate: boolean; value: string } | null>(null);
 
   useEffect(() => {
     let active = true;
 
     async function exchange() {
       if (params.error_description) {
-        if (active) setError(params.error_description);
+        if (active) setError({ translate: false, value: params.error_description });
         return;
       }
 
       if (!params.code) {
-        if (active) setError('That sign-in link is missing its code.');
+        if (active) setError({ translate: true, value: 'auth.errors.missingCode' });
         return;
       }
 
@@ -35,7 +47,7 @@ export default function AuthCallbackScreen() {
       if (!active) return;
 
       if (exchangeError) {
-        setError(exchangeError.message);
+        setError({ translate: false, value: exchangeError.message });
         return;
       }
 
@@ -56,12 +68,14 @@ export default function AuthCallbackScreen() {
       <View className="flex-1 justify-center p-gutter">
         {error ? (
           <Card className="gap-gutter">
-            <Text className="text-xl font-semibold text-content">That link did not work</Text>
+            <Text className="text-xl font-semibold text-content">
+              {t('auth.errors.linkFailed')}
+            </Text>
             <Text testID="callback-error" className="text-sm text-red-600">
-              {error}
+              {error.translate ? t(error.value) : error.value}
             </Text>
             <Text className="text-sm text-content-muted">
-              Sign-in links work once and expire. Ask for a new one.
+              {t('auth.errors.linkFailedExplainer')}
             </Text>
           </Card>
         ) : (

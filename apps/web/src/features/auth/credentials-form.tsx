@@ -1,6 +1,12 @@
 'use client';
 
-import { credentialsSchema, registrationSchema, type Credentials } from '@expenzo/domain';
+import {
+  credentialsSchema,
+  registrationSchema,
+  VALIDATION_PARAMS,
+  type Credentials,
+} from '@expenzo/domain';
+import { useTranslation } from '@expenzo/i18n';
 import { buttonContainerClass, buttonLabelClass } from '@expenzo/ui';
 import { useId, useState, type FormEvent } from 'react';
 
@@ -11,15 +17,16 @@ export interface CredentialsFormProps {
   onSubmit: (credentials: { email: string; password: string }) => Promise<void>;
 }
 
-const LABEL: Record<CredentialsMode, { idle: string; busy: string }> = {
-  signIn: { idle: 'Sign in', busy: 'Signing in…' },
-  signUp: { idle: 'Create account', busy: 'Creating account…' },
+const LABEL_KEY: Record<CredentialsMode, { idle: string; busy: string }> = {
+  signIn: { idle: 'auth.signIn', busy: 'auth.signingIn' },
+  signUp: { idle: 'auth.createAccount', busy: 'auth.creatingAccount' },
 };
 
 const inputClass =
   'rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500';
 
 export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
+  const { t } = useTranslation();
   const emailId = useId();
   const passwordId = useId();
   const confirmId = useId();
@@ -48,7 +55,11 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
       : credentialsSchema.safeParse({ email, password });
 
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Check the details and try again.');
+      // The schemas return translation keys rather than prose, so the whole
+      // parameter set goes with every one; i18next ignores what a given string
+      // does not reference, which spares this call site knowing which key it
+      // is about to render.
+      setError(t(parsed.error.issues[0]?.message ?? 'auth.errors.checkDetails', VALIDATION_PARAMS));
       return;
     }
 
@@ -58,7 +69,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
       // confirmPassword, which is only ever compared and must not be sent.
       await onSubmit({ email: parsed.data.email, password: parsed.data.password });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not sign you in. Try again.');
+      setError(cause instanceof Error ? cause.message : t('auth.errors.signInFailed'));
     } finally {
       setPending(false);
     }
@@ -67,7 +78,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-gutter" noValidate>
       <label htmlFor={emailId} className="text-sm font-medium text-content-muted">
-        Email
+        {t('auth.email')}
       </label>
       <input
         id={emailId}
@@ -78,12 +89,12 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         aria-invalid={error ? true : undefined}
-        placeholder="you@example.com"
+        placeholder={t('auth.emailPlaceholder')}
         className={inputClass}
       />
 
       <label htmlFor={passwordId} className="text-sm font-medium text-content-muted">
-        Password
+        {t('auth.password')}
       </label>
       <input
         id={passwordId}
@@ -101,7 +112,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
       {registering ? (
         <>
           <label htmlFor={confirmId} className="text-sm font-medium text-content-muted">
-            Confirm password
+            {t('auth.confirmPassword')}
           </label>
           <input
             id={confirmId}
@@ -122,7 +133,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
         className={buttonContainerClass('primary', 'md', pending)}
       >
         <span className={buttonLabelClass('primary', 'md')}>
-          {pending ? LABEL[mode].busy : LABEL[mode].idle}
+          {t(pending ? LABEL_KEY[mode].busy : LABEL_KEY[mode].idle)}
         </span>
       </button>
 

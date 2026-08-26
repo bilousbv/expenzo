@@ -3,11 +3,19 @@ import { headers } from 'next/headers';
 import Link from 'next/link';
 
 import { HouseholdInvite } from '@/features/household/household-invite';
+import { LanguageSwitcher } from '@/features/settings/language-switcher';
+import { getLocale, getTranslations } from '@/lib/i18n/server';
 import { createClient } from '@/lib/supabase/server';
 
-export const metadata = { title: 'Household · Expenzo' };
+export async function generateMetadata() {
+  const { t } = await getTranslations();
+
+  return { title: t('pageTitle.household') };
+}
 
 export default async function HouseholdSettingsPage() {
+  const { t } = await getTranslations();
+  const locale = await getLocale();
   const supabase = await createClient();
 
   // Row-level security scopes both of these to the caller's household, so
@@ -37,16 +45,16 @@ export default async function HouseholdSettingsPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-gutter p-gutter">
-      <h1 className="text-3xl font-bold text-content">{household?.name ?? 'Household'}</h1>
+      <h1 className="text-3xl font-bold text-content">{household?.name ?? t('household.title')}</h1>
 
       <Card className="gap-gutter">
-        <h2 className="text-lg font-semibold text-content">Members</h2>
+        <h2 className="text-lg font-semibold text-content">{t('household.members')}</h2>
 
         <ul className="flex flex-col gap-2">
           {(members ?? []).map((member) => (
             <li key={member.user_id} className="flex items-center justify-between">
               <span className="text-content" data-testid="member-name">
-                {nameFor.get(member.user_id) ?? 'Member'}
+                {nameFor.get(member.user_id) ?? t('common.member')}
               </span>
               <span className="text-sm text-content-muted">{member.role}</span>
             </li>
@@ -55,14 +63,18 @@ export default async function HouseholdSettingsPage() {
       </Card>
 
       <Card className="gap-gutter">
-        <h2 className="text-lg font-semibold text-content">Invite someone</h2>
+        <h2 className="text-lg font-semibold text-content">{t('household.inviteSomeone')}</h2>
         <HouseholdInvite origin={origin} />
       </Card>
 
       <Card className="gap-gutter">
-        <h2 className="text-lg font-semibold text-content">Categories</h2>
+        <LanguageSwitcher locale={locale} />
+      </Card>
+
+      <Card className="gap-gutter">
+        <h2 className="text-lg font-semibold text-content">{t('categories.title')}</h2>
         <Link href="/settings/categories" className="text-brand-600 underline">
-          Manage categories
+          {t('nav.manageCategories')}
         </Link>
       </Card>
     </main>

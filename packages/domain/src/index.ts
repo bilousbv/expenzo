@@ -14,7 +14,6 @@ export {
   localDateIn,
   monthBounds,
   parseIsoDate,
-  PERIOD_PRESET_LABELS,
   PERIOD_PRESETS,
   presetRange,
   toIsoDate,
@@ -36,8 +35,11 @@ export {
   credentialsSchema,
   emailSchema,
   oauthProviderSchema,
+  PASSWORD_MAX_BYTES,
+  PASSWORD_MIN_LENGTH,
   passwordSchema,
   registrationSchema,
+  VALIDATION_PARAMS,
 } from './schemas/auth';
 export type { Credentials, OAuthProvider, Registration } from './schemas/auth';
 

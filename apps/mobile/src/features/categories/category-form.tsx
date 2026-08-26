@@ -1,18 +1,19 @@
-import { createCategoryInput, type CreateCategoryInput } from '@expenzo/domain';
+import { createCategoryInput, VALIDATION_PARAMS, type CreateCategoryInput } from '@expenzo/domain';
 import { Button, categoryDotStyle } from '@expenzo/ui';
 import { useState } from 'react';
+import { useTranslation } from '@expenzo/i18n';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
 /** Named because a colour needs an accessible name; the hex is not one. */
 const PALETTE = [
-  { name: 'Blue', hex: '#337dff' },
-  { name: 'Orange', hex: '#f97316' },
-  { name: 'Teal', hex: '#14b8a6' },
-  { name: 'Purple', hex: '#8b5cf6' },
-  { name: 'Pink', hex: '#ec4899' },
-  { name: 'Green', hex: '#22c55e' },
-  { name: 'Red', hex: '#ef4444' },
-  { name: 'Slate', hex: '#64748b' },
+  { key: 'blue', hex: '#337dff' },
+  { key: 'orange', hex: '#f97316' },
+  { key: 'teal', hex: '#14b8a6' },
+  { key: 'purple', hex: '#8b5cf6' },
+  { key: 'pink', hex: '#ec4899' },
+  { key: 'green', hex: '#22c55e' },
+  { key: 'red', hex: '#ef4444' },
+  { key: 'slate', hex: '#64748b' },
 ] as const;
 
 export interface CategoryFormProps {
@@ -22,6 +23,7 @@ export interface CategoryFormProps {
 }
 
 export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [color, setColor] = useState<string>(PALETTE[0].hex);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +44,9 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
     const parsed = createCategoryInput.safeParse({ name, color });
 
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'That category is not valid.');
+      setError(
+        t(parsed.error.issues[0]?.message ?? 'categories.errors.invalid', VALIDATION_PARAMS),
+      );
       return;
     }
 
@@ -53,7 +57,7 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
     } catch (cause) {
       // Deliberately not clearing the field: retyping the name is not part of
       // the fix for whatever went wrong.
-      setError(cause instanceof Error ? cause.message : 'Could not add the category.');
+      setError(cause instanceof Error ? cause.message : t('categories.errors.addFailed'));
     } finally {
       setPending(false);
     }
@@ -61,24 +65,28 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
 
   return (
     <View className="gap-gutter">
-      <Text className="text-sm font-medium text-content-muted">Name</Text>
+      <Text className="text-sm font-medium text-content-muted">{t('categories.name')}</Text>
 
       <TextInput
         testID="category-name"
         value={name}
         onChangeText={setName}
         autoCapitalize="words"
-        placeholder="Coffee"
+        placeholder={t('categories.namePlaceholder')}
         className="rounded-card border border-brand-100 bg-white px-4 py-3 text-content"
       />
 
-      <View accessibilityRole="radiogroup" accessibilityLabel="Colour" className="flex-row gap-2">
+      <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel={t('categories.colour')}
+        className="flex-row gap-2"
+      >
         {PALETTE.map((swatch) => (
           <Pressable
             key={swatch.hex}
             accessibilityRole="radio"
             accessibilityState={{ selected: color === swatch.hex }}
-            accessibilityLabel={swatch.name}
+            accessibilityLabel={t(`categories.colours.${swatch.key}`)}
             testID={`category-color-${swatch.hex}`}
             onPress={() => setColor(swatch.hex)}
             style={categoryDotStyle(swatch.hex)}
@@ -90,7 +98,7 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
       </View>
 
       <Button testID="category-submit" disabled={pending || disabled} onPress={handleSubmit}>
-        {pending ? 'Adding…' : 'Add category'}
+        {t(pending ? 'categories.adding' : 'categories.add')}
       </Button>
 
       {error ? (

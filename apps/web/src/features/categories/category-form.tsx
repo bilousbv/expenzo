@@ -1,19 +1,20 @@
 'use client';
 
-import { createCategoryInput, type CreateCategoryInput } from '@expenzo/domain';
+import { createCategoryInput, VALIDATION_PARAMS, type CreateCategoryInput } from '@expenzo/domain';
+import { useTranslation } from '@expenzo/i18n';
 import { buttonContainerClass, buttonLabelClass, categoryDotStyle } from '@expenzo/ui';
 import { useId, useState, type FormEvent } from 'react';
 
 /** Named because a colour needs an accessible name; the hex is not one. */
 export const PALETTE = [
-  { name: 'Blue', hex: '#337dff' },
-  { name: 'Orange', hex: '#f97316' },
-  { name: 'Teal', hex: '#14b8a6' },
-  { name: 'Purple', hex: '#8b5cf6' },
-  { name: 'Pink', hex: '#ec4899' },
-  { name: 'Green', hex: '#22c55e' },
-  { name: 'Red', hex: '#ef4444' },
-  { name: 'Slate', hex: '#64748b' },
+  { key: 'blue', hex: '#337dff' },
+  { key: 'orange', hex: '#f97316' },
+  { key: 'teal', hex: '#14b8a6' },
+  { key: 'purple', hex: '#8b5cf6' },
+  { key: 'pink', hex: '#ec4899' },
+  { key: 'green', hex: '#22c55e' },
+  { key: 'red', hex: '#ef4444' },
+  { key: 'slate', hex: '#64748b' },
 ] as const;
 
 export interface CategoryFormProps {
@@ -24,6 +25,7 @@ export interface CategoryFormProps {
 
 export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) {
   const nameId = useId();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [color, setColor] = useState<string>(PALETTE[0].hex);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,9 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
     const parsed = createCategoryInput.safeParse({ name, color });
 
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'That category is not valid.');
+      setError(
+        t(parsed.error.issues[0]?.message ?? 'categories.errors.invalid', VALIDATION_PARAMS),
+      );
       return;
     }
 
@@ -58,7 +62,7 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
     } catch (cause) {
       // Deliberately not clearing the field: whatever went wrong, retyping the
       // name is not part of the fix.
-      setError(cause instanceof Error ? cause.message : 'Could not add the category.');
+      setError(cause instanceof Error ? cause.message : t('categories.errors.addFailed'));
     } finally {
       setPending(false);
     }
@@ -67,7 +71,7 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-gutter" noValidate>
       <label htmlFor={nameId} className="text-sm font-medium text-content-muted">
-        Name
+        {t('categories.name')}
       </label>
 
       <input
@@ -76,18 +80,22 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
         value={name}
         onChange={(event) => setName(event.target.value)}
         aria-invalid={error ? true : undefined}
-        placeholder="Coffee"
+        placeholder={t('categories.namePlaceholder')}
         className="rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500"
       />
 
-      <div role="radiogroup" aria-label="Colour" className="flex flex-row flex-wrap gap-2">
+      <div
+        role="radiogroup"
+        aria-label={t('categories.colour')}
+        className="flex flex-row flex-wrap gap-2"
+      >
         {PALETTE.map((swatch) => (
           <button
             key={swatch.hex}
             type="button"
             role="radio"
             aria-checked={color === swatch.hex}
-            aria-label={swatch.name}
+            aria-label={t(`categories.colours.${swatch.key}`)}
             onClick={() => setColor(swatch.hex)}
             style={categoryDotStyle(swatch.hex)}
             className={`h-8 w-8 rounded-full border-2 ${
@@ -103,7 +111,7 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
         className={buttonContainerClass('primary', 'md', pending || disabled)}
       >
         <span className={buttonLabelClass('primary', 'md')}>
-          {pending ? 'Adding…' : 'Add category'}
+          {t(pending ? 'categories.adding' : 'categories.add')}
         </span>
       </button>
 

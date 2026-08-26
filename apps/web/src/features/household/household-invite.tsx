@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/browser';
 
+import { useTranslation } from '@expenzo/i18n';
+
 import { InviteForm } from './invite-form';
 
 /**
@@ -9,6 +11,7 @@ import { InviteForm } from './invite-form';
  * plain presentational component that tests can drive without a client.
  */
 export function HouseholdInvite({ origin }: { origin: string }) {
+  const { t } = useTranslation();
   async function invite(email: string): Promise<string> {
     const supabase = createClient();
 
@@ -17,7 +20,7 @@ export function HouseholdInvite({ origin }: { origin: string }) {
     });
 
     if (error) throw new Error(error.message);
-    if (!data) throw new Error('The server did not return an invitation token.');
+    if (!data) throw new Error(t('household.errors.noToken'));
 
     return data;
   }

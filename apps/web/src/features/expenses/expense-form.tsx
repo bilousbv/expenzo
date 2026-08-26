@@ -1,6 +1,7 @@
 'use client';
 
-import { createExpenseInput, type CreateExpenseInput } from '@expenzo/domain';
+import { createExpenseInput, VALIDATION_PARAMS, type CreateExpenseInput } from '@expenzo/domain';
+import { useTranslation } from '@expenzo/i18n';
 import {
   AmountField,
   buttonContainerClass,
@@ -39,6 +40,7 @@ export function ExpenseForm({
   onCreate,
   disabled = false,
 }: ExpenseFormProps) {
+  const { t } = useTranslation();
   const dateId = useId();
   const merchantId = useId();
   const noteId = useId();
@@ -78,7 +80,7 @@ export function ExpenseForm({
     });
 
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Check the expense and try again.');
+      setError(t(parsed.error.issues[0]?.message ?? 'expenses.errors.invalid', VALIDATION_PARAMS));
       return;
     }
 
@@ -91,7 +93,7 @@ export function ExpenseForm({
       setAmountMinor(null);
       setAmountKey((key) => key + 1);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not add the expense.');
+      setError(cause instanceof Error ? cause.message : t('expenses.errors.addFailed'));
     } finally {
       setPending(false);
     }
@@ -102,7 +104,7 @@ export function ExpenseForm({
       {/* Spending or income. A direction rather than a signed amount: the
           amount column is constrained positive, and carrying both a sign and a
           direction invites rows where the two disagree. */}
-      <div role="radiogroup" aria-label="Direction" className="flex flex-row gap-2">
+      <div role="radiogroup" aria-label={t('expenses.direction')} className="flex flex-row gap-2">
         {(['spend', 'income'] as const).map((option) => (
           <button
             key={option}
@@ -116,7 +118,7 @@ export function ExpenseForm({
             <span
               className={buttonLabelClass(direction === option ? 'primary' : 'secondary', 'sm')}
             >
-              {option === 'spend' ? 'Spending' : 'Income'}
+              {t(option === 'spend' ? 'expenses.spending' : 'expenses.incomeDirection')}
             </span>
           </button>
         ))}
@@ -143,7 +145,7 @@ export function ExpenseForm({
       ) : null}
 
       <label htmlFor={dateId} className="text-sm font-medium text-content-muted">
-        Date
+        {t('expenses.date')}
       </label>
       <input
         id={dateId}
@@ -162,19 +164,19 @@ export function ExpenseForm({
       />
 
       <label htmlFor={merchantId} className="text-sm font-medium text-content-muted">
-        Merchant
+        {t('expenses.merchant')}
       </label>
       <input
         id={merchantId}
         name="merchant"
         value={merchant}
         onChange={(event) => setMerchant(event.target.value)}
-        placeholder="Blue Bottle"
+        placeholder={t('expenses.merchantPlaceholder')}
         className={inputClass}
       />
 
       <label htmlFor={noteId} className="text-sm font-medium text-content-muted">
-        Note
+        {t('expenses.note')}
       </label>
       <input
         id={noteId}
@@ -190,7 +192,7 @@ export function ExpenseForm({
         className={buttonContainerClass('primary', 'md', pending || disabled)}
       >
         <span className={buttonLabelClass('primary', 'md')}>
-          {pending ? 'Adding…' : 'Add expense'}
+          {t(pending ? 'expenses.adding' : 'expenses.addExpense')}
         </span>
       </button>
 

@@ -7,6 +7,7 @@ import {
 } from '@expenzo/data';
 import type { ExpenseFilter } from '@expenzo/domain';
 import { Button, Card, categoryDotClass, categoryDotStyle, formatCurrency } from '@expenzo/ui';
+import { useTranslation } from '@expenzo/i18n';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 /**
@@ -17,6 +18,7 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
  * would disagree with the totals sitting next to it.
  */
 export function ExpenseListView({ filter }: { filter: ExpenseFilter }) {
+  const { t } = useTranslation();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
   const baseCurrency = household.data?.base_currency;
@@ -39,7 +41,7 @@ export function ExpenseListView({ filter }: { filter: ExpenseFilter }) {
         <ActivityIndicator />
       ) : rows.length === 0 ? (
         <Text testID="no-expenses" className="text-sm text-content-muted">
-          Nothing recorded in this period.
+          {t('expenses.nothingRecorded')}
         </Text>
       ) : (
         rows.map((row) => {
@@ -59,8 +61,8 @@ export function ExpenseListView({ filter }: { filter: ExpenseFilter }) {
                     <View className={categoryDotClass()} style={categoryDotStyle(category.color)} />
                   ) : null}
                   <Text testID="expense-author" className="text-xs text-content-muted">
-                    {category?.name ?? 'Uncategorised'} · {row.occurred_on} ·{' '}
-                    {authorFor.get(row.created_by) ?? 'Member'}
+                    {category?.name ?? t('common.uncategorised')} · {row.occurred_on} ·{' '}
+                    {authorFor.get(row.created_by) ?? t('common.member')}
                   </Text>
                 </View>
               </View>
@@ -89,7 +91,9 @@ export function ExpenseListView({ filter }: { filter: ExpenseFilter }) {
                 </View>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`Delete ${row.merchant ?? 'expense'}`}
+                  accessibilityLabel={t('expenses.deleteLabel', {
+                    name: row.merchant ?? t('expenses.fallbackName'),
+                  })}
                   disabled={remove.isPending}
                   onPress={() => remove.mutate(row.id)}
                 >
@@ -108,7 +112,7 @@ export function ExpenseListView({ filter }: { filter: ExpenseFilter }) {
           disabled={expenses.isFetchingNextPage}
           onPress={() => void expenses.fetchNextPage()}
         >
-          {expenses.isFetchingNextPage ? 'Loading…' : 'Load more'}
+          {t(expenses.isFetchingNextPage ? 'common.loading' : 'expenses.loadMore')}
         </Button>
       ) : null}
     </Card>

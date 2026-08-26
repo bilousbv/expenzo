@@ -27,8 +27,10 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
+    "i18next": "^25.10.10",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "react-i18next": "^16.6.6",
     "supabase": "2.115.0",
     "turbo": "^2.10.11",
     "typescript": "~6.0.3"

@@ -3,18 +3,19 @@ import { z } from 'zod';
 import { isIsoDate } from '../period';
 
 /** Uppercase ISO 4217. Lowercase is rejected so stored values are canonical. */
-export const currencyCodeSchema = z
-  .string()
-  .regex(/^[A-Z]{3}$/, 'Currency must be a three-letter uppercase ISO code');
+export const currencyCodeSchema = z.string().regex(/^[A-Z]{3}$/, 'validation.currency.invalid');
 
 export const isoDateSchema = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be formatted YYYY-MM-DD')
-  .refine(isIsoDate, 'Not a real calendar date');
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'validation.date.format')
+  .refine(isIsoDate, 'validation.date.unreal');
 
 export const uuidSchema = z
   .string()
-  .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'Must be a UUID');
+  .regex(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    'validation.uuid.invalid',
+  );
 
 /** Blank strings become absent, so the database stores NULL rather than ''. */
 const optionalText = z
@@ -34,10 +35,7 @@ export const expenseDirectionSchema = z.enum(['spend', 'income']);
 
 export const createExpenseInput = z.object({
   direction: expenseDirectionSchema.default('spend'),
-  amountMinor: z
-    .number()
-    .int('Amount must be a whole number of minor units')
-    .positive('Amount must be greater than zero'),
+  amountMinor: z.number().int('validation.amount.integer').positive('validation.amount.positive'),
   currency: currencyCodeSchema,
   occurredOn: isoDateSchema,
   categoryId: uuidSchema.optional(),
@@ -74,7 +72,7 @@ export const expenseFilter = z
     memberId: uuidSchema.optional(),
   })
   .refine((filter) => !filter.from || !filter.to || filter.from <= filter.to, {
-    message: 'Range end must not precede its start',
+    message: 'validation.date.rangeReversed',
     path: ['to'],
   });
 

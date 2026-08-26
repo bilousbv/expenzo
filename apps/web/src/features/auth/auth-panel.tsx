@@ -1,6 +1,7 @@
 'use client';
 
 import type { OAuthProvider } from '@expenzo/domain';
+import { useTranslation } from '@expenzo/i18n';
 import { buttonLabelClass } from '@expenzo/ui';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -18,6 +19,7 @@ import { OAuthButtons } from './oauth-buttons';
  * and testable without a client.
  */
 export function AuthPanel({ mode }: { mode: CredentialsMode }) {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('next') ?? '/';
   const [showMagicLink, setShowMagicLink] = useState(false);
@@ -77,7 +79,7 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
     });
 
     if (error) throw new Error(error.message);
-    if (!data.url) throw new Error('That provider did not return a sign-in URL.');
+    if (!data.url) throw new Error(t('auth.errors.providerNoUrl'));
 
     window.location.assign(data.url);
   }
@@ -95,9 +97,7 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
           data-testid="magic-link"
           className="flex flex-col gap-2 border-t border-brand-100 pt-gutter"
         >
-          <p className="text-sm text-content-muted">
-            We will email you a link. No password needed.
-          </p>
+          <p className="text-sm text-content-muted">{t('auth.magicLinkExplainer')}</p>
           <LoginForm onSubmit={sendMagicLink} />
         </div>
       ) : (
@@ -107,18 +107,18 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
           onClick={() => setShowMagicLink(true)}
           className={buttonLabelClass('ghost', 'sm')}
         >
-          Email me a sign-in link instead
+          {t('auth.showMagicLink')}
         </button>
       )}
 
       <p className="text-center text-sm text-content-muted">
-        {registering ? 'Already have an account? ' : 'No account yet? '}
+        {registering ? t('auth.alreadyHaveAccount') : t('auth.noAccountYet')}
         <Link
           href={registering ? '/login' : '/register'}
           className="text-brand-600 underline"
           data-testid={registering ? 'go-to-login' : 'go-to-register'}
         >
-          {registering ? 'Sign in' : 'Create one'}
+          {registering ? t('auth.signIn') : t('auth.createOne')}
         </Link>
       </p>
     </div>

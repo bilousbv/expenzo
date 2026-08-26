@@ -15,6 +15,7 @@
   "dependencies": {
     "@expenzo/data": "workspace:*",
     "@expenzo/domain": "workspace:*",
+    "@expenzo/i18n": "workspace:*",
     "@expenzo/supabase-types": "workspace:*",
     "@expenzo/ui": "workspace:*",
     "@react-native-async-storage/async-storage": "2.2.0",

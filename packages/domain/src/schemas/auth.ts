@@ -16,29 +16,43 @@ import { z } from 'zod';
 export const emailSchema = z
   .string()
   .trim()
-  .min(1, 'Enter your email address')
-  .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Enter a valid email address')
+  .min(1, 'validation.email.required')
+  .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'validation.email.invalid')
   .transform((value) => value.toLowerCase());
 
 /** Matches `minimum_password_length` in supabase/config.toml. */
-const MIN_LENGTH = 8;
+export const PASSWORD_MIN_LENGTH = 8;
+
+const MIN_LENGTH = PASSWORD_MIN_LENGTH;
 
 /**
  * bcrypt — which GoTrue hashes with — reads only the first 72 bytes and
  * silently ignores the rest. A longer password appears to work, and then any
  * 72-byte prefix of it also signs in. Refusing it is honest; truncating is not.
  */
-const MAX_BYTES = 72;
+export const PASSWORD_MAX_BYTES = 72;
+
+const MAX_BYTES = PASSWORD_MAX_BYTES;
+
+/**
+ * The interpolation values the validation keys above may ask for.
+ *
+ * Schemas return a key and nothing else — zod carries a message string, not a
+ * bag of parameters — so the numbers live here and every screen hands the whole
+ * set to `t()`. i18next ignores the ones a given string does not reference,
+ * which means a call site never has to know which key it is translating.
+ */
+export const VALIDATION_PARAMS = {
+  min: PASSWORD_MIN_LENGTH,
+  max: PASSWORD_MAX_BYTES,
+} as const;
 
 const encoder = new TextEncoder();
 
 export const passwordSchema = z
   .string()
-  .min(MIN_LENGTH, `Use at least ${MIN_LENGTH} characters`)
-  .refine(
-    (value) => encoder.encode(value).length <= MAX_BYTES,
-    `That password is too long — keep it under ${MAX_BYTES} bytes`,
-  );
+  .min(MIN_LENGTH, 'validation.password.tooShort')
+  .refine((value) => encoder.encode(value).length <= MAX_BYTES, 'validation.password.tooLong');
 
 export const credentialsSchema = z.object({
   email: emailSchema,
@@ -54,7 +68,7 @@ export const registrationSchema = credentialsSchema
   // short reports as too short rather than as a mismatch, and the message
   // lands on the field the user has to fix.
   .refine((value) => value.password === value.confirmPassword, {
-    message: 'Those passwords do not match',
+    message: 'validation.password.mismatch',
     path: ['confirmPassword'],
   });
 

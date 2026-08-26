@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from '@expenzo/i18n';
 import { Card, formatCurrency } from '@expenzo/ui';
 
 export interface BudgetSummaryProps {
@@ -17,11 +18,13 @@ export function BudgetSummary({
   currency,
   loading = false,
 }: BudgetSummaryProps) {
+  const { t } = useTranslation();
+
   return (
     <Card className="gap-gutter">
       <div className="flex flex-row items-baseline justify-between">
-        <span className="text-sm text-content-muted">Left this period</span>
-        {loading ? <span className="text-sm text-content-muted">Loading…</span> : null}
+        <span className="text-sm text-content-muted">{t('dashboard.leftThisPeriod')}</span>
+        {loading ? <span className="text-sm text-content-muted">{t('common.loading')}</span> : null}
       </div>
 
       <p
@@ -34,14 +37,14 @@ export function BudgetSummary({
 
       <div className="flex flex-row gap-gutter">
         <div className="flex flex-col">
-          <span className="text-xs text-content-muted">Income</span>
+          <span className="text-xs text-content-muted">{t('dashboard.income')}</span>
           <span data-testid="budget-income" className="text-lg text-content">
             {formatCurrency(incomeMinor, currency)}
           </span>
         </div>
 
         <div className="flex flex-col">
-          <span className="text-xs text-content-muted">Spent</span>
+          <span className="text-xs text-content-muted">{t('dashboard.spent')}</span>
           <span data-testid="budget-spent" className="text-lg text-content">
             {formatCurrency(spentMinor, currency)}
           </span>
@@ -50,9 +53,7 @@ export function BudgetSummary({
 
       {/* These come from an aggregate query rather than the loaded page, which
           is what lets them be called the period's figures at all. */}
-      <p className="text-xs text-content-muted">
-        Everything in the period, not just what is listed
-      </p>
+      <p className="text-xs text-content-muted">{t('dashboard.wholePeriodNote')}</p>
     </Card>
   );
 }

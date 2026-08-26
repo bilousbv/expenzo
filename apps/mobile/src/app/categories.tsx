@@ -12,12 +12,14 @@ import {
   categoryDotClass,
   categoryDotStyle,
 } from '@expenzo/ui';
+import { useTranslation } from '@expenzo/i18n';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategoryForm } from '../features/categories/category-form';
 
 export default function CategoriesScreen() {
+  const { t } = useTranslation();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
 
@@ -64,7 +66,7 @@ export default function CategoriesScreen() {
                       uncategorise every expense that ever used it. */}
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`Archive ${category.name}`}
+                    accessibilityLabel={t('categories.archiveLabel', { name: category.name })}
                     disabled={archive.isPending}
                     onPress={() => archive.mutate(category.id)}
                   >

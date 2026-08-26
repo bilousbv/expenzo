@@ -3,6 +3,7 @@ import { Button } from '@expenzo/ui';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
+import { useTranslation } from '@expenzo/i18n';
 import { Text, View } from 'react-native';
 
 import { env } from '../../env';
@@ -16,6 +17,7 @@ import { SignInForm } from './sign-in-form';
  * presentational and testable without a client.
  */
 export function AuthPanel({ mode }: { mode: CredentialsMode }) {
+  const { t } = useTranslation();
   const [showMagicLink, setShowMagicLink] = useState(false);
   const [providerError, setProviderError] = useState<string | null>(null);
 
@@ -60,7 +62,7 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
       });
 
       if (error) throw new Error(error.message);
-      if (!data.url) throw new Error('That provider did not return a sign-in URL.');
+      if (!data.url) throw new Error(t('auth.errors.providerNoUrl'));
 
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
 
@@ -71,12 +73,14 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
       // openAuthSessionAsync hands the deep link back rather than routing it, so
       // the code is exchanged here rather than on the callback screen.
       const code = new URL(result.url).searchParams.get('code');
-      if (!code) throw new Error('That sign-in link is missing its code.');
+      if (!code) throw new Error(t('auth.errors.missingCode'));
 
       const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
       if (exchangeError) throw new Error(exchangeError.message);
     } catch (cause) {
-      setProviderError(cause instanceof Error ? cause.message : 'Could not reach that provider.');
+      setProviderError(
+        cause instanceof Error ? cause.message : t('auth.errors.providerUnreachable'),
+      );
     }
   }
 
@@ -91,7 +95,7 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
           variant="secondary"
           onPress={() => void signInWithProvider(provider)}
         >
-          {provider === 'google' ? 'Continue with Google' : 'Continue with Apple'}
+          {t(provider === 'google' ? 'auth.continueWithGoogle' : 'auth.continueWithApple')}
         </Button>
       ))}
 
@@ -103,14 +107,12 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
 
       {showMagicLink ? (
         <View className="gap-2 border-t border-brand-100 pt-gutter">
-          <Text className="text-sm text-content-muted">
-            We will email you a link. No password needed.
-          </Text>
+          <Text className="text-sm text-content-muted">{t('auth.magicLinkExplainer')}</Text>
           <SignInForm onSubmit={sendMagicLink} />
         </View>
       ) : (
         <Button testID="show-magic-link" variant="ghost" onPress={() => setShowMagicLink(true)}>
-          Email me a sign-in link instead
+          {t('auth.showMagicLink')}
         </Button>
       )}
     </View>

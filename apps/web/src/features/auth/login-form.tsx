@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from '@expenzo/i18n';
 import { buttonContainerClass, buttonLabelClass } from '@expenzo/ui';
 import { useId, useState, type FormEvent } from 'react';
 
@@ -10,6 +11,7 @@ export interface LoginFormProps {
 }
 
 export function LoginForm({ onSubmit }: LoginFormProps) {
+  const { t } = useTranslation();
   const emailId = useId();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +25,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
     setError(null);
 
     if (!EMAIL_PATTERN.test(trimmed)) {
-      setError('Enter a valid email address.');
+      setError(t('auth.errors.invalidEmail'));
       return;
     }
 
@@ -34,7 +36,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
       await onSubmit(trimmed);
       setSent(true);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not send the link. Try again.');
+      setError(cause instanceof Error ? cause.message : t('auth.errors.sendLinkFailed'));
     } finally {
       setPending(false);
     }
@@ -43,7 +45,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-gutter" noValidate>
       <label htmlFor={emailId} className="text-sm font-medium text-content-muted">
-        Email
+        {t('auth.email')}
       </label>
 
       <input
@@ -56,7 +58,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
         onChange={(event) => setEmail(event.target.value)}
         aria-invalid={error ? true : undefined}
         className="rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500"
-        placeholder="you@example.com"
+        placeholder={t('auth.emailPlaceholder')}
       />
 
       <button
@@ -65,7 +67,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
         className={buttonContainerClass('primary', 'md', pending)}
       >
         <span className={buttonLabelClass('primary', 'md')}>
-          {pending ? 'Sending…' : 'Send magic link'}
+          {t(pending ? 'auth.sendingMagicLink' : 'auth.sendMagicLink')}
         </span>
       </button>
 
@@ -79,7 +81,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
 
       {sent && !error ? (
         <p role="status" data-testid="login-sent" className="text-sm text-content-muted">
-          Check your email for a sign-in link.
+          {t('auth.magicLinkSent')}
         </p>
       ) : null}
     </form>
