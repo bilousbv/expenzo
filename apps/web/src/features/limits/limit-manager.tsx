@@ -7,7 +7,8 @@ import {
   useDeleteLimit,
   useLimits,
 } from '@expenzo/data';
-import { createLimitInput, parseAmountInput } from '@expenzo/domain';
+import { createLimitInput, parseAmountInput, VALIDATION_PARAMS } from '@expenzo/domain';
+import { useTranslation } from '@expenzo/i18n';
 import {
   buttonContainerClass,
   buttonLabelClass,
@@ -19,6 +20,7 @@ import {
 import { useId, useState, type FormEvent } from 'react';
 
 export function LimitManager({ userId }: { userId: string | undefined }) {
+  const { t } = useTranslation();
   const amountId = useId();
 
   const household = useCurrentHousehold();
@@ -54,7 +56,7 @@ export function LimitManager({ userId }: { userId: string | undefined }) {
     const parsed = createLimitInput.safeParse({ categoryId, amountMinor: amountMinor ?? 0 });
 
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'That is not a limit.');
+      setError(t(parsed.error.issues[0]?.message ?? 'limits.errors.invalid', VALIDATION_PARAMS));
       return;
     }
 
@@ -64,7 +66,7 @@ export function LimitManager({ userId }: { userId: string | undefined }) {
       setAmountText('');
       setCategoryId(undefined);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not set the limit.');
+      setError(cause instanceof Error ? cause.message : t('limits.errors.setFailed'));
     } finally {
       setPending(false);
     }
@@ -73,7 +75,7 @@ export function LimitManager({ userId }: { userId: string | undefined }) {
   return (
     <div className="flex flex-col gap-gutter">
       <Card className="gap-gutter">
-        <h2 className="text-lg font-semibold text-content">Set a limit</h2>
+        <h2 className="text-lg font-semibold text-content">{t('limits.setHeading')}</h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-gutter" noValidate>
           {/* No category means the household-wide limit — the one the dashboard
@@ -82,12 +84,12 @@ export function LimitManager({ userId }: { userId: string | undefined }) {
             options={options}
             value={categoryId}
             onChange={setCategoryId}
-            placeholder="Everything (household-wide)"
+            placeholder={t('limits.householdWide')}
             disabled={!householdId}
           />
 
           <label htmlFor={amountId} className="text-sm font-medium text-content-muted">
-            Monthly limit
+            {t('limits.monthly')}
           </label>
           <input
             id={amountId}
@@ -106,7 +108,7 @@ export function LimitManager({ userId }: { userId: string | undefined }) {
             className={buttonContainerClass('primary', 'md', pending || !householdId)}
           >
             <span className={buttonLabelClass('primary', 'md')}>
-              {pending ? 'Saving…' : 'Set limit'}
+              {t(pending ? 'limits.saving' : 'limits.set')}
             </span>
           </button>
 
@@ -119,13 +121,13 @@ export function LimitManager({ userId }: { userId: string | undefined }) {
       </Card>
 
       <Card className="gap-gutter">
-        <h2 className="text-lg font-semibold text-content">Current limits</h2>
+        <h2 className="text-lg font-semibold text-content">{t('limits.current')}</h2>
 
         {limits.isPending ? (
-          <p className="text-sm text-content-muted">Loading…</p>
+          <p className="text-sm text-content-muted">{t('common.loading')}</p>
         ) : (limits.data ?? []).length === 0 ? (
           <p data-testid="no-limits" className="text-sm text-content-muted">
-            No limits set. Spending is shown without one until you add it.
+            {t('limits.none')}
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -137,8 +139,8 @@ export function LimitManager({ userId }: { userId: string | undefined }) {
               >
                 <span className="text-content">
                   {limit.category_id
-                    ? (categoryById.get(limit.category_id)?.name ?? 'Category')
-                    : 'Everything'}
+                    ? (categoryById.get(limit.category_id)?.name ?? t('limits.fallbackCategory'))
+                    : t('common.everything')}
                 </span>
 
                 <span className="flex flex-row items-center gap-3">
@@ -147,7 +149,7 @@ export function LimitManager({ userId }: { userId: string | undefined }) {
                   </span>
                   <button
                     type="button"
-                    aria-label={`Remove limit`}
+                    aria-label={t('limits.removeLabel')}
                     disabled={remove.isPending}
                     onClick={() => remove.mutate(limit.id)}
                     className="text-sm text-content-muted"

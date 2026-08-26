@@ -1,14 +1,15 @@
 'use client';
 
+import { useTranslation } from '@expenzo/i18n';
 import { buttonContainerClass, buttonLabelClass } from '@expenzo/ui';
 import { useState } from 'react';
 
 /** Matches the providers configured in supabase/config.toml. */
 export type OAuthProvider = 'google' | 'apple';
 
-export const OAUTH_LABEL: Record<OAuthProvider, string> = {
-  google: 'Continue with Google',
-  apple: 'Continue with Apple',
+export const OAUTH_LABEL_KEY: Record<OAuthProvider, string> = {
+  google: 'auth.continueWithGoogle',
+  apple: 'auth.continueWithApple',
 };
 
 export interface OAuthButtonsProps {
@@ -18,6 +19,7 @@ export interface OAuthButtonsProps {
 }
 
 export function OAuthButtons({ providers, onSignIn }: OAuthButtonsProps) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState<OAuthProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +37,7 @@ export function OAuthButtons({ providers, onSignIn }: OAuthButtonsProps) {
     try {
       await onSignIn(provider);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not reach that provider.');
+      setError(cause instanceof Error ? cause.message : t('auth.errors.providerUnreachable'));
       setBusy(null);
     }
   }
@@ -50,7 +52,9 @@ export function OAuthButtons({ providers, onSignIn }: OAuthButtonsProps) {
           onClick={() => void handleClick(provider)}
           className={buttonContainerClass('secondary', 'md', busy !== null)}
         >
-          <span className={buttonLabelClass('secondary', 'md')}>{OAUTH_LABEL[provider]}</span>
+          <span className={buttonLabelClass('secondary', 'md')}>
+            {t(OAUTH_LABEL_KEY[provider])}
+          </span>
         </button>
       ))}
 

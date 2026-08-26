@@ -7,7 +7,7 @@ import { uuidSchema } from './expense';
  *  of the same colour, and the swatch UI offers exactly this form. */
 export const hexColorSchema = z
   .string()
-  .regex(/^#[0-9a-fA-F]{6}$/, 'Colour must be a six-digit hex value like #337dff')
+  .regex(/^#[0-9a-fA-F]{6}$/, 'validation.category.colourInvalid')
   .transform((value) => value.toLowerCase());
 
 /** Blank strings become absent, so the database stores NULL rather than ''. */
@@ -22,12 +22,12 @@ const optionalText = z
 const categoryName = z
   .string()
   .trim()
-  .min(1, 'Give the category a name')
-  .max(64, 'That name is too long')
+  .min(1, 'validation.category.nameRequired')
+  .max(64, 'validation.category.nameTooLong')
   // A name of only emoji or punctuation is not blank, but it produces no slug —
   // and the slug is what the unique index is built on. Catching it here means
   // the user gets a sentence rather than a constraint name.
-  .refine((value) => slugify(value).length > 0, 'That name needs at least one letter or digit');
+  .refine((value) => slugify(value).length > 0, 'validation.category.nameNeedsCharacter');
 
 export const createCategoryInput = z.object({
   name: categoryName,
@@ -36,7 +36,7 @@ export const createCategoryInput = z.object({
   parentId: uuidSchema.optional(),
   // Seeded system categories occupy 10–999 in steps of ten. Starting custom
   // ones at 500 drops them into the middle rather than above everything.
-  sortOrder: z.number().int('Sort order must be a whole number').min(0).default(500),
+  sortOrder: z.number().int('validation.category.sortOrderInteger').min(0).default(500),
 });
 
 /**

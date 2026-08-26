@@ -1,6 +1,7 @@
-import { credentialsSchema, registrationSchema } from '@expenzo/domain';
+import { credentialsSchema, registrationSchema, VALIDATION_PARAMS } from '@expenzo/domain';
 import { Button } from '@expenzo/ui';
 import { useState } from 'react';
+import { useTranslation } from '@expenzo/i18n';
 import { Text, TextInput, View } from 'react-native';
 
 export type CredentialsMode = 'signIn' | 'signUp';
@@ -11,13 +12,14 @@ export interface CredentialsFormProps {
 }
 
 const LABEL: Record<CredentialsMode, { idle: string; busy: string }> = {
-  signIn: { idle: 'Sign in', busy: 'Signing in…' },
-  signUp: { idle: 'Create account', busy: 'Creating account…' },
+  signIn: { idle: 'auth.signIn', busy: 'auth.signingIn' },
+  signUp: { idle: 'auth.createAccount', busy: 'auth.creatingAccount' },
 };
 
 const inputClass = 'rounded-card border border-brand-100 bg-white px-4 py-3 text-content';
 
 export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -41,7 +43,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
       : credentialsSchema.safeParse({ email, password });
 
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Check the details and try again.');
+      setError(t(parsed.error.issues[0]?.message ?? 'auth.errors.checkDetails', VALIDATION_PARAMS));
       return;
     }
 
@@ -51,7 +53,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
       // confirmPassword, which is only ever compared and must not be sent.
       await onSubmit({ email: parsed.data.email, password: parsed.data.password });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not sign you in. Try again.');
+      setError(cause instanceof Error ? cause.message : t('auth.errors.signInFailed'));
     } finally {
       setPending(false);
     }
@@ -59,7 +61,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
 
   return (
     <View className="gap-gutter">
-      <Text className="text-sm font-medium text-content-muted">Email</Text>
+      <Text className="text-sm font-medium text-content-muted">{t('auth.email')}</Text>
       <TextInput
         testID="credentials-email"
         value={email}
@@ -67,11 +69,11 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
         autoCapitalize="none"
         autoComplete="email"
         keyboardType="email-address"
-        placeholder="you@example.com"
+        placeholder={t('auth.emailPlaceholder')}
         className={inputClass}
       />
 
-      <Text className="text-sm font-medium text-content-muted">Password</Text>
+      <Text className="text-sm font-medium text-content-muted">{t('auth.password')}</Text>
       <TextInput
         testID="credentials-password"
         value={password}

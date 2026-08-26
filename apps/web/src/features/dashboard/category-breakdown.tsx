@@ -1,6 +1,7 @@
 'use client';
 
 import { limitProgress } from '@expenzo/domain';
+import { useTranslation } from '@expenzo/i18n';
 import { Card, categoryDotClass, categoryDotStyle, formatCurrency } from '@expenzo/ui';
 
 export interface CategoryBreakdownRow {
@@ -18,15 +19,17 @@ export interface CategoryBreakdownProps {
 }
 
 export function CategoryBreakdown({ rows, currency, loading = false }: CategoryBreakdownProps) {
+  const { t } = useTranslation();
+
   return (
     <Card className="gap-gutter">
-      <h2 className="text-lg font-semibold text-content">By category</h2>
+      <h2 className="text-lg font-semibold text-content">{t('dashboard.byCategory')}</h2>
 
       {loading ? (
-        <p className="text-sm text-content-muted">Loading…</p>
+        <p className="text-sm text-content-muted">{t('common.loading')}</p>
       ) : rows.length === 0 ? (
         <p data-testid="no-category-spend" className="text-sm text-content-muted">
-          Nothing spent in this period.
+          {t('dashboard.nothingSpent')}
         </p>
       ) : (
         <ul className="flex flex-col gap-3">

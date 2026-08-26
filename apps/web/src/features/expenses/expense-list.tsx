@@ -8,6 +8,7 @@ import {
   useHouseholdMembers,
 } from '@expenzo/data';
 import type { ExpenseFilter } from '@expenzo/domain';
+import { useTranslation } from '@expenzo/i18n';
 import {
   buttonContainerClass,
   buttonLabelClass,
@@ -31,6 +32,7 @@ export function ExpenseList({
   userId: string | undefined;
   filter: ExpenseFilter;
 }) {
+  const { t } = useTranslation();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
   const baseCurrency = household.data?.base_currency;
@@ -50,10 +52,10 @@ export function ExpenseList({
   return (
     <Card className="gap-gutter">
       {expenses.isPending ? (
-        <p className="text-sm text-content-muted">Loading…</p>
+        <p className="text-sm text-content-muted">{t('common.loading')}</p>
       ) : rows.length === 0 ? (
         <p data-testid="no-expenses" className="text-sm text-content-muted">
-          Nothing recorded in this period.
+          {t('expenses.nothingRecorded')}
         </p>
       ) : (
         <ul className="flex flex-col gap-2">
@@ -68,7 +70,7 @@ export function ExpenseList({
                 className="flex flex-row items-center justify-between border-b border-brand-100 pb-2"
               >
                 <div className="flex flex-col">
-                  <span className="text-content">{row.merchant ?? 'Expense'}</span>
+                  <span className="text-content">{row.merchant ?? t('expenses.fallbackName')}</span>
                   <span className="flex flex-row items-center gap-2 text-xs text-content-muted">
                     {category ? (
                       <>
@@ -80,11 +82,11 @@ export function ExpenseList({
                         {category.name}
                       </>
                     ) : (
-                      'Uncategorised'
+                      t('common.uncategorised')
                     )}
                     <span>{row.occurred_on}</span>
                     <span data-testid="expense-author">
-                      {authorFor.get(row.created_by) ?? 'Member'}
+                      {authorFor.get(row.created_by) ?? t('common.member')}
                     </span>
                   </span>
                 </div>
@@ -116,7 +118,9 @@ export function ExpenseList({
                   </span>
                   <button
                     type="button"
-                    aria-label={`Delete ${row.merchant ?? 'expense'}`}
+                    aria-label={t('expenses.deleteLabel', {
+                      name: row.merchant ?? t('expenses.fallbackName'),
+                    })}
                     disabled={remove.isPending}
                     onClick={() => remove.mutate(row.id)}
                     className="text-sm text-content-muted"
@@ -139,7 +143,7 @@ export function ExpenseList({
           className={buttonContainerClass('secondary', 'md', expenses.isFetchingNextPage)}
         >
           <span className={buttonLabelClass('secondary', 'md')}>
-            {expenses.isFetchingNextPage ? 'Loading…' : 'Load more'}
+            {t(expenses.isFetchingNextPage ? 'common.loading' : 'expenses.loadMore')}
           </span>
         </button>
       ) : null}

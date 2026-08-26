@@ -1,5 +1,7 @@
 import { expect, test as setup } from '@playwright/test';
 
+import { ENGLISH_COOKIE } from './locale';
+
 const STORAGE_STATE = 'e2e/.auth/user.json';
 
 /** Mailpit, which `supabase start` exposes. Every local mail lands here. */
@@ -61,6 +63,12 @@ async function signInLinkFrom(messageId: string): Promise<string> {
  * application.
  */
 setup('authenticate', async ({ page }) => {
+  // Before the first navigation, not just before the state is saved: this
+  // setup drives the real sign-in UI with English selectors, and without the
+  // cookie it would be reading a Ukrainian page. It is written out with the
+  // rest of the state, so every signed-in spec inherits English too.
+  await page.context().addCookies([ENGLISH_COOKIE]);
+
   const email = process.env.E2E_TEST_EMAIL;
 
   if (!email) {

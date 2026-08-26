@@ -2,12 +2,16 @@ import { Button, Card } from '@expenzo/ui';
 import { useSupabase } from '@expenzo/data';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { useTranslation } from '@expenzo/i18n';
+
+import { LanguageSwitcher } from '../../features/settings/language-switcher';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useSession } from '../../features/auth/use-session';
 
 export default function SettingsTab() {
+  const { t } = useTranslation();
   const supabase = useSupabase();
   const { session } = useSession();
 
@@ -35,7 +39,7 @@ export default function SettingsTab() {
       const nameFor = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
       return (rows ?? []).map((row) => ({
         ...row,
-        displayName: nameFor.get(row.user_id) ?? 'Member',
+        displayName: nameFor.get(row.user_id) ?? t('common.member'),
       }));
     },
   });
@@ -44,11 +48,11 @@ export default function SettingsTab() {
     <SafeAreaView className="flex-1 bg-surface-muted">
       <View className="flex-1 gap-gutter p-gutter">
         <Text className="text-2xl font-bold text-content">
-          {household.data?.name ?? 'Settings'}
+          {household.data?.name ?? t('nav.settings')}
         </Text>
 
         <Card className="gap-gutter">
-          <Text className="text-lg font-semibold text-content">Members</Text>
+          <Text className="text-lg font-semibold text-content">{t('household.members')}</Text>
 
           {members.isPending ? (
             <ActivityIndicator />
@@ -65,13 +69,17 @@ export default function SettingsTab() {
         </Card>
 
         <Card className="gap-gutter">
-          <Text className="text-lg font-semibold text-content">Categories</Text>
+          <LanguageSwitcher />
+        </Card>
+
+        <Card className="gap-gutter">
+          <Text className="text-lg font-semibold text-content">{t('categories.title')}</Text>
           <Button
             testID="open-categories"
             variant="secondary"
             onPress={() => router.push('/categories')}
           >
-            Manage categories
+            {t('nav.manageCategories')}
           </Button>
         </Card>
 

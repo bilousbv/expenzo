@@ -6,13 +6,7 @@ import {
   useLimits,
   usePeriodSummary,
 } from '@expenzo/data';
-import {
-  limitProgress,
-  PERIOD_PRESET_LABELS,
-  PERIOD_PRESETS,
-  presetRange,
-  type PeriodPreset,
-} from '@expenzo/domain';
+import { limitProgress, PERIOD_PRESETS, presetRange, type PeriodPreset } from '@expenzo/domain';
 import {
   Button,
   Card,
@@ -23,11 +17,13 @@ import {
 } from '@expenzo/ui';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
+import { useTranslation } from '@expenzo/i18n';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { ExpenseListView } from '../expenses/expense-list';
 
 export function Dashboard() {
+  const { t } = useTranslation();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
   const currency = household.data?.base_currency ?? 'USD';
@@ -67,8 +63,8 @@ export function Dashboard() {
       // Expenses with no category still sum to something, and dropping them
       // would make the rollup disagree with the period total.
       name: entry.categoryId
-        ? (categoryById.get(entry.categoryId)?.name ?? 'Category')
-        : 'Uncategorised',
+        ? (categoryById.get(entry.categoryId)?.name ?? t('limits.fallbackCategory'))
+        : t('common.uncategorised'),
       color: entry.categoryId ? (categoryById.get(entry.categoryId)?.color ?? null) : null,
       spentMinor: entry.totalMinor,
       limitMinor: limitFor.get(entry.categoryId) ?? null,
@@ -90,13 +86,13 @@ export function Dashboard() {
 
         <View className="flex-row gap-gutter">
           <View>
-            <Text className="text-xs text-content-muted">Income</Text>
+            <Text className="text-xs text-content-muted">{t('dashboard.income')}</Text>
             <Text testID="budget-income" className="text-content">
               {formatCurrency(summary.data?.incomeMinor ?? 0, currency)}
             </Text>
           </View>
           <View>
-            <Text className="text-xs text-content-muted">Spent</Text>
+            <Text className="text-xs text-content-muted">{t('dashboard.spent')}</Text>
             <Text testID="budget-spent" className="text-content">
               {formatCurrency(summary.data?.spentMinor ?? 0, currency)}
             </Text>
@@ -106,7 +102,7 @@ export function Dashboard() {
 
       <View
         accessibilityRole="radiogroup"
-        accessibilityLabel="Period"
+        accessibilityLabel={t('dashboard.period')}
         className="flex-row flex-wrap gap-2"
       >
         {PERIOD_PRESETS.map((option) => (
@@ -117,14 +113,14 @@ export function Dashboard() {
             size="sm"
             onPress={() => setPreset(option)}
           >
-            {PERIOD_PRESET_LABELS[option]}
+            {t(`period.${option}`)}
           </Button>
         ))}
       </View>
 
       <View
         accessibilityRole="radiogroup"
-        accessibilityLabel="Author"
+        accessibilityLabel={t('dashboard.author')}
         className="flex-row flex-wrap gap-2"
       >
         <Button
@@ -150,7 +146,7 @@ export function Dashboard() {
       </View>
 
       <View className="flex-row items-center justify-between">
-        <Text className="text-xl font-semibold text-content">Expenses</Text>
+        <Text className="text-xl font-semibold text-content">{t('expenses.title')}</Text>
         <Button testID="new-expense" size="sm" onPress={() => router.push('/expense/new')}>
           Add
         </Button>
@@ -163,7 +159,7 @@ export function Dashboard() {
           <ActivityIndicator />
         ) : breakdown.length === 0 ? (
           <Text testID="no-category-spend" className="text-sm text-content-muted">
-            Nothing spent in this period.
+            {t('dashboard.nothingSpent')}
           </Text>
         ) : (
           breakdown.map((row) => {

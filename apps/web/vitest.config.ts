@@ -16,6 +16,7 @@ export default defineConfig({
       '@expenzo/ui': path.resolve(__dirname, '../../packages/ui/src/index.ts'),
       '@expenzo/data': path.resolve(__dirname, '../../packages/data/src/index.ts'),
       '@expenzo/domain': path.resolve(__dirname, '../../packages/domain/src/index.ts'),
+      '@expenzo/i18n': path.resolve(__dirname, '../../packages/i18n/src/index.ts'),
       '@expenzo/supabase-types': path.resolve(
         __dirname,
         '../../packages/supabase-types/src/index.ts',

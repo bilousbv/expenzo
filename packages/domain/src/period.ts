@@ -109,12 +109,6 @@ export const PERIOD_PRESETS = ['this-month', 'last-month', 'this-week'] as const
 
 export type PeriodPreset = (typeof PERIOD_PRESETS)[number];
 
-export const PERIOD_PRESET_LABELS: Record<PeriodPreset, string> = {
-  'this-month': 'This month',
-  'last-month': 'Last month',
-  'this-week': 'This week',
-};
-
 /**
  * The date range a named period covers, in the household's timezone.
  *

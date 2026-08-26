@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from '@expenzo/i18n';
 import { buttonContainerClass, buttonLabelClass } from '@expenzo/ui';
 import { useEffect, useRef, type ReactNode } from 'react';
 
@@ -20,6 +21,7 @@ export interface ExpenseDialogProps {
  * reader user notices immediately.
  */
 export function ExpenseDialog({ open, onClose, title, children }: ExpenseDialogProps) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -48,11 +50,11 @@ export function ExpenseDialog({ open, onClose, title, children }: ExpenseDialogP
           <button
             type="button"
             data-testid="close-expense-dialog"
-            aria-label="Close"
+            aria-label={t('common.close')}
             onClick={onClose}
             className={buttonContainerClass('ghost', 'sm')}
           >
-            <span className={buttonLabelClass('ghost', 'sm')}>Close</span>
+            <span className={buttonLabelClass('ghost', 'sm')}>{t('common.close')}</span>
           </button>
         </div>
 

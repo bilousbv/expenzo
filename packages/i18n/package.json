@@ -1,0 +1,32 @@
+{
+  "name": "@expenzo/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": false,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint .",
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "i18next": "^25.10.10",
+    "react-i18next": "^16.6.6"
+  },
+  "peerDependencies": {
+    "react": ">=19"
+  },
+  "devDependencies": {
+    "@expenzo/eslint-config": "workspace:*",
+    "@expenzo/typescript-config": "workspace:*",
+    "@types/node": "^22.19.1",
+    "@types/react": "^19.2.7",
+    "eslint": "^9.39.5",
+    "react": "^19.2.0",
+    "typescript": "~6.0.3",
+    "vite": "^7.3.6",
+    "vitest": "^4.1.11"
+  }
+}

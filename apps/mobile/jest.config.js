@@ -16,7 +16,7 @@ module.exports = {
       '|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation' +
       '|@sentry/react-native|native-base|standard-navigation' +
       '|nativewind|react-native-css-interop|expo-router|@react-navigation' +
-      '|@expenzo/ui|@expenzo/data|@expenzo/domain|@expenzo/supabase-types))',
+      '|@expenzo/ui|@expenzo/data|@expenzo/domain|@expenzo/i18n|@expenzo/supabase-types))',
     '/node_modules/react-native-reanimated/plugin/',
     '/node_modules/@react-native/babel-preset/',
   ],
@@ -26,6 +26,7 @@ module.exports = {
     '^@expenzo/ui$': '<rootDir>/../../packages/ui/src/index.ts',
     '^@expenzo/data$': '<rootDir>/../../packages/data/src/index.ts',
     '^@expenzo/domain$': '<rootDir>/../../packages/domain/src/index.ts',
+    '^@expenzo/i18n$': '<rootDir>/../../packages/i18n/src/index.ts',
     '^@expenzo/supabase-types$': '<rootDir>/../../packages/supabase-types/src/index.ts',
   },
   collectCoverageFrom: ['**/*.{ts,tsx}', '!**/node_modules/**', '!**/coverage/**'],

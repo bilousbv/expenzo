@@ -88,11 +88,18 @@ Reference data that production needs — system categories, the service catalogu
 
 ## Testing
 
-| Workspace     | Runner                      | Covers                                                        |
-| ------------- | --------------------------- | ------------------------------------------------------------- |
-| `packages/ui` | Vitest (jsdom)              | shared logic and the web `.tsx` component variants            |
-| `apps/web`    | Vitest (jsdom) + Playwright | app components and browser end-to-end flows                   |
-| `apps/mobile` | jest-expo                   | mobile code and the `.native.tsx` variants, via `@expenzo/ui` |
+| Workspace       | Runner                      | Covers                                                        |
+| --------------- | --------------------------- | ------------------------------------------------------------- |
+| `packages/ui`   | Vitest (jsdom)              | shared logic and the web `.tsx` component variants            |
+| `packages/i18n` | Vitest (node)               | catalogue parity, plural forms and the i18next factory        |
+| `apps/web`      | Vitest (jsdom) + Playwright | app components and browser end-to-end flows                   |
+| `apps/mobile`   | jest-expo                   | mobile code and the `.native.tsx` variants, via `@expenzo/ui` |
+
+Both component suites render in **English**, while the app itself defaults to
+**Ukrainian** — see `vitest.setup.ts` and `jest.setup.js`. Pinning them keeps
+the assertions readable in one language rather than needing a rewrite per
+language added; the Ukrainian default is covered where it is the subject, in
+`apps/web/e2e/locale.spec.ts` and the `packages/i18n` catalogue tests.
 
 The two runners resolve the platform split for free. Vite's default extension
 list omits `.native.tsx`, so Vitest always gets the web half; `jest-expo/ios`

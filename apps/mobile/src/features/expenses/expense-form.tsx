@@ -1,4 +1,4 @@
-import { createExpenseInput, type CreateExpenseInput } from '@expenzo/domain';
+import { createExpenseInput, VALIDATION_PARAMS, type CreateExpenseInput } from '@expenzo/domain';
 import {
   AmountField,
   Button,
@@ -7,6 +7,7 @@ import {
   type CategoryOption,
 } from '@expenzo/ui';
 import { useState } from 'react';
+import { useTranslation } from '@expenzo/i18n';
 import { Text, TextInput, View } from 'react-native';
 
 export interface ExpenseFormProps {
@@ -38,6 +39,7 @@ export function ExpenseForm({
   disabled = false,
   autoFocusAmount = true,
 }: ExpenseFormProps) {
+  const { t } = useTranslation();
   const [amountMinor, setAmountMinor] = useState<number | null>(null);
   const [amountKey, setAmountKey] = useState(0);
 
@@ -69,7 +71,7 @@ export function ExpenseForm({
     });
 
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Check the expense and try again.');
+      setError(t(parsed.error.issues[0]?.message ?? 'expenses.errors.invalid', VALIDATION_PARAMS));
       return;
     }
 
@@ -82,7 +84,7 @@ export function ExpenseForm({
       setAmountMinor(null);
       setAmountKey((key) => key + 1);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not add the expense.');
+      setError(cause instanceof Error ? cause.message : t('expenses.errors.addFailed'));
     } finally {
       setPending(false);
     }
@@ -95,7 +97,7 @@ export function ExpenseForm({
           direction invites rows where the two disagree. */}
       <View
         accessibilityRole="radiogroup"
-        accessibilityLabel="Direction"
+        accessibilityLabel={t('expenses.direction')}
         className="flex-row gap-2"
       >
         {(['spend', 'income'] as const).map((option) => (
@@ -106,7 +108,7 @@ export function ExpenseForm({
             size="sm"
             onPress={() => setDirection(option)}
           >
-            {option === 'spend' ? 'Spending' : 'Income'}
+            {t(option === 'spend' ? 'expenses.spending' : 'expenses.incomeDirection')}
           </Button>
         ))}
       </View>
@@ -131,13 +133,13 @@ export function ExpenseForm({
         />
       ) : null}
 
-      <Text className="text-sm font-medium text-content-muted">Date</Text>
+      <Text className="text-sm font-medium text-content-muted">{t('expenses.date')}</Text>
       <TextInput
         testID="expense-date"
         value={occurredOn}
         onChangeText={setOccurredOn}
         autoCapitalize="none"
-        placeholder="YYYY-MM-DD"
+        placeholder={t('expenses.datePlaceholder')}
         className={inputClass}
       />
 
@@ -148,20 +150,20 @@ export function ExpenseForm({
         disabled={disabled}
       />
 
-      <Text className="text-sm font-medium text-content-muted">Merchant</Text>
+      <Text className="text-sm font-medium text-content-muted">{t('expenses.merchant')}</Text>
       <TextInput
         testID="expense-merchant"
         value={merchant}
         onChangeText={setMerchant}
-        placeholder="Blue Bottle"
+        placeholder={t('expenses.merchantPlaceholder')}
         className={inputClass}
       />
 
-      <Text className="text-sm font-medium text-content-muted">Note</Text>
+      <Text className="text-sm font-medium text-content-muted">{t('expenses.note')}</Text>
       <TextInput testID="expense-note" value={note} onChangeText={setNote} className={inputClass} />
 
       <Button testID="expense-submit" disabled={pending || disabled} onPress={handleSubmit}>
-        {pending ? 'Adding…' : 'Add expense'}
+        {t(pending ? 'expenses.adding' : 'expenses.addExpense')}
       </Button>
 
       {error ? (

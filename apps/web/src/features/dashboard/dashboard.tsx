@@ -12,12 +12,12 @@ import {
 } from '@expenzo/data';
 import {
   localDateIn,
-  PERIOD_PRESET_LABELS,
   PERIOD_PRESETS,
   presetRange,
   type CreateExpenseInput,
   type PeriodPreset,
 } from '@expenzo/domain';
+import { useTranslation } from '@expenzo/i18n';
 import { buttonContainerClass, buttonLabelClass, Card, type CategoryOption } from '@expenzo/ui';
 import { useMemo, useState } from 'react';
 
@@ -29,6 +29,7 @@ import { BudgetSummary } from './budget-summary';
 import { CategoryBreakdown, type CategoryBreakdownRow } from './category-breakdown';
 
 export function Dashboard({ userId }: { userId: string | undefined }) {
+  const { t } = useTranslation();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
   const currency = household.data?.base_currency ?? 'USD';
@@ -76,7 +77,7 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
         categoryId: entry.categoryId,
         // Expenses with no category still sum to something, and dropping them
         // would make the rollup disagree with the period total.
-        name: category?.name ?? 'Uncategorised',
+        name: category?.name ?? t('common.uncategorised'),
         color: category?.color ?? null,
         spentMinor: entry.totalMinor,
         limitMinor: limitFor.get(entry.categoryId) ?? null,
@@ -102,7 +103,11 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
       />
 
       <Card className="gap-gutter">
-        <div role="radiogroup" aria-label="Period" className="flex flex-row flex-wrap gap-2">
+        <div
+          role="radiogroup"
+          aria-label={t('dashboard.period')}
+          className="flex flex-row flex-wrap gap-2"
+        >
           {PERIOD_PRESETS.map((option) => (
             <button
               key={option}
@@ -114,13 +119,17 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
               className={buttonContainerClass(preset === option ? 'primary' : 'secondary', 'sm')}
             >
               <span className={buttonLabelClass(preset === option ? 'primary' : 'secondary', 'sm')}>
-                {PERIOD_PRESET_LABELS[option]}
+                {t(`period.${option}`)}
               </span>
             </button>
           ))}
         </div>
 
-        <div role="radiogroup" aria-label="Author" className="flex flex-row flex-wrap gap-2">
+        <div
+          role="radiogroup"
+          aria-label={t('dashboard.author')}
+          className="flex flex-row flex-wrap gap-2"
+        >
           <button
             type="button"
             role="radio"
@@ -132,7 +141,7 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
             <span
               className={buttonLabelClass(memberId === undefined ? 'primary' : 'secondary', 'sm')}
             >
-              Everyone
+              {t('common.everyone')}
             </span>
           </button>
 
@@ -162,12 +171,12 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
         </div>
 
         <p data-testid="period-range" className="text-xs text-content-muted">
-          {range.start} to {range.end}
+          {range.start} {t('dashboard.rangeSeparator')} {range.end}
         </p>
       </Card>
 
       <div className="flex flex-row items-center justify-between">
-        <h2 className="text-xl font-semibold text-content">Expenses</h2>
+        <h2 className="text-xl font-semibold text-content">{t('expenses.title')}</h2>
         <button
           type="button"
           data-testid="open-expense-dialog"
@@ -175,7 +184,7 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
           onClick={() => setAdding(true)}
           className={buttonContainerClass('primary', 'md', !householdId)}
         >
-          <span className={buttonLabelClass('primary', 'md')}>Add</span>
+          <span className={buttonLabelClass('primary', 'md')}>{t('expenses.add')}</span>
         </button>
       </div>
 
@@ -186,7 +195,7 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
           rows={[
             {
               categoryId: null,
-              name: 'Everything',
+              name: t('common.everything'),
               color: null,
               spentMinor: summary.data?.spentMinor ?? 0,
               limitMinor: overallLimit,
@@ -198,7 +207,11 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
 
       <ExpenseList userId={userId} filter={window} />
 
-      <ExpenseDialog open={adding} onClose={() => setAdding(false)} title="Add an expense">
+      <ExpenseDialog
+        open={adding}
+        onClose={() => setAdding(false)}
+        title={t('expenses.addDialogTitle')}
+      >
         <ExpenseForm
           currency={currency}
           timeZone={timeZone}
