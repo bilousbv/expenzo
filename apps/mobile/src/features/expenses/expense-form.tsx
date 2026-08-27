@@ -4,6 +4,7 @@ import {
   Button,
   CategorySelect,
   CurrencySelect,
+  fieldInputClass,
   type CategoryOption,
 } from '@expenzo/ui';
 import { useState } from 'react';
@@ -27,8 +28,6 @@ export interface ExpenseFormProps {
   /** M6 opens this screen from a wallet payment, where only the amount is left to type. */
   autoFocusAmount?: boolean;
 }
-
-const inputClass = 'rounded-card border border-brand-100 bg-white px-4 py-3 text-content';
 
 export function ExpenseForm({
   currency,
@@ -140,7 +139,7 @@ export function ExpenseForm({
         onChangeText={setOccurredOn}
         autoCapitalize="none"
         placeholder={t('expenses.datePlaceholder')}
-        className={inputClass}
+        className={fieldInputClass()}
       />
 
       <CategorySelect
@@ -156,11 +155,16 @@ export function ExpenseForm({
         value={merchant}
         onChangeText={setMerchant}
         placeholder={t('expenses.merchantPlaceholder')}
-        className={inputClass}
+        className={fieldInputClass()}
       />
 
       <Text className="text-sm font-medium text-content-muted">{t('expenses.note')}</Text>
-      <TextInput testID="expense-note" value={note} onChangeText={setNote} className={inputClass} />
+      <TextInput
+        testID="expense-note"
+        value={note}
+        onChangeText={setNote}
+        className={fieldInputClass()}
+      />
 
       <Button testID="expense-submit" disabled={pending || disabled} onPress={handleSubmit}>
         {t(pending ? 'expenses.adding' : 'expenses.addExpense')}

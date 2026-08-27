@@ -16,6 +16,7 @@ import {
   buttonLabelClass,
   CategorySelect,
   CurrencySelect,
+  fieldInputClass,
   type CategoryOption,
 } from '@expenzo/ui';
 import { useId, useState, type FormEvent } from 'react';
@@ -30,9 +31,6 @@ export interface SubscriptionFormProps {
   onCreate: (input: CreateSubscriptionInput) => Promise<void>;
   disabled?: boolean;
 }
-
-const inputClass =
-  'rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500';
 
 export function SubscriptionForm({
   currency,
@@ -128,7 +126,7 @@ export function SubscriptionForm({
         value={chosenService}
         disabled={disabled}
         onChange={(event) => handleServiceChange(event.target.value)}
-        className={inputClass}
+        className={fieldInputClass()}
       >
         {/* Most subscriptions are not in any catalogue, so "not listed" is the
             starting position rather than an afterthought at the bottom. */}
@@ -150,7 +148,7 @@ export function SubscriptionForm({
         value={name}
         onChange={(event) => setName(event.target.value)}
         placeholder={t('subscriptions.namePlaceholder')}
-        className={inputClass}
+        className={fieldInputClass()}
       />
 
       <AmountField
@@ -178,7 +176,7 @@ export function SubscriptionForm({
         value={cadence}
         disabled={disabled}
         onChange={(event) => setCadence(event.target.value as SubscriptionCadence)}
-        className={inputClass}
+        className={fieldInputClass()}
       >
         {subscriptionCadenceSchema.options.map((option) => (
           <option key={option} value={option}>
@@ -197,7 +195,7 @@ export function SubscriptionForm({
         data-testid="subscription-started"
         value={startedOn}
         onChange={(event) => setStartedOn(event.target.value)}
-        className={inputClass}
+        className={fieldInputClass()}
       />
 
       <CategorySelect

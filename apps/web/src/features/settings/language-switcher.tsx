@@ -1,13 +1,11 @@
 'use client';
 
 import { LOCALE_LABEL, locales, useTranslation, type Locale } from '@expenzo/i18n';
+import { fieldInputClass } from '@expenzo/ui';
 import { useRouter } from 'next/navigation';
 import { useId, useTransition } from 'react';
 
 import { setLocale } from '@/app/locale-action';
-
-const selectClass =
-  'rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500';
 
 /**
  * A real `<select>`, matching the category and currency pickers: keyboard
@@ -42,7 +40,7 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
         value={locale}
         disabled={pending}
         onChange={(event) => handleChange(event.target.value)}
-        className={selectClass}
+        className={fieldInputClass()}
       >
         {locales.map((option) => (
           <option key={option} value={option}>

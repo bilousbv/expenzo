@@ -8,6 +8,7 @@ import {
   buttonLabelClass,
   CategorySelect,
   CurrencySelect,
+  fieldInputClass,
   type CategoryOption,
 } from '@expenzo/ui';
 import { useId, useState, type FormEvent } from 'react';
@@ -28,9 +29,6 @@ export interface ExpenseFormProps {
   onCreate: (input: CreateExpenseInput) => Promise<void>;
   disabled?: boolean;
 }
-
-const inputClass =
-  'rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500';
 
 export function ExpenseForm({
   currency,
@@ -153,7 +151,7 @@ export function ExpenseForm({
         type="date"
         value={occurredOn}
         onChange={(event) => setOccurredOn(event.target.value)}
-        className={inputClass}
+        className={fieldInputClass()}
       />
 
       <CategorySelect
@@ -172,7 +170,7 @@ export function ExpenseForm({
         value={merchant}
         onChange={(event) => setMerchant(event.target.value)}
         placeholder={t('expenses.merchantPlaceholder')}
-        className={inputClass}
+        className={fieldInputClass()}
       />
 
       <label htmlFor={noteId} className="text-sm font-medium text-content-muted">
@@ -183,7 +181,7 @@ export function ExpenseForm({
         name="note"
         value={note}
         onChange={(event) => setNote(event.target.value)}
-        className={inputClass}
+        className={fieldInputClass()}
       />
 
       <button

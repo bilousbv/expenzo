@@ -13,6 +13,7 @@ import {
   categoryDotClass,
   categoryDotStyle,
   formatCurrency,
+  GradientSurface,
   type CategoryOption,
 } from '@expenzo/ui';
 import { router } from 'expo-router';
@@ -74,134 +75,151 @@ export function Dashboard() {
   const balance = summary.data?.balanceMinor ?? 0;
 
   return (
-    <View className="gap-gutter">
-      <Card className="gap-2">
-        <Text className="text-sm text-content-muted">Left this period</Text>
-        <Text
-          testID="budget-balance"
-          className={`text-4xl font-semibold ${balance < 0 ? 'text-red-600' : 'text-content'}`}
-        >
-          {formatCurrency(balance, currency)}
-        </Text>
+    <View>
+      {/* The one surface in the app that is not a white card on grey. The point
+          is that "how are we doing" should be legible from arm's length, which
+          a figure set in the same size as its neighbours is not. */}
+      <GradientSurface className="rounded-b-card px-gutter pb-gutter pt-6">
+        <View className="items-center gap-2 py-8">
+          <Text className="text-sm text-content-inverse/70">{t('dashboard.leftThisPeriod')}</Text>
+          {/* Not reddened when negative: on a dark panel red reads as an error
+              rather than as a number, and the minus sign already says it. */}
+          <Text testID="budget-balance" className="text-5xl font-bold text-content-inverse">
+            {formatCurrency(balance, currency)}
+          </Text>
+        </View>
 
-        <View className="flex-row gap-gutter">
-          <View>
-            <Text className="text-xs text-content-muted">{t('dashboard.income')}</Text>
-            <Text testID="budget-income" className="text-content">
+        <View className="flex-row rounded-card bg-black/15 px-gutter py-4">
+          <View className="flex-1 items-center gap-1">
+            <Text className="text-xs text-content-inverse/70">{t('dashboard.income')}</Text>
+            <Text testID="budget-income" className="text-lg font-semibold text-content-inverse">
               {formatCurrency(summary.data?.incomeMinor ?? 0, currency)}
             </Text>
           </View>
-          <View>
-            <Text className="text-xs text-content-muted">{t('dashboard.spent')}</Text>
-            <Text testID="budget-spent" className="text-content">
+
+          <View className="w-px bg-content-inverse/20" />
+
+          <View className="flex-1 items-center gap-1">
+            <Text className="text-xs text-content-inverse/70">{t('dashboard.spent')}</Text>
+            <Text testID="budget-spent" className="text-lg font-semibold text-content-inverse">
               {formatCurrency(summary.data?.spentMinor ?? 0, currency)}
             </Text>
           </View>
         </View>
-      </Card>
 
-      <View
-        accessibilityRole="radiogroup"
-        accessibilityLabel={t('dashboard.period')}
-        className="flex-row flex-wrap gap-2"
-      >
-        {PERIOD_PRESETS.map((option) => (
-          <Button
-            key={option}
-            testID={`period-${option}`}
-            variant={preset === option ? 'primary' : 'secondary'}
-            size="sm"
-            onPress={() => setPreset(option)}
-          >
-            {t(`period.${option}`)}
-          </Button>
-        ))}
-      </View>
+        <Text className="pt-3 text-center text-xs text-content-inverse/60">
+          {t('dashboard.wholePeriodNote')}
+        </Text>
+      </GradientSurface>
 
-      <View
-        accessibilityRole="radiogroup"
-        accessibilityLabel={t('dashboard.author')}
-        className="flex-row flex-wrap gap-2"
-      >
-        <Button
-          testID="author-all"
-          variant={memberId === undefined ? 'primary' : 'secondary'}
-          size="sm"
-          onPress={() => setMemberId(undefined)}
+      <View className="gap-gutter p-gutter">
+        <View
+          accessibilityRole="radiogroup"
+          accessibilityLabel={t('dashboard.period')}
+          className="flex-row flex-wrap gap-2"
         >
-          Everyone
-        </Button>
+          {PERIOD_PRESETS.map((option) => (
+            <Button
+              key={option}
+              testID={`period-${option}`}
+              variant={preset === option ? 'primary' : 'secondary'}
+              size="sm"
+              onPress={() => setPreset(option)}
+            >
+              {t(`period.${option}`)}
+            </Button>
+          ))}
+        </View>
 
-        {(members.data ?? []).map((member) => (
+        <View
+          accessibilityRole="radiogroup"
+          accessibilityLabel={t('dashboard.author')}
+          className="flex-row flex-wrap gap-2"
+        >
           <Button
-            key={member.userId}
-            testID={`author-${member.userId}`}
-            variant={memberId === member.userId ? 'primary' : 'secondary'}
+            testID="author-all"
+            variant={memberId === undefined ? 'primary' : 'secondary'}
             size="sm"
-            onPress={() => setMemberId(member.userId)}
+            onPress={() => setMemberId(undefined)}
           >
-            {member.displayName}
+            {t('common.everyone')}
           </Button>
-        ))}
-      </View>
 
-      <View className="flex-row items-center justify-between">
-        <Text className="text-xl font-semibold text-content">{t('expenses.title')}</Text>
-        <Button testID="new-expense" size="sm" onPress={() => router.push('/expense/new')}>
-          Add
-        </Button>
-      </View>
+          {(members.data ?? []).map((member) => (
+            <Button
+              key={member.userId}
+              testID={`author-${member.userId}`}
+              variant={memberId === member.userId ? 'primary' : 'secondary'}
+              size="sm"
+              onPress={() => setMemberId(member.userId)}
+            >
+              {member.displayName}
+            </Button>
+          ))}
+        </View>
 
-      <Card className="gap-gutter">
-        <Text className="text-lg font-semibold text-content">By category</Text>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-xl font-semibold text-content">{t('expenses.title')}</Text>
+          <Button testID="new-expense" size="sm" onPress={() => router.push('/expense/new')}>
+            Add
+          </Button>
+        </View>
 
-        {categorySpend.isPending ? (
-          <ActivityIndicator />
-        ) : breakdown.length === 0 ? (
-          <Text testID="no-category-spend" className="text-sm text-content-muted">
-            {t('dashboard.nothingSpent')}
-          </Text>
-        ) : (
-          breakdown.map((row) => {
-            const progress = limitProgress(row.spentMinor, row.limitMinor);
+        <Card className="gap-gutter">
+          <Text className="text-lg font-semibold text-content">By category</Text>
 
-            return (
-              <View key={row.categoryId ?? 'uncategorised'} testID="category-row" className="gap-1">
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-2">
-                    <View className={categoryDotClass()} style={categoryDotStyle(row.color)} />
-                    <Text className="text-content">{row.name}</Text>
+          {categorySpend.isPending ? (
+            <ActivityIndicator />
+          ) : breakdown.length === 0 ? (
+            <Text testID="no-category-spend" className="text-sm text-content-muted">
+              {t('dashboard.nothingSpent')}
+            </Text>
+          ) : (
+            breakdown.map((row) => {
+              const progress = limitProgress(row.spentMinor, row.limitMinor);
+
+              return (
+                <View
+                  key={row.categoryId ?? 'uncategorised'}
+                  testID="category-row"
+                  className="gap-1"
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-2">
+                      <View className={categoryDotClass()} style={categoryDotStyle(row.color)} />
+                      <Text className="text-content">{row.name}</Text>
+                    </View>
+                    <Text
+                      testID="category-amount"
+                      className={progress.exceeded ? 'text-red-600' : 'text-content'}
+                    >
+                      {formatCurrency(row.spentMinor, currency)}
+                      {progress.limitMinor !== null
+                        ? ` / ${formatCurrency(progress.limitMinor, currency)}`
+                        : ''}
+                    </Text>
                   </View>
-                  <Text
-                    testID="category-amount"
-                    className={progress.exceeded ? 'text-red-600' : 'text-content'}
-                  >
-                    {formatCurrency(row.spentMinor, currency)}
-                    {progress.limitMinor !== null
-                      ? ` / ${formatCurrency(progress.limitMinor, currency)}`
-                      : ''}
-                  </Text>
-                </View>
 
-                {/* Only categories with a limit get a bar — one with nothing
+                  {/* Only categories with a limit get a bar — one with nothing
                     behind it would be measuring against nothing. */}
-                {progress.ratio !== null ? (
-                  <View className="h-2 w-full overflow-hidden rounded-full bg-brand-100">
-                    <View
-                      // Capped so an overspend does not paint outside the
-                      // track; the figures above already say by how much.
-                      style={{ width: `${Math.min(progress.ratio, 1) * 100}%` }}
-                      className={`h-full ${progress.exceeded ? 'bg-red-600' : 'bg-brand-600'}`}
-                    />
-                  </View>
-                ) : null}
-              </View>
-            );
-          })
-        )}
-      </Card>
+                  {progress.ratio !== null ? (
+                    <View className="h-2 w-full overflow-hidden rounded-full bg-brand-100">
+                      <View
+                        // Capped so an overspend does not paint outside the
+                        // track; the figures above already say by how much.
+                        style={{ width: `${Math.min(progress.ratio, 1) * 100}%` }}
+                        className={`h-full ${progress.exceeded ? 'bg-red-600' : 'bg-brand-600'}`}
+                      />
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })
+          )}
+        </Card>
 
-      <ExpenseListView filter={window} />
+        <ExpenseListView filter={window} />
+      </View>
     </View>
   );
 }

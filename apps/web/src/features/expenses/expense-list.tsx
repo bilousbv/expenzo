@@ -7,19 +7,21 @@ import {
   useExpenses,
   useHouseholdMembers,
 } from '@expenzo/data';
-import type { ExpenseFilter } from '@expenzo/domain';
+import { groupByDay, localDateIn, relativeDayKey, type ExpenseFilter } from '@expenzo/domain';
 import { useTranslation } from '@expenzo/i18n';
 import {
   buttonContainerClass,
   buttonLabelClass,
   Card,
-  categoryDotClass,
-  categoryDotStyle,
   formatCurrency,
+  IconTile,
+  iconTileGlyphClass,
+  iconTileGlyphStyle,
+  monogramFor,
 } from '@expenzo/ui';
 
 /**
- * The chronological list.
+ * The chronological list, grouped by day.
  *
  * Takes its filter from the dashboard rather than owning one: the period and
  * author controls sit above the whole screen, and a list with its own copy
@@ -36,6 +38,7 @@ export function ExpenseList({
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
   const baseCurrency = household.data?.base_currency;
+  const timeZone = household.data?.timezone ?? 'UTC';
 
   const categories = useCategories(householdId);
   const members = useHouseholdMembers(householdId);
@@ -48,91 +51,139 @@ export function ExpenseList({
   );
 
   const rows = (expenses.data ?? []).flatMap((page) => page.rows);
+  const days = groupByDay(rows, (row) => row.occurred_on);
+  const today = localDateIn(new Date(), timeZone);
 
-  return (
-    <Card className="gap-gutter">
-      {expenses.isPending ? (
+  if (expenses.isPending) {
+    return (
+      <Card>
         <p className="text-sm text-content-muted">{t('common.loading')}</p>
-      ) : rows.length === 0 ? (
+      </Card>
+    );
+  }
+
+  if (rows.length === 0) {
+    return (
+      <Card>
         <p data-testid="no-expenses" className="text-sm text-content-muted">
           {t('expenses.nothingRecorded')}
         </p>
-      ) : (
-        <ul className="flex flex-col gap-2">
-          {rows.map((row) => {
-            const category = row.category_id ? categoryById.get(row.category_id) : undefined;
-            const income = row.direction === 'income';
+      </Card>
+    );
+  }
 
-            return (
-              <li
-                key={row.id}
-                data-testid="expense-row"
-                className="flex flex-row items-center justify-between border-b border-brand-100 pb-2"
+  return (
+    <div className="flex flex-col gap-gutter">
+      {days.map((day) => {
+        const relative = relativeDayKey(day.date, today);
+        // Net for the day, summed in the household's own currency so a day
+        // holding two currencies still adds to one figure.
+        const netMinor = day.items.reduce(
+          (total, row) =>
+            row.direction === 'income'
+              ? total + row.base_amount_minor
+              : total - row.base_amount_minor,
+          0,
+        );
+
+        return (
+          <section key={day.date} className="flex flex-col gap-2">
+            <div className="flex flex-row items-baseline justify-between px-1">
+              <h3 className="text-sm font-medium text-content">
+                {relative ? t(`common.${relative}`) : day.date}
+              </h3>
+              <span
+                data-testid="day-total"
+                className={`text-sm ${netMinor > 0 ? 'text-positive' : 'text-content-muted'}`}
               >
-                <div className="flex flex-col">
-                  <span className="text-content">{row.merchant ?? t('expenses.fallbackName')}</span>
-                  <span className="flex flex-row items-center gap-2 text-xs text-content-muted">
-                    {category ? (
-                      <>
-                        <span
-                          aria-hidden
-                          className={categoryDotClass()}
-                          style={categoryDotStyle(category.color)}
-                        />
-                        {category.name}
-                      </>
-                    ) : (
-                      t('common.uncategorised')
-                    )}
-                    <span>{row.occurred_on}</span>
-                    <span data-testid="expense-author">
-                      {authorFor.get(row.created_by) ?? t('common.member')}
-                    </span>
-                  </span>
-                </div>
+                {netMinor > 0 ? '+' : ''}
+                {formatCurrency(netMinor, baseCurrency ?? 'USD')}
+              </span>
+            </div>
 
-                <div className="flex flex-row items-center gap-3">
-                  <span className="flex flex-col items-end">
-                    {/* Income is signed here for the reader's benefit only — the
-                        stored amount is positive and the direction carries the
-                        meaning. */}
-                    <span
-                      data-testid="expense-amount"
-                      className={income ? 'text-green-700' : 'text-content'}
-                    >
-                      {income ? '+' : ''}
-                      {formatCurrency(row.amount_minor, row.currency)}
-                    </span>
+            {/* One card per day rather than one per row: the rows inside share
+                a surface and are separated by rules, which is what makes the
+                grouping read as a group. */}
+            <Card className="gap-0 p-0">
+              {day.items.map((row, index) => {
+                const category = row.category_id ? categoryById.get(row.category_id) : undefined;
+                const income = row.direction === 'income';
 
-                    {/* What this row contributed to the totals above. Shown only
-                        when it differs, so the common case stays uncluttered
-                        and a foreign amount never looks like it was ignored. */}
-                    {baseCurrency && row.currency !== baseCurrency ? (
-                      <span
-                        data-testid="expense-base-amount"
-                        className="text-xs text-content-muted"
-                      >
-                        ≈ {formatCurrency(row.base_amount_minor, baseCurrency)}
-                      </span>
-                    ) : null}
-                  </span>
-                  <button
-                    type="button"
-                    aria-label={t('expenses.deleteLabel', {
-                      name: row.merchant ?? t('expenses.fallbackName'),
-                    })}
-                    disabled={remove.isPending}
-                    onClick={() => remove.mutate(row.id)}
-                    className="text-sm text-content-muted"
+                return (
+                  <div
+                    key={row.id}
+                    data-testid="expense-row"
+                    className={`flex flex-row items-center gap-3 px-gutter py-3 ${
+                      index > 0 ? 'border-t border-surface-muted' : ''
+                    }`}
                   >
-                    ×
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                    <IconTile color={category?.color ?? null}>
+                      <span
+                        className={iconTileGlyphClass}
+                        style={iconTileGlyphStyle(category?.color ?? null)}
+                      >
+                        {monogramFor(row.merchant ?? category?.name)}
+                      </span>
+                    </IconTile>
+
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-content">
+                        {row.merchant ?? t('expenses.fallbackName')}
+                      </span>
+                      <span className="truncate text-xs text-content-muted">
+                        {category ? category.name : t('common.uncategorised')} ·{' '}
+                        <span data-testid="expense-author">
+                          {authorFor.get(row.created_by) ?? t('common.member')}
+                        </span>
+                      </span>
+                    </div>
+
+                    <div className="flex flex-row items-center gap-3">
+                      <span className="flex flex-col items-end">
+                        {/* Income is signed here for the reader's benefit only
+                            — the stored amount is positive and the direction
+                            carries the meaning. */}
+                        <span
+                          data-testid="expense-amount"
+                          className={income ? 'font-semibold text-positive' : 'text-content'}
+                        >
+                          {income ? '+' : ''}
+                          {formatCurrency(row.amount_minor, row.currency)}
+                        </span>
+
+                        {/* What this row contributed to the totals above. Shown
+                            only when it differs, so the common case stays
+                            uncluttered and a foreign amount never looks like it
+                            was ignored. */}
+                        {baseCurrency && row.currency !== baseCurrency ? (
+                          <span
+                            data-testid="expense-base-amount"
+                            className="text-xs text-content-muted"
+                          >
+                            ≈ {formatCurrency(row.base_amount_minor, baseCurrency)}
+                          </span>
+                        ) : null}
+                      </span>
+
+                      <button
+                        type="button"
+                        aria-label={t('expenses.deleteLabel', {
+                          name: row.merchant ?? t('expenses.fallbackName'),
+                        })}
+                        disabled={remove.isPending}
+                        onClick={() => remove.mutate(row.id)}
+                        className="text-sm text-content-muted"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </Card>
+          </section>
+        );
+      })}
 
       {expenses.hasNextPage ? (
         <button
@@ -147,6 +198,6 @@ export function ExpenseList({
           </span>
         </button>
       ) : null}
-    </Card>
+    </div>
   );
 }

@@ -21,6 +21,9 @@ export {
 } from './period';
 export type { DateRange, IsoDate, PeriodPreset, WeekStart } from './period';
 
+export { groupByDay, relativeDayKey } from './grouping';
+export type { DayGroup } from './grouping';
+
 export { nextRenewalOn, upcomingRenewals } from './renewal';
 export type { RenewalCadence, RenewalSchedule } from './renewal';
 

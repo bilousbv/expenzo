@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslation } from '@expenzo/i18n';
-import { buttonContainerClass, buttonLabelClass } from '@expenzo/ui';
+import { buttonContainerClass, buttonLabelClass, fieldInputClass } from '@expenzo/ui';
 import { useId, useState, type FormEvent } from 'react';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,7 +51,7 @@ export function InviteForm({ onInvite, origin }: InviteFormProps) {
 
         <code
           data-testid="invite-link"
-          className="break-all rounded-card border border-brand-100 bg-white px-4 py-3 text-sm text-content"
+          className="break-all rounded-card bg-surface-muted px-4 py-3 text-sm text-content"
         >
           {link}
         </code>
@@ -83,7 +83,7 @@ export function InviteForm({ onInvite, origin }: InviteFormProps) {
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         aria-invalid={error ? true : undefined}
-        className="rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500"
+        className={fieldInputClass()}
         placeholder={t('household.emailPlaceholder')}
       />
 

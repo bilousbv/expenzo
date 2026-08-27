@@ -1,5 +1,8 @@
 import { useId } from 'react';
 
+import { cn } from './cn';
+import { fieldGroupClass } from './field.styles';
+
 import {
   currencyOptions,
   selectLabelClass,
@@ -25,7 +28,7 @@ export function CurrencySelect({
   const selectId = useId();
 
   return (
-    <div className={className}>
+    <div className={cn(fieldGroupClass, className)}>
       <label htmlFor={selectId} className={selectLabelClass}>
         {label}
       </label>

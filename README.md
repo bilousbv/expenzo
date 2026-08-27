@@ -62,6 +62,24 @@ the SDK expects, which is often _older_ than npm's latest.
 pnpm --filter @expenzo/mobile exec expo install <package>
 ```
 
+## Design
+
+Tokens live in `packages/tailwind-config/theme.js` and are consumed by both
+apps. The palette is a teal ramp whose darkest and brightest stops double as the
+two ends of the balance panel's gradient, plus a mint accent for calls to
+action, on a light grey background with white cards.
+
+Two rules the code enforces rather than documents:
+
+- The accent is bright enough that a **dark** label is the only one that passes
+  contrast on it, so `buttonLabelClass('primary')` returns `text-content`.
+- `fieldInputClass()` is the single definition of an input. Forms must not
+  carry their own copy — that is how the shared pickers came to lay their labels
+  out inline while the forms around them stacked.
+
+A gradient cannot be a class name on native, so it is not a token.
+`GradientSurface` renders it per platform from one shared pair of stops.
+
 ## Local database
 
 The backend is Supabase, run locally in Docker. Docker must be running first.
