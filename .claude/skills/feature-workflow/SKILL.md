@@ -9,7 +9,8 @@ description: >-
   the first line of code. Start feature means sync master, cut a short-named
   branch, write failing unit and e2e tests, then implement until green. Finish
   feature means run format, lint, types and tests, then commit and open a pull
-  request, degrading gracefully when there is no git remote or no gh CLI. Do not
+  request, degrading gracefully when there is no git remote or no gh CLI, and
+  close by inviting the user to /compact. Do not
   use for read-only questions, code explanation, code review, debugging without
   a code change, or a single edit the user did not frame as a feature or a plan.
 allowed-tools:
@@ -125,11 +126,40 @@ dates, no author names. If the branch already exists, append `-2`, `-3`.
    workspace touched (`ui`, `web`, `mobile`, `repo`).
 4. Push — **ask first**, naming the branch, the remote and the commit count.
 5. Open the PR — **ask first**, showing the exact title, base, head and body.
+6. Prompt for `/compact` — see below. Last line of the response, every time.
 
 Steps 4 and 5 degrade based on what is available. With no remote, stop after the
 commit and print the PR title and body you would have used. See
 `references/git-workflow.md` for all four modes; the same instructions cover
 every one, so nothing here needs editing once a remote and `gh` exist.
+
+### Compact when the feature is done
+
+A finished feature is the cheapest moment in a session to throw context away.
+The branch is pushed, the reasoning that produced it is recorded in the commit
+message and the PR body, and the next feature starts from the trunk — so almost
+everything held in the window has already been written down somewhere durable.
+Carrying it into the next feature pays for the same tokens on every subsequent
+turn and buys nothing.
+
+**`/compact` is a local CLI command. Claude cannot run it** — there is no tool
+that triggers compaction, and it only happens when the user types it or when the
+window fills on its own. So this step is a prompt, not an action: end the
+finishing response with one line inviting it, and do not claim to have done it.
+
+> Worth a `/compact` before the next feature — this one is pushed and its
+> reasoning is in the PR.
+
+Two cases where the line is wrong and should be left off:
+
+- **The gate failed and work is still open.** The failure detail is exactly what
+  the next turn needs; compacting there throws away the thing being fixed.
+- **The user has already said what comes next** and it depends on this feature's
+  specifics — a follow-up fix, a review comment to address. Suggest it once that
+  is done instead.
+
+If the user declines or ignores it, drop it. It is a suggestion about their
+budget, and repeating it is nagging.
 
 ### When the gate fails
 
