@@ -22,6 +22,8 @@ export {
 export type { DateRange, IsoDate, PeriodPreset, WeekStart } from './period';
 
 export { groupByDay, relativeDayKey } from './grouping';
+export { nbuToEurRates, parseNbuJson } from './nbu';
+export type { NbuDailyRates } from './nbu';
 export type { DayGroup } from './grouping';
 
 export { nextRenewalOn, upcomingRenewals } from './renewal';

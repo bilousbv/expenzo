@@ -1,7 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 
-import { upsertEcbRates, type Db, type FxSyncResult } from '@expenzo/data';
-import { parseEcbDailyXml } from '@expenzo/domain';
+import { upsertEurRates, type Db, type FxSyncResult } from '@expenzo/data';
+import { nbuToEurRates, parseEcbDailyXml, parseNbuJson } from '@expenzo/domain';
 
 /**
  * The European Central Bank's daily reference rates: free, no key, no rate
@@ -10,15 +10,19 @@ import { parseEcbDailyXml } from '@expenzo/domain';
 export const ECB_DAILY_URL = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml';
 
 /**
- * Fetches a day of rates and files them.
+ * The National Bank of Ukraine's daily rates.
  *
- * `fetchImpl` is injectable so the parsing and the storing can be tested
- * without a network, which is the part that actually breaks.
+ * Read as well as the ECB's, not instead of it. The ECB publishes 29
+ * currencies and the hryvnia is not one of them — for an app whose default
+ * language is Ukrainian, that is the gap this source exists to close. It also
+ * roughly doubles what can be entered, to about fifty currencies.
  */
-export async function syncFxRates(db: Db, fetchImpl: typeof fetch = fetch): Promise<FxSyncResult> {
-  const response = await fetchImpl(ECB_DAILY_URL, {
-    headers: { accept: 'application/xml' },
-    // The feed changes once a day; a cached copy from an hour ago is fine, a
+export const NBU_DAILY_URL = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json';
+
+async function readFeed(fetchImpl: typeof fetch, url: string, accept: string): Promise<string> {
+  const response = await fetchImpl(url, {
+    headers: { accept },
+    // The feeds change once a day; a cached copy from an hour ago is fine, a
     // cached copy from last week is not.
     cache: 'no-store',
   });
@@ -26,10 +30,54 @@ export async function syncFxRates(db: Db, fetchImpl: typeof fetch = fetch): Prom
   // Parsing an error page produces "no publication date", which sends whoever
   // reads the log looking at the parser instead of at the status code.
   if (!response.ok) {
-    throw new Error(`The rate feed responded ${response.status}`);
+    throw new Error(`responded ${response.status}`);
   }
 
-  return upsertEcbRates(db, parseEcbDailyXml(await response.text()));
+  return response.text();
+}
+
+/**
+ * Fetches a day of rates from both publishers and files them.
+ *
+ * Each source is stored as its own batch, the ECB last, so that where the two
+ * overlap the ECB's figure is the one left in the table. It is the reference
+ * for euro pairs and is where every other euro rate already came from;
+ * "whichever was written second" is not a rule anyone could reason about.
+ *
+ * One source failing is survivable and deliberately not fatal. Rates persist
+ * and `app.fx_rate_on` already reaches back a week, so a day-old hryvnia rate
+ * is far better than discarding the feed that did answer. Both failing is
+ * reported, because then there is nothing new at all.
+ *
+ * `fetchImpl` is injectable so the parsing and the storing can be tested
+ * without a network, which is the part that actually breaks.
+ */
+export async function syncFxRates(db: Db, fetchImpl: typeof fetch = fetch): Promise<FxSyncResult> {
+  const failed: string[] = [];
+  let result: FxSyncResult | null = null;
+
+  // Written first so the ECB can overwrite the pairs both of them quote.
+  try {
+    const feed = parseNbuJson(await readFeed(fetchImpl, NBU_DAILY_URL, 'application/json'));
+
+    result = await upsertEurRates(db, feed.asOf, nbuToEurRates(feed), 'nbu');
+  } catch {
+    failed.push('nbu');
+  }
+
+  try {
+    const feed = parseEcbDailyXml(await readFeed(fetchImpl, ECB_DAILY_URL, 'application/xml'));
+
+    result = await upsertEurRates(db, feed.asOf, feed.rates, 'ecb');
+  } catch {
+    failed.push('ecb');
+  }
+
+  if (!result) {
+    throw new Error('Both rate feeds failed, so no rates were filed');
+  }
+
+  return { ...result, failed };
 }
 
 /**

@@ -6,30 +6,46 @@ export interface FxSyncResult {
   /** The date the feed published the rates for, not the date they were fetched. */
   readonly asOf: string;
   readonly quoted: number;
+  /** Sources that did not answer. Empty on a clean run. */
+  readonly failed?: string[];
 }
 
 /**
- * Files a day of European Central Bank rates.
+ * Files a day of rates, whoever published them.
+ *
+ * Everything is stored EUR-based whatever the source quoted against, so the
+ * lookup in `app.fx_rate_on` has one path through the table rather than one
+ * per publisher — two paths would be two chances to disagree about what a
+ * currency is worth.
  *
  * An upsert rather than an insert: re-running the sync has to be free, or a
  * second run on the same day raises a primary key violation and a healthy job
  * looks broken. Only the service role can reach this — there is no write policy
  * on the table at all.
  */
-export async function upsertEcbRates(db: Db, feed: EcbDailyRates): Promise<FxSyncResult> {
-  const rows = Object.entries(feed.rates).map(([quote, rate]) => ({
+export async function upsertEurRates(
+  db: Db,
+  asOf: string,
+  rates: Record<string, number>,
+  source: string,
+): Promise<FxSyncResult> {
+  const rows = Object.entries(rates).map(([quote, rate]) => ({
     base: 'EUR',
     quote,
-    as_of: feed.asOf,
+    as_of: asOf,
     rate,
-    source: 'ecb',
+    source,
   }));
 
   const { error } = await db.from('fx_rates').upsert(rows, { onConflict: 'base,quote,as_of' });
 
   if (error) throw new Error(error.message);
 
-  return { asOf: feed.asOf, quoted: rows.length };
+  return { asOf, quoted: rows.length };
+}
+
+export async function upsertEcbRates(db: Db, feed: EcbDailyRates): Promise<FxSyncResult> {
+  return upsertEurRates(db, feed.asOf, feed.rates, 'ecb');
 }
 
 /**
