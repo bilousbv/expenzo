@@ -9,5 +9,7 @@ export interface CardProps {
 }
 
 export function cardClass(extra?: string): string {
-  return cn('rounded-card bg-surface p-gutter border-brand-100 border', extra);
+  // No border. On the grey app background a white card separates itself well
+  // enough, and a border at this radius reads as a box rather than a surface.
+  return cn('rounded-card bg-surface p-gutter', extra);
 }

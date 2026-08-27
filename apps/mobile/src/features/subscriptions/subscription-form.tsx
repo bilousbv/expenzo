@@ -13,6 +13,7 @@ import {
   Button,
   CategorySelect,
   CurrencySelect,
+  fieldInputClass,
   type CategoryOption,
 } from '@expenzo/ui';
 import { useState } from 'react';
@@ -27,8 +28,6 @@ export interface SubscriptionFormProps {
   onCreate: (input: CreateSubscriptionInput) => Promise<void>;
   disabled?: boolean;
 }
-
-const inputClass = 'rounded-card border border-brand-100 bg-white px-4 py-3 text-content';
 
 export function SubscriptionForm({
   currency,
@@ -119,7 +118,7 @@ export function SubscriptionForm({
         accessibilityLabel={t('subscriptions.service')}
         disabled={disabled}
         onPress={() => setPickingService(true)}
-        className={inputClass}
+        className={fieldInputClass()}
       >
         <Text className="text-content">{chosen?.name ?? t('subscriptions.serviceUnlisted')}</Text>
       </Pressable>
@@ -172,7 +171,7 @@ export function SubscriptionForm({
         value={name}
         onChangeText={setName}
         placeholder={t('subscriptions.namePlaceholder')}
-        className={inputClass}
+        className={fieldInputClass()}
       />
 
       <AmountField
@@ -222,7 +221,7 @@ export function SubscriptionForm({
         onChangeText={setStartedOn}
         autoCapitalize="none"
         placeholder={t('expenses.datePlaceholder')}
-        className={inputClass}
+        className={fieldInputClass()}
       />
 
       <CategorySelect

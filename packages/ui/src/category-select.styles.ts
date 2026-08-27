@@ -1,4 +1,5 @@
 import type { CategoryOption } from './category-picker.styles';
+import { fieldInputClass, fieldLabelClass } from './field.styles';
 
 export interface CategorySelectProps {
   options: CategoryOption[];
@@ -23,12 +24,10 @@ export interface CategorySelectProps {
 export const NO_CATEGORY = '';
 
 export function selectTriggerClass(disabled: boolean): string {
-  return `rounded-card border border-brand-100 bg-white px-4 py-3 text-content${
-    disabled ? ' opacity-50' : ''
-  }`;
+  return fieldInputClass(false, disabled ? 'opacity-50' : undefined);
 }
 
-export const selectLabelClass = 'text-content-muted text-sm font-medium';
+export const selectLabelClass = fieldLabelClass;
 
 /** Resolves a chosen value back to an id, treating the empty choice as none. */
 export function toCategoryId(value: string): string | undefined {

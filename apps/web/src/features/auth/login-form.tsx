@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslation } from '@expenzo/i18n';
-import { buttonContainerClass, buttonLabelClass } from '@expenzo/ui';
+import { buttonContainerClass, buttonLabelClass, fieldInputClass } from '@expenzo/ui';
 import { useId, useState, type FormEvent } from 'react';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -57,7 +57,7 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         aria-invalid={error ? true : undefined}
-        className="rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500"
+        className={fieldInputClass()}
         placeholder={t('auth.emailPlaceholder')}
       />
 

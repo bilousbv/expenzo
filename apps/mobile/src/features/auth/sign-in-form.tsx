@@ -1,4 +1,4 @@
-import { Button } from '@expenzo/ui';
+import { Button, fieldInputClass } from '@expenzo/ui';
 import { useState } from 'react';
 import { useTranslation } from '@expenzo/i18n';
 import { Text, TextInput, View } from 'react-native';
@@ -53,7 +53,7 @@ export function SignInForm({ onSubmit }: SignInFormProps) {
         autoComplete="email"
         keyboardType="email-address"
         placeholder={t('auth.emailPlaceholder')}
-        className="rounded-card border border-brand-100 bg-white px-4 py-3 text-content"
+        className={fieldInputClass()}
       />
 
       <Button testID="sign-in-submit" disabled={pending} onPress={handleSubmit}>

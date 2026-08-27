@@ -1,5 +1,5 @@
 import { credentialsSchema, registrationSchema, VALIDATION_PARAMS } from '@expenzo/domain';
-import { Button } from '@expenzo/ui';
+import { Button, fieldInputClass } from '@expenzo/ui';
 import { useState } from 'react';
 import { useTranslation } from '@expenzo/i18n';
 import { Text, TextInput, View } from 'react-native';
@@ -15,8 +15,6 @@ const LABEL: Record<CredentialsMode, { idle: string; busy: string }> = {
   signIn: { idle: 'auth.signIn', busy: 'auth.signingIn' },
   signUp: { idle: 'auth.createAccount', busy: 'auth.creatingAccount' },
 };
-
-const inputClass = 'rounded-card border border-brand-100 bg-white px-4 py-3 text-content';
 
 export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
   const { t } = useTranslation();
@@ -70,7 +68,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
         autoComplete="email"
         keyboardType="email-address"
         placeholder={t('auth.emailPlaceholder')}
-        className={inputClass}
+        className={fieldInputClass()}
       />
 
       <Text className="text-sm font-medium text-content-muted">{t('auth.password')}</Text>
@@ -83,7 +81,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
         // offers to save a new one rather than filling the wrong existing one.
         autoComplete={registering ? 'new-password' : 'current-password'}
         secureTextEntry
-        className={inputClass}
+        className={fieldInputClass()}
       />
 
       {registering ? (
@@ -96,7 +94,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
             autoCapitalize="none"
             autoComplete="new-password"
             secureTextEntry
-            className={inputClass}
+            className={fieldInputClass()}
           />
         </>
       ) : null}

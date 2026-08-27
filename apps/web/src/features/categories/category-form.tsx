@@ -2,7 +2,12 @@
 
 import { createCategoryInput, VALIDATION_PARAMS, type CreateCategoryInput } from '@expenzo/domain';
 import { useTranslation } from '@expenzo/i18n';
-import { buttonContainerClass, buttonLabelClass, categoryDotStyle } from '@expenzo/ui';
+import {
+  buttonContainerClass,
+  buttonLabelClass,
+  categoryDotStyle,
+  fieldInputClass,
+} from '@expenzo/ui';
 import { useId, useState, type FormEvent } from 'react';
 
 /** Named because a colour needs an accessible name; the hex is not one. */
@@ -81,7 +86,7 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
         onChange={(event) => setName(event.target.value)}
         aria-invalid={error ? true : undefined}
         placeholder={t('categories.namePlaceholder')}
-        className="rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500"
+        className={fieldInputClass()}
       />
 
       <div

@@ -6,12 +6,25 @@ export { CategorySelect } from './category-select';
 export { CurrencySelect } from './currency-select';
 export { cn } from './cn';
 export { formatCurrency } from './format';
+export { fieldGroupClass, fieldInputClass, fieldLabelClass } from './field.styles';
+export { GradientSurface } from './gradient-surface';
+export { IconTile } from './icon-tile';
 
 // Exported so web forms can style a native submit button: the shared Button
 // renders type="button" on purpose, and a login form needs Enter to submit.
 export { buttonContainerClass, buttonLabelClass } from './button.styles';
 export type { ButtonProps, ButtonSize, ButtonVariant } from './button.styles';
 export type { CardProps } from './card.styles';
+export { GRADIENT_CSS, GRADIENT_STOPS, gradientSurfaceClass } from './gradient-surface.styles';
+export type { GradientSurfaceProps } from './gradient-surface.styles';
+export {
+  iconTileClass,
+  iconTileGlyphClass,
+  iconTileGlyphStyle,
+  iconTileStyle,
+  monogramFor,
+} from './icon-tile.styles';
+export type { IconTileProps } from './icon-tile.styles';
 export type { AmountFieldProps } from './amount-field.styles';
 
 export {

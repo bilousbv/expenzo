@@ -17,15 +17,18 @@ export interface ButtonProps {
 }
 
 const container: Record<ButtonVariant, string> = {
-  primary: 'bg-brand-600',
-  secondary: 'bg-surface-muted border border-brand-200',
+  primary: 'bg-accent',
+  secondary: 'bg-surface-muted',
   ghost: 'bg-transparent',
 };
 
+// Dark on the accent fill: the mint is bright enough that a white label falls
+// below the contrast floor, so this filled button breaks the usual rule that a
+// coloured fill takes an inverse label.
 const label: Record<ButtonVariant, string> = {
-  primary: 'text-content-inverse',
-  secondary: 'text-brand-700',
-  ghost: 'text-brand-600',
+  primary: 'text-content',
+  secondary: 'text-content',
+  ghost: 'text-link',
 };
 
 const containerSize: Record<ButtonSize, string> = {
@@ -51,7 +54,7 @@ export function buttonContainerClass(
   extra?: string,
 ): string {
   return cn(
-    'rounded-card flex-row items-center justify-center',
+    'rounded-pill flex-row items-center justify-center',
     container[variant],
     containerSize[size],
     disabled && 'opacity-50',

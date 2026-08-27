@@ -24,6 +24,8 @@ export const en = {
     uncategorised: 'Uncategorised',
     member: 'Member',
     language: 'Language',
+    today: 'Today',
+    yesterday: 'Yesterday',
   },
 
   auth: {

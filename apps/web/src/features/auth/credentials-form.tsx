@@ -7,7 +7,7 @@ import {
   type Credentials,
 } from '@expenzo/domain';
 import { useTranslation } from '@expenzo/i18n';
-import { buttonContainerClass, buttonLabelClass } from '@expenzo/ui';
+import { buttonContainerClass, buttonLabelClass, fieldInputClass } from '@expenzo/ui';
 import { useId, useState, type FormEvent } from 'react';
 
 export type CredentialsMode = 'signIn' | 'signUp';
@@ -21,9 +21,6 @@ const LABEL_KEY: Record<CredentialsMode, { idle: string; busy: string }> = {
   signIn: { idle: 'auth.signIn', busy: 'auth.signingIn' },
   signUp: { idle: 'auth.createAccount', busy: 'auth.creatingAccount' },
 };
-
-const inputClass =
-  'rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500';
 
 export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
   const { t } = useTranslation();
@@ -90,7 +87,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
         onChange={(event) => setEmail(event.target.value)}
         aria-invalid={error ? true : undefined}
         placeholder={t('auth.emailPlaceholder')}
-        className={inputClass}
+        className={fieldInputClass()}
       />
 
       <label htmlFor={passwordId} className="text-sm font-medium text-content-muted">
@@ -106,7 +103,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
         value={password}
         onChange={(event) => setPassword(event.target.value)}
         aria-invalid={error ? true : undefined}
-        className={inputClass}
+        className={fieldInputClass()}
       />
 
       {registering ? (
@@ -122,7 +119,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
             aria-invalid={error ? true : undefined}
-            className={inputClass}
+            className={fieldInputClass()}
           />
         </>
       ) : null}

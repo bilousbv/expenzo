@@ -14,6 +14,7 @@ import {
   buttonLabelClass,
   Card,
   CategorySelect,
+  fieldInputClass,
   formatCurrency,
   type CategoryOption,
 } from '@expenzo/ui';
@@ -99,7 +100,7 @@ export function LimitManager({ userId }: { userId: string | undefined }) {
             value={amountText}
             onChange={(event) => setAmountText(event.target.value)}
             placeholder="500"
-            className="rounded-card border border-brand-100 bg-white px-4 py-3 text-content outline-none focus:border-brand-500"
+            className={fieldInputClass()}
           />
 
           <button

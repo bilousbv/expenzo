@@ -19,7 +19,7 @@ import {
 } from '@expenzo/domain';
 import { useTranslation } from '@expenzo/i18n';
 import { buttonContainerClass, buttonLabelClass, Card, type CategoryOption } from '@expenzo/ui';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 
 import { ExpenseDialog } from '@/features/expenses/expense-dialog';
 import { ExpenseForm } from '@/features/expenses/expense-form';
@@ -28,7 +28,14 @@ import { ExpenseList } from '@/features/expenses/expense-list';
 import { BudgetSummary } from './budget-summary';
 import { CategoryBreakdown, type CategoryBreakdownRow } from './category-breakdown';
 
-export function Dashboard({ userId }: { userId: string | undefined }) {
+export function Dashboard({
+  userId,
+  header,
+}: {
+  userId: string | undefined;
+  /** The app name and its links, rendered inside the balance panel. */
+  header?: ReactNode;
+}) {
   const { t } = useTranslation();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
@@ -93,135 +100,145 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
   }
 
   return (
-    <div className="flex flex-col gap-gutter">
+    <div className="flex flex-col">
       <BudgetSummary
         spentMinor={summary.data?.spentMinor ?? 0}
         incomeMinor={summary.data?.incomeMinor ?? 0}
         balanceMinor={summary.data?.balanceMinor ?? 0}
         currency={currency}
         loading={summary.isPending}
+        header={header}
       />
 
-      <Card className="gap-gutter">
-        <div
-          role="radiogroup"
-          aria-label={t('dashboard.period')}
-          className="flex flex-row flex-wrap gap-2"
-        >
-          {PERIOD_PRESETS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              role="radio"
-              aria-checked={preset === option}
-              data-testid={`period-${option}`}
-              onClick={() => setPreset(option)}
-              className={buttonContainerClass(preset === option ? 'primary' : 'secondary', 'sm')}
-            >
-              <span className={buttonLabelClass(preset === option ? 'primary' : 'secondary', 'sm')}>
-                {t(`period.${option}`)}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        <div
-          role="radiogroup"
-          aria-label={t('dashboard.author')}
-          className="flex flex-row flex-wrap gap-2"
-        >
-          <button
-            type="button"
-            role="radio"
-            aria-checked={memberId === undefined}
-            data-testid="author-all"
-            onClick={() => setMemberId(undefined)}
-            className={buttonContainerClass(memberId === undefined ? 'primary' : 'secondary', 'sm')}
+      {/* Everything below the panel sits on the grey app background, which is
+          what makes the panel read as the one thing worth looking at first. */}
+      <div className="flex flex-col gap-gutter p-gutter">
+        <Card className="gap-gutter">
+          <div
+            role="radiogroup"
+            aria-label={t('dashboard.period')}
+            className="flex flex-row flex-wrap gap-2"
           >
-            <span
-              className={buttonLabelClass(memberId === undefined ? 'primary' : 'secondary', 'sm')}
-            >
-              {t('common.everyone')}
-            </span>
-          </button>
+            {PERIOD_PRESETS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="radio"
+                aria-checked={preset === option}
+                data-testid={`period-${option}`}
+                onClick={() => setPreset(option)}
+                className={buttonContainerClass(preset === option ? 'primary' : 'secondary', 'sm')}
+              >
+                <span
+                  className={buttonLabelClass(preset === option ? 'primary' : 'secondary', 'sm')}
+                >
+                  {t(`period.${option}`)}
+                </span>
+              </button>
+            ))}
+          </div>
 
-          {(members.data ?? []).map((member) => (
+          <div
+            role="radiogroup"
+            aria-label={t('dashboard.author')}
+            className="flex flex-row flex-wrap gap-2"
+          >
             <button
-              key={member.userId}
               type="button"
               role="radio"
-              aria-checked={memberId === member.userId}
-              data-testid={`author-${member.userId}`}
-              onClick={() => setMemberId(member.userId)}
+              aria-checked={memberId === undefined}
+              data-testid="author-all"
+              onClick={() => setMemberId(undefined)}
               className={buttonContainerClass(
-                memberId === member.userId ? 'primary' : 'secondary',
+                memberId === undefined ? 'primary' : 'secondary',
                 'sm',
               )}
             >
               <span
-                className={buttonLabelClass(
+                className={buttonLabelClass(memberId === undefined ? 'primary' : 'secondary', 'sm')}
+              >
+                {t('common.everyone')}
+              </span>
+            </button>
+
+            {(members.data ?? []).map((member) => (
+              <button
+                key={member.userId}
+                type="button"
+                role="radio"
+                aria-checked={memberId === member.userId}
+                data-testid={`author-${member.userId}`}
+                onClick={() => setMemberId(member.userId)}
+                className={buttonContainerClass(
                   memberId === member.userId ? 'primary' : 'secondary',
                   'sm',
                 )}
               >
-                {member.displayName}
-              </span>
-            </button>
-          ))}
+                <span
+                  className={buttonLabelClass(
+                    memberId === member.userId ? 'primary' : 'secondary',
+                    'sm',
+                  )}
+                >
+                  {member.displayName}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <p data-testid="period-range" className="text-xs text-content-muted">
+            {range.start} {t('dashboard.rangeSeparator')} {range.end}
+          </p>
+        </Card>
+
+        <div className="flex flex-row items-center justify-between">
+          <h2 className="text-xl font-semibold text-content">{t('expenses.title')}</h2>
+          <button
+            type="button"
+            data-testid="open-expense-dialog"
+            disabled={!householdId}
+            onClick={() => setAdding(true)}
+            className={buttonContainerClass('primary', 'md', !householdId)}
+          >
+            <span className={buttonLabelClass('primary', 'md')}>{t('expenses.add')}</span>
+          </button>
         </div>
 
-        <p data-testid="period-range" className="text-xs text-content-muted">
-          {range.start} {t('dashboard.rangeSeparator')} {range.end}
-        </p>
-      </Card>
+        <CategoryBreakdown rows={breakdown} currency={currency} loading={categorySpend.isPending} />
 
-      <div className="flex flex-row items-center justify-between">
-        <h2 className="text-xl font-semibold text-content">{t('expenses.title')}</h2>
-        <button
-          type="button"
-          data-testid="open-expense-dialog"
-          disabled={!householdId}
-          onClick={() => setAdding(true)}
-          className={buttonContainerClass('primary', 'md', !householdId)}
+        {overallLimit !== null ? (
+          <CategoryBreakdown
+            rows={[
+              {
+                categoryId: null,
+                name: t('common.everything'),
+                color: null,
+                spentMinor: summary.data?.spentMinor ?? 0,
+                limitMinor: overallLimit,
+              },
+            ]}
+            currency={currency}
+          />
+        ) : null}
+
+        <ExpenseList userId={userId} filter={window} />
+
+        <ExpenseDialog
+          open={adding}
+          onClose={() => setAdding(false)}
+          title={t('expenses.addDialogTitle')}
         >
-          <span className={buttonLabelClass('primary', 'md')}>{t('expenses.add')}</span>
-        </button>
+          <ExpenseForm
+            currency={currency}
+            timeZone={timeZone}
+            today={localDateIn(new Date(), timeZone)}
+            categories={options}
+            currencies={currencies.data}
+            onCreate={handleCreate}
+            disabled={!householdId}
+          />
+        </ExpenseDialog>
       </div>
-
-      <CategoryBreakdown rows={breakdown} currency={currency} loading={categorySpend.isPending} />
-
-      {overallLimit !== null ? (
-        <CategoryBreakdown
-          rows={[
-            {
-              categoryId: null,
-              name: t('common.everything'),
-              color: null,
-              spentMinor: summary.data?.spentMinor ?? 0,
-              limitMinor: overallLimit,
-            },
-          ]}
-          currency={currency}
-        />
-      ) : null}
-
-      <ExpenseList userId={userId} filter={window} />
-
-      <ExpenseDialog
-        open={adding}
-        onClose={() => setAdding(false)}
-        title={t('expenses.addDialogTitle')}
-      >
-        <ExpenseForm
-          currency={currency}
-          timeZone={timeZone}
-          today={localDateIn(new Date(), timeZone)}
-          categories={options}
-          currencies={currencies.data}
-          onCreate={handleCreate}
-          disabled={!householdId}
-        />
-      </ExpenseDialog>
     </div>
   );
 }

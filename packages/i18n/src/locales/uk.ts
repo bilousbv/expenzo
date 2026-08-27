@@ -28,6 +28,8 @@ export const uk: Messages & {
     uncategorised: 'Без категорії',
     member: 'Учасник',
     language: 'Мова',
+    today: 'Сьогодні',
+    yesterday: 'Вчора',
   },
 
   auth: {

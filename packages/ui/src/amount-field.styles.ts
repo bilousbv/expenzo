@@ -1,6 +1,7 @@
 import { formatMinorUnits, parseAmountInput } from '@expenzo/domain';
 
 import { cn } from './cn';
+import { fieldInputClass } from './field.styles';
 
 export interface AmountFieldProps {
   currency: string;
@@ -16,11 +17,9 @@ export interface AmountFieldProps {
 }
 
 export function amountInputClass(invalid: boolean, extra?: string): string {
-  return cn(
-    'rounded-card text-content border bg-white px-4 py-3 text-2xl',
-    invalid ? 'border-red-500' : 'border-brand-100',
-    extra,
-  );
+  // The one field set larger than the rest: the amount is what the form is
+  // for, and it is the only value people re-read before submitting.
+  return fieldInputClass(invalid, cn('text-2xl', extra));
 }
 
 export const amountPreviewClass = 'text-content-muted text-sm';

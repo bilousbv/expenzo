@@ -1,5 +1,5 @@
 import { createCategoryInput, VALIDATION_PARAMS, type CreateCategoryInput } from '@expenzo/domain';
-import { Button, categoryDotStyle } from '@expenzo/ui';
+import { Button, categoryDotStyle, fieldInputClass } from '@expenzo/ui';
 import { useState } from 'react';
 import { useTranslation } from '@expenzo/i18n';
 import { Pressable, Text, TextInput, View } from 'react-native';
@@ -73,7 +73,7 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
         onChangeText={setName}
         autoCapitalize="words"
         placeholder={t('categories.namePlaceholder')}
-        className="rounded-card border border-brand-100 bg-white px-4 py-3 text-content"
+        className={fieldInputClass()}
       />
 
       <View
