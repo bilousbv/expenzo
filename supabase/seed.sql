@@ -21,6 +21,10 @@ select 'EUR', v.quote, current_date - offset_days, v.rate, 'seed'
 from generate_series(0, 14) as offset_days
 cross join (values
   ('EUR', 1.0),
+  -- The hryvnia leads the list because it is the reason the National Bank of
+  -- Ukraine feed was added: the ECB publishes 29 currencies and does not quote
+  -- it, and this app's default language is Ukrainian.
+  ('UAH', 51.86),
   ('USD', 1.16),
   ('GBP', 0.86),
   ('CHF', 0.94),
@@ -28,6 +32,11 @@ cross join (values
   ('PLN', 4.24),
   ('JPY', 171.35),
   ('CAD', 1.61),
-  ('AUD', 1.78)
+  ('AUD', 1.78),
+  ('CZK', 24.14),
+  ('HUF', 393.5),
+  ('NOK', 11.68),
+  ('DKK', 7.46),
+  ('TRY', 47.6)
 ) as v(quote, rate)
 on conflict do nothing;

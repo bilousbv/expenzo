@@ -14,7 +14,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(23);
+select plan(26);
 
 ---------------------------------------------------------------------------
 -- Minor units, mirroring packages/domain/src/currency.ts
@@ -65,7 +65,10 @@ insert into public.fx_rates (base, quote, as_of, rate) values
   ('EUR', 'EUR', current_date - 3, 1),
   ('EUR', 'USD', current_date - 3, 1.2),
   ('EUR', 'GBP', current_date - 3, 0.9),
-  ('EUR', 'JPY', current_date - 3, 180);
+  ('EUR', 'JPY', current_date - 3, 180),
+  -- The ECB does not quote the hryvnia at all; it reaches the table from the
+  -- National Bank of Ukraine feed, rebased into euro terms on the way in.
+  ('EUR', 'UAH', current_date - 3, 50);
 
 insert into auth.users (id, instance_id, aud, role, email, encrypted_password,
                         email_confirmed_at, created_at, updated_at)
@@ -80,7 +83,7 @@ set local request.jwt.claims to
 -- Rates are public reference data, not household data: everybody converts with
 -- the same numbers, and there is nothing in them to leak.
 select is(
-  (select count(*) from public.fx_rates)::int, 4,
+  (select count(*) from public.fx_rates)::int, 5,
   'any signed-in user can read the rate table'
 );
 
@@ -187,6 +190,33 @@ select is(
    where direction = 'spend'),
   6050::bigint,
   'a household with mixed currencies still adds up to one number'
+);
+
+---------------------------------------------------------------------------
+-- The hryvnia
+---------------------------------------------------------------------------
+
+-- Stored EUR-based like everything else, so it converts by the same path as
+-- any other currency rather than needing one of its own.
+select is(
+  (select rate from public.fx_rates where quote = 'UAH' and as_of = current_date - 3),
+  50::numeric,
+  'the hryvnia is quoted against the euro like every other currency'
+);
+
+-- 500.00 UAH at 50 UAH per EUR is 10.00 EUR, which at 1.2 is 12.00 USD.
+select lives_ok(
+  $$insert into public.expenses
+      (household_id, created_by, amount_minor, currency, occurred_on, merchant)
+    values (app.current_household_id(), '11111111-1111-4111-8111-111111111111',
+            50000, 'UAH', current_date, 'Hryvnia')$$,
+  'an expense in hryvnia is accepted'
+);
+
+select is(
+  (select base_amount_minor from public.expenses where merchant = 'Hryvnia'),
+  1200::bigint,
+  'and triangulates through the euro into the household currency'
 );
 
 ---------------------------------------------------------------------------

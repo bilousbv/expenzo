@@ -16,7 +16,7 @@ export {
 } from './repositories/subscriptions';
 export type { ServiceRow, SubscriptionRow } from './repositories/subscriptions';
 
-export { listSupportedCurrencies, upsertEcbRates } from './repositories/fx';
+export { listSupportedCurrencies, upsertEcbRates, upsertEurRates } from './repositories/fx';
 export type { FxSyncResult } from './repositories/fx';
 
 export { useSupportedCurrencies } from './hooks/use-currencies';

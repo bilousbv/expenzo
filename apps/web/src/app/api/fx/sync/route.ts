@@ -13,6 +13,13 @@ import { createServiceClient } from '@/lib/supabase/service';
  *
  * Rates are not household data, so this is the one place a service-role client
  * is justified: there is no user whose policies could scope the write.
+ *
+ * Two feeds are read, and one of them failing is a 200 with that source named
+ * in `failed` rather than an error — the feed that did answer is worth filing,
+ * and `app.fx_rate_on` reaches back a week, so a day-old rate is fine. What is
+ * not fine is a source down for longer than that window: its currencies then
+ * stop converting and expenses in them refuse to save. Whatever calls this is
+ * the thing that has to notice `failed` staying non-empty.
  */
 export async function POST(request: NextRequest) {
   if (!isAuthorizedSync(request.headers.get('authorization'), process.env.FX_SYNC_SECRET ?? '')) {
