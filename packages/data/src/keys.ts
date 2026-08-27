@@ -37,6 +37,14 @@ export const queryKeys = {
   limits: {
     all: (householdId: string) => ['limits', householdId] as const,
   },
+  subscriptions: {
+    all: (householdId: string) => ['subscriptions', householdId] as const,
+  },
+  // The catalogue is the same for every household and only a migration
+  // changes it, so this key carries no household segment.
+  services: {
+    all: () => ['services'] as const,
+  },
   summary: {
     all: (householdId: string) => ['summary', householdId] as const,
     period: (householdId: string, window: SummaryWindow) =>

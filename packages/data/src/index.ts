@@ -6,6 +6,15 @@ export type { ExpenseListFilter, SummaryWindow } from './keys';
 
 export { createLimit, deleteLimit, listLimits, updateLimit } from './repositories/limits';
 export type { SpendingLimitRow } from './repositories/limits';
+export {
+  cancelSubscription,
+  createSubscription,
+  deleteSubscription,
+  listServices,
+  listSubscriptions,
+  updateSubscription,
+} from './repositories/subscriptions';
+export type { ServiceRow, SubscriptionRow } from './repositories/subscriptions';
 
 export { listSupportedCurrencies, upsertEcbRates } from './repositories/fx';
 export type { FxSyncResult } from './repositories/fx';
@@ -16,6 +25,14 @@ export { getCategorySpend, getPeriodSummary } from './repositories/summary';
 export type { CategorySpend, PeriodSummary, SummaryArgs } from './repositories/summary';
 
 export { useCreateLimit, useDeleteLimit, useLimits, useUpdateLimit } from './hooks/use-limits';
+export {
+  useCancelSubscription,
+  useCreateSubscription,
+  useDeleteSubscription,
+  useServices,
+  useSubscriptions,
+  useUpdateSubscription,
+} from './hooks/use-subscriptions';
 export { useCategorySpend, usePeriodSummary } from './hooks/use-summary';
 
 export {
