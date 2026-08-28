@@ -54,6 +54,13 @@ export function ExpenseForm({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
+  /*
+   * Money arriving has no shop, no category of spending, and nothing to
+   * disambiguate it from the purchase next to it. Asking would be asking a
+   * question with no answer.
+   */
+  const recordingIncome = direction === 'income';
+
   async function handleSubmit() {
     if (pending || disabled) return;
 
@@ -64,9 +71,14 @@ export function ExpenseForm({
       currency: chosenCurrency,
       direction,
       occurredOn,
-      categoryId,
-      merchant,
-      note,
+      /*
+       * Income carries none of the three. They are not merely hidden: a
+       * merchant typed before switching direction must not travel into the
+       * saved row where nobody can see it to correct it.
+       */
+      categoryId: recordingIncome ? undefined : categoryId,
+      merchant: recordingIncome ? undefined : merchant,
+      note: recordingIncome ? undefined : note,
     });
 
     if (!parsed.success) {
@@ -142,29 +154,35 @@ export function ExpenseForm({
         className={fieldInputClass()}
       />
 
-      <CategorySelect
-        options={categories}
-        value={categoryId}
-        onChange={setCategoryId}
-        disabled={disabled}
-      />
+      {/* Spending only. Income has no shop and no category of spending, and a
+          note exists to tell one purchase from another. */}
+      {recordingIncome ? null : (
+        <>
+          <CategorySelect
+            options={categories}
+            value={categoryId}
+            onChange={setCategoryId}
+            disabled={disabled}
+          />
 
-      <Text className="text-sm font-medium text-content-muted">{t('expenses.merchant')}</Text>
-      <TextInput
-        testID="expense-merchant"
-        value={merchant}
-        onChangeText={setMerchant}
-        placeholder={t('expenses.merchantPlaceholder')}
-        className={fieldInputClass()}
-      />
+          <Text className="text-sm font-medium text-content-muted">{t('expenses.merchant')}</Text>
+          <TextInput
+            testID="expense-merchant"
+            value={merchant}
+            onChangeText={setMerchant}
+            placeholder={t('expenses.merchantPlaceholder')}
+            className={fieldInputClass()}
+          />
 
-      <Text className="text-sm font-medium text-content-muted">{t('expenses.note')}</Text>
-      <TextInput
-        testID="expense-note"
-        value={note}
-        onChangeText={setNote}
-        className={fieldInputClass()}
-      />
+          <Text className="text-sm font-medium text-content-muted">{t('expenses.note')}</Text>
+          <TextInput
+            testID="expense-note"
+            value={note}
+            onChangeText={setNote}
+            className={fieldInputClass()}
+          />
+        </>
+      )}
 
       <Button testID="expense-submit" disabled={pending || disabled} onPress={handleSubmit}>
         {t(pending ? 'expenses.adding' : 'expenses.addExpense')}

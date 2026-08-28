@@ -60,6 +60,13 @@ export function ExpenseForm({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
+  /*
+   * Money arriving has no shop, no category of spending, and nothing to
+   * disambiguate it from the purchase next to it. Asking would be asking a
+   * question with no answer.
+   */
+  const recordingIncome = direction === 'income';
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
 
@@ -72,9 +79,14 @@ export function ExpenseForm({
       currency: chosenCurrency,
       direction,
       occurredOn,
-      categoryId,
-      merchant,
-      note,
+      /*
+       * Income carries none of the three. They are not merely hidden: a
+       * merchant typed before switching direction must not travel into the
+       * saved row where nobody can see it to correct it.
+       */
+      categoryId: recordingIncome ? undefined : categoryId,
+      merchant: recordingIncome ? undefined : merchant,
+      note: recordingIncome ? undefined : note,
     });
 
     if (!parsed.success) {
@@ -154,35 +166,41 @@ export function ExpenseForm({
         className={fieldInputClass()}
       />
 
-      <CategorySelect
-        options={categories}
-        value={categoryId}
-        onChange={setCategoryId}
-        disabled={disabled}
-      />
+      {/* Spending only. Income has no shop and no category of spending, and a
+          note exists to tell one purchase from another. */}
+      {recordingIncome ? null : (
+        <>
+          <CategorySelect
+            options={categories}
+            value={categoryId}
+            onChange={setCategoryId}
+            disabled={disabled}
+          />
 
-      <label htmlFor={merchantId} className="text-sm font-medium text-content-muted">
-        {t('expenses.merchant')}
-      </label>
-      <input
-        id={merchantId}
-        name="merchant"
-        value={merchant}
-        onChange={(event) => setMerchant(event.target.value)}
-        placeholder={t('expenses.merchantPlaceholder')}
-        className={fieldInputClass()}
-      />
+          <label htmlFor={merchantId} className="text-sm font-medium text-content-muted">
+            {t('expenses.merchant')}
+          </label>
+          <input
+            id={merchantId}
+            name="merchant"
+            value={merchant}
+            onChange={(event) => setMerchant(event.target.value)}
+            placeholder={t('expenses.merchantPlaceholder')}
+            className={fieldInputClass()}
+          />
 
-      <label htmlFor={noteId} className="text-sm font-medium text-content-muted">
-        {t('expenses.note')}
-      </label>
-      <input
-        id={noteId}
-        name="note"
-        value={note}
-        onChange={(event) => setNote(event.target.value)}
-        className={fieldInputClass()}
-      />
+          <label htmlFor={noteId} className="text-sm font-medium text-content-muted">
+            {t('expenses.note')}
+          </label>
+          <input
+            id={noteId}
+            name="note"
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            className={fieldInputClass()}
+          />
+        </>
+      )}
 
       <button
         type="submit"

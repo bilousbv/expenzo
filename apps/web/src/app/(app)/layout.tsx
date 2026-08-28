@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 
+import { AppHeader } from '@/features/navigation/app-header';
 import { createClient } from '@/lib/supabase/server';
 
 /**
@@ -23,5 +24,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     redirect('/login');
   }
 
-  return <>{children}</>;
+  // In the layout rather than on each page: the header used to live inside the
+  // dashboard's gradient panel, so every settings screen was a dead end you
+  // could only leave with the browser's back button.
+  return (
+    <>
+      <AppHeader />
+      {children}
+    </>
+  );
 }

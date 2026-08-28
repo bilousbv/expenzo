@@ -8,8 +8,8 @@ import {
 import { localDateIn, type CreateExpenseInput } from '@expenzo/domain';
 import { Card, type CategoryOption } from '@expenzo/ui';
 import { router } from 'expo-router';
-import { ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { FormScreen } from '../../features/layout/form-screen';
 
 import { useSession } from '../../features/auth/use-session';
 import { ExpenseForm } from '../../features/expenses/expense-form';
@@ -47,21 +47,19 @@ export default function NewExpenseScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface-muted">
-      <ScrollView contentContainerClassName="p-gutter">
-        <Card className="gap-gutter">
-          <ExpenseForm
-            // The currency a new expense defaults to is the one this member
-            // lives in, not the one the household reports in.
-            currency={display.currency}
-            today={localDateIn(new Date(), timeZone)}
-            categories={options}
-            currencies={currencies.data}
-            onCreate={handleCreate}
-            disabled={!householdId}
-          />
-        </Card>
-      </ScrollView>
-    </SafeAreaView>
+    <FormScreen>
+      <Card className="gap-gutter">
+        <ExpenseForm
+          // The currency a new expense defaults to is the one this member
+          // lives in, not the one the household reports in.
+          currency={display.currency}
+          today={localDateIn(new Date(), timeZone)}
+          categories={options}
+          currencies={currencies.data}
+          onCreate={handleCreate}
+          disabled={!householdId}
+        />
+      </Card>
+    </FormScreen>
   );
 }

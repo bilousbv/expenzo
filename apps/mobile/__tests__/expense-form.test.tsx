@@ -173,3 +173,50 @@ describe('ExpenseForm (native)', () => {
     release();
   });
 });
+
+describe('ExpenseForm, recording income (native)', () => {
+  /*
+   * Income is money arriving. There is no shop, no category of spending, and
+   * the note only ever existed to tell one purchase from another — so all
+   * three are questions with no answer.
+   */
+  it('drops the fields that only describe a purchase', () => {
+    renderForm(jest.fn<Create>());
+
+    expect(screen.getByTestId('expense-merchant')).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId('direction-income'));
+
+    expect(screen.queryByTestId('expense-merchant')).toBeNull();
+    expect(screen.queryByTestId('expense-note')).toBeNull();
+    expect(screen.queryByTestId('category-select')).toBeNull();
+  });
+
+  it('keeps the amount and the date', () => {
+    renderForm(jest.fn<Create>());
+
+    fireEvent.press(screen.getByTestId('direction-income'));
+
+    expect(screen.getByTestId('expense-date')).toBeTruthy();
+  });
+
+  // Switching to income must not carry a merchant the user can no longer see
+  // into the saved row.
+  it('discards what was typed before switching to income', async () => {
+    const onCreate = jest.fn<Create>().mockResolvedValue(undefined);
+    renderForm(onCreate);
+
+    fireEvent.changeText(screen.getByTestId('expense-merchant'), 'Blue Bottle');
+    fireEvent.press(screen.getByTestId('direction-income'));
+    fireEvent.changeText(screen.getByTestId('amount-field'), '15.00');
+    fireEvent.press(screen.getByTestId('expense-submit'));
+
+    await waitFor(() => expect(onCreate).toHaveBeenCalled());
+    expect(onCreate.mock.calls[0]?.[0]).toMatchObject({
+      direction: 'income',
+      merchant: undefined,
+      categoryId: undefined,
+      note: undefined,
+    });
+  });
+});

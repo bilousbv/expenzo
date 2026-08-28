@@ -40,6 +40,8 @@ function RootNavigator() {
           name="categories"
           options={{ headerShown: true, title: t('categories.title'), presentation: 'modal' }}
         />
+        {/* One category's expenses, reached from the dashboard rollup. */}
+        <Stack.Screen name="category/[categoryId]" options={{ headerShown: true, title: '' }} />
         {/* Pushed from Settings, like the categories screen. */}
         <Stack.Screen
           name="profile"

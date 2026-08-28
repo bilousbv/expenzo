@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createExpenseInput, expenseFilter } from './expense';
+import { categoryFilter, createExpenseInput, expenseFilter, UNCATEGORISED } from './expense';
 
 const valid = {
   amountMinor: 1250,
@@ -112,5 +112,57 @@ describe('direction', () => {
 
   it('rejects a direction it does not know', () => {
     expect(createExpenseInput.safeParse({ ...valid, direction: 'refund' }).success).toBe(false);
+  });
+});
+
+describe('expenseFilter, narrowing to one category', () => {
+  /*
+   * Expenses with no category still sum into the period total, so the rollup
+   * shows an Uncategorised row — and that row has to lead somewhere. "No
+   * category" cannot be expressed as a categoryId, which is a uuid, so it is
+   * its own flag.
+   */
+  it('accepts a request for the expenses with no category', () => {
+    expect(expenseFilter.parse({ uncategorised: true })).toMatchObject({ uncategorised: true });
+  });
+
+  it('leaves it out when it was not asked for', () => {
+    expect(expenseFilter.parse({})).toEqual({});
+  });
+
+  // Asking for both is a caller that has not decided what it wants, and
+  // answering either way would be a guess.
+  it('refuses a category id and the uncategorised flag together', () => {
+    const result = expenseFilter.safeParse({
+      categoryId: '33333333-3333-4333-8333-333333333333',
+      uncategorised: true,
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('categoryFilter', () => {
+  const CATEGORY = '33333333-3333-4333-8333-333333333333';
+
+  it('narrows to one category', () => {
+    expect(categoryFilter(CATEGORY)).toEqual({ categoryId: CATEGORY, uncategorised: undefined });
+  });
+
+  /*
+   * "None" cannot be a category id: that column is a uuid, and any sentinel
+   * value could one day belong to a real category. The segment in the URL is a
+   * word, and this is the one place that word is understood.
+   */
+  it('turns the uncategorised segment into the flag, not an id', () => {
+    expect(categoryFilter(UNCATEGORISED)).toEqual({
+      categoryId: undefined,
+      uncategorised: true,
+    });
+  });
+
+  it('produces a filter both platforms can hand straight to the repository', () => {
+    expect(expenseFilter.safeParse(categoryFilter(CATEGORY)).success).toBe(true);
+    expect(expenseFilter.safeParse(categoryFilter(UNCATEGORISED)).success).toBe(true);
   });
 });

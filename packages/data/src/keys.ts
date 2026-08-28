@@ -17,6 +17,7 @@ export interface ExpenseListFilter {
   readonly from?: string;
   readonly to?: string;
   readonly categoryId?: string;
+  readonly uncategorised?: boolean;
   readonly memberId?: string;
 }
 

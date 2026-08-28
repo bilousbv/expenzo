@@ -20,23 +20,15 @@ import {
 } from '@expenzo/domain';
 import { useTranslation } from '@expenzo/i18n';
 import { buttonContainerClass, buttonLabelClass, Card, type CategoryOption } from '@expenzo/ui';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 
 import { ExpenseDialog } from '@/features/expenses/expense-dialog';
 import { ExpenseForm } from '@/features/expenses/expense-form';
-import { ExpenseList } from '@/features/expenses/expense-list';
 
 import { BudgetSummary } from './budget-summary';
 import { CategoryBreakdown, type CategoryBreakdownRow } from './category-breakdown';
 
-export function Dashboard({
-  userId,
-  header,
-}: {
-  userId: string | undefined;
-  /** The app name and its links, rendered inside the balance panel. */
-  header?: ReactNode;
-}) {
+export function Dashboard({ userId }: { userId: string | undefined }) {
   const { t } = useTranslation();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
@@ -113,7 +105,6 @@ export function Dashboard({
         balanceMinor={summary.data?.balanceMinor ?? 0}
         display={display}
         loading={summary.isPending}
-        header={header}
       />
 
       {/* Everything below the panel sits on the grey app background, which is
@@ -210,7 +201,18 @@ export function Dashboard({
           </button>
         </div>
 
-        <CategoryBreakdown rows={breakdown} display={display} loading={categorySpend.isPending} />
+        {/* The rollup is the way into the expenses now that the dashboard does
+            not list them, so every row is a link. The period travels with it,
+            so the category page opens on the window the rollup was showing
+            rather than resetting to this month. */}
+        <CategoryBreakdown
+          rows={breakdown}
+          display={display}
+          loading={categorySpend.isPending}
+          hrefFor={(categoryId) =>
+            `/categories/${categoryId ?? 'uncategorised'}?from=${range.start}&to=${range.end}`
+          }
+        />
 
         {overallLimit !== null ? (
           <CategoryBreakdown
@@ -226,8 +228,6 @@ export function Dashboard({
             display={display}
           />
         ) : null}
-
-        <ExpenseList userId={userId} filter={window} />
 
         <ExpenseDialog
           open={adding}

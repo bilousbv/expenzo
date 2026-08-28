@@ -114,7 +114,9 @@ setup('authenticate', async ({ page }) => {
     '/login',
   );
 
-  await expect(page.getByRole('heading', { name: 'Expenzo', exact: true })).toBeVisible();
+  // The app name is a link in the site header now rather than a heading inside
+  // the dashboard panel, so this looks for the header itself.
+  await expect(page.getByTestId('go-home')).toBeVisible();
 
   await page.context().storageState({ path: STORAGE_STATE });
 });
