@@ -79,3 +79,12 @@ export { getDisplayRate } from './repositories/fx';
 export { getMyProfile, updateMyProfile } from './repositories/profiles';
 export type { ProfileRow } from './repositories/profiles';
 export { useDisplayCurrency, useMyProfile, useUpdateMyProfile } from './hooks/use-profile';
+
+export { clearMyAvatar, setMyAvatar, signedAvatarUrls } from './repositories/avatars';
+export type { AvatarUpload } from './repositories/avatars';
+export {
+  useAvatarUrls,
+  useClearMyAvatar,
+  useMyAvatarUrl,
+  useSetMyAvatar,
+} from './hooks/use-avatars';

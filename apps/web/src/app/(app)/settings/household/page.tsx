@@ -1,5 +1,6 @@
 import { personDisplayName } from '@expenzo/domain';
-import { Card } from '@expenzo/ui';
+import { signedAvatarUrls } from '@expenzo/data';
+import { Avatar, Card } from '@expenzo/ui';
 import { headers } from 'next/headers';
 import Link from 'next/link';
 
@@ -32,8 +33,16 @@ export default async function HouseholdSettingsPage() {
       .select('user_id, role, joined_at')
       .eq('status', 'active')
       .order('joined_at'),
-    supabase.from('profiles').select('id, first_name, last_name, display_name'),
+    supabase.from('profiles').select('id, first_name, last_name, display_name, avatar_path'),
   ]);
+
+  // The bucket is private, so a usable URL has to be signed at read time. One
+  // request for the whole roster rather than one per member: a household of
+  // five would otherwise be five round trips before any face appeared.
+  const avatarUrls = await signedAvatarUrls(
+    supabase,
+    (profiles ?? []).map((profile) => profile.avatar_path ?? ''),
+  );
 
   // Assembled by the domain helper rather than here, so the roster, the expense
   // rows and the mobile screen cannot drift into naming the same person three
@@ -46,6 +55,13 @@ export default async function HouseholdSettingsPage() {
         lastName: profile.last_name,
         displayName: profile.display_name,
       }),
+    ]),
+  );
+
+  const avatarFor = new Map(
+    (profiles ?? []).map((profile) => [
+      profile.id,
+      profile.avatar_path ? (avatarUrls.get(profile.avatar_path) ?? null) : null,
     ]),
   );
 
@@ -66,8 +82,15 @@ export default async function HouseholdSettingsPage() {
         <ul className="flex flex-col gap-2">
           {(members ?? []).map((member) => (
             <li key={member.user_id} className="flex items-center justify-between">
-              <span className="text-content" data-testid="member-name">
-                {nameFor.get(member.user_id) ?? t('common.member')}
+              <span className="flex items-center gap-3">
+                <Avatar
+                  name={nameFor.get(member.user_id) ?? t('common.member')}
+                  url={avatarFor.get(member.user_id) ?? null}
+                  size="sm"
+                />
+                <span className="text-content" data-testid="member-name">
+                  {nameFor.get(member.user_id) ?? t('common.member')}
+                </span>
               </span>
               <span className="text-sm text-content-muted">{member.role}</span>
             </li>

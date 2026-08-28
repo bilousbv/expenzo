@@ -1,15 +1,19 @@
 import {
+  useClearMyAvatar,
   useCurrentHousehold,
+  useMyAvatarUrl,
   useMyProfile,
+  useSetMyAvatar,
   useSupportedCurrencies,
   useUpdateMyProfile,
 } from '@expenzo/data';
-import type { UpdateProfileInput } from '@expenzo/domain';
+import { personDisplayName, type UpdateProfileInput } from '@expenzo/domain';
 import { useTranslation } from '@expenzo/i18n';
 import { Card } from '@expenzo/ui';
 import { ActivityIndicator, ScrollView, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AvatarField } from '../features/settings/avatar-field';
 import { ProfileForm } from '../features/settings/profile-form';
 
 /**
@@ -26,6 +30,9 @@ export default function ProfileScreen() {
   const baseCurrency = household.data?.base_currency ?? 'USD';
   const currencies = useSupportedCurrencies(household.data?.base_currency);
   const save = useUpdateMyProfile();
+  const avatarUrl = useMyAvatarUrl();
+  const setAvatar = useSetMyAvatar();
+  const clearAvatar = useClearMyAvatar();
 
   async function handleSave(input: UpdateProfileInput) {
     await save.mutateAsync(input);
@@ -40,12 +47,21 @@ export default function ProfileScreen() {
           {!profile.data || !household.data ? (
             <ActivityIndicator />
           ) : (
-            <ProfileForm
-              profile={profile.data}
-              baseCurrency={baseCurrency}
-              currencies={currencies.data ?? [baseCurrency]}
-              onSave={handleSave}
-            />
+            <>
+              <AvatarField
+                name={personDisplayName(profile.data)}
+                url={avatarUrl}
+                onChoose={(file) => setAvatar.mutateAsync(file).then(() => undefined)}
+                onRemove={() => clearAvatar.mutateAsync().then(() => undefined)}
+              />
+
+              <ProfileForm
+                profile={profile.data}
+                baseCurrency={baseCurrency}
+                currencies={currencies.data ?? [baseCurrency]}
+                onSave={handleSave}
+              />
+            </>
           )}
         </Card>
       </ScrollView>

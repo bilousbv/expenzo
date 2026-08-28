@@ -91,3 +91,6 @@ export type { CreateCategoryInput, UpdateCategoryInput } from './schemas/categor
 
 export { personDisplayName, personNameSchema, updateProfileInput } from './schemas/profile';
 export type { PersonNames, UpdateProfileInput } from './schemas/profile';
+
+export { avatarFileProblem, avatarObjectPath, AVATAR_MAX_BYTES, AVATAR_MIME_TYPES } from './avatar';
+export type { AvatarCandidate, AvatarMimeType } from './avatar';

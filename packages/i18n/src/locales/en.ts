@@ -248,6 +248,12 @@ export const en = {
     displayCurrency: 'Show my totals in',
     displayCurrencyExplainer:
       'Everything stays recorded in your household currency. This changes only what you are shown, converted at today’s rate.',
+    photo: 'Photo',
+    choosePhoto: 'Choose a photo',
+    replacePhoto: 'Replace photo',
+    removePhoto: 'Remove photo',
+    uploadingPhoto: 'Uploading…',
+    photoExplainer: 'Only people in your household can see it.',
     save: 'Save',
     saving: 'Saving…',
     saved: 'Saved',
@@ -267,6 +273,10 @@ export const en = {
     name: {
       required: 'Enter a name',
       tooLong: 'That name is too long',
+    },
+    avatar: {
+      notAnImage: 'Choose a JPEG, PNG or WebP image',
+      tooLarge: 'That image is too large — keep it under 2 MB',
     },
     password: {
       // Deliberately not {{count}}: that name is reserved by i18next for

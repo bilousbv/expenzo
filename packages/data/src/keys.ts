@@ -36,6 +36,11 @@ export const queryKeys = {
   // Rates are reference data shared by every household, so this key is scoped
   // by base currency rather than by household — there is nothing in it that
   // switching household could leak.
+  // Keyed by the paths themselves so the whole roster signs in one request
+  // rather than one per member.
+  avatars: {
+    signed: (paths: string[]) => ['avatars', ...paths] as const,
+  },
   currencies: {
     supported: (baseCurrency: string) => ['currencies', baseCurrency] as const,
     rate: (from: string, to: string) => ['currencies', 'rate', from, to] as const,

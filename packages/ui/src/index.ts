@@ -36,3 +36,7 @@ export {
 export type { CategoryOption, CategoryPickerProps } from './category-picker.styles';
 export type { CategorySelectProps } from './category-select.styles';
 export type { CurrencySelectProps } from './currency-select.styles';
+
+export { Avatar } from './avatar';
+export { avatarClass, avatarInitials, avatarLabelClass } from './avatar.styles';
+export type { AvatarProps, AvatarSize } from './avatar.styles';

@@ -15,6 +15,7 @@ const profile = {
   lastName: 'Petrenko',
   displayName: 'ana',
   displayCurrency: null,
+  avatarPath: null,
 };
 
 function renderForm(onSave: Save, displayCurrency: string | null = null) {
