@@ -3,7 +3,6 @@
 import { useTranslation } from '@expenzo/i18n';
 import type { DisplayCurrency } from '@expenzo/data';
 import { formatApprox, GradientSurface } from '@expenzo/ui';
-import type { ReactNode } from 'react';
 
 export interface BudgetSummaryProps {
   spentMinor: number;
@@ -16,8 +15,6 @@ export interface BudgetSummaryProps {
    */
   display: DisplayCurrency;
   loading?: boolean;
-  /** Rendered inside the panel, above the figure — the app name and its links. */
-  header?: ReactNode;
 }
 
 /**
@@ -34,14 +31,11 @@ export function BudgetSummary({
   balanceMinor,
   display,
   loading = false,
-  header,
 }: BudgetSummaryProps) {
   const { t } = useTranslation();
 
   return (
     <GradientSurface className="rounded-b-card px-gutter pb-gutter pt-6">
-      {header}
-
       <div className="flex flex-col items-center gap-2 py-10">
         <span className="text-sm text-content-inverse/70">{t('dashboard.leftThisPeriod')}</span>
 

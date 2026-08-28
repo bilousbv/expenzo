@@ -77,12 +77,14 @@ export const uk: Messages & {
 
   nav: {
     limits: 'Ліміти',
+    primary: 'Головне',
     profile: 'Ви',
     settings: 'Налаштування',
     subscriptions: 'Підписки',
     notFound: 'Не знайдено',
     newExpense: 'Нова витрата',
     manageCategories: 'Керувати категоріями',
+    backToDashboard: 'Назад до огляду',
     backToExpenses: 'Назад до витрат',
     goToExpenses: 'Перейти до витрат',
     goToExpenseList: 'Перейти до списку витрат',
@@ -291,6 +293,9 @@ export const uk: Messages & {
     },
     currency: {
       invalid: 'Валюта має бути трилітерним кодом ISO у верхньому регістрі',
+    },
+    filter: {
+      categoryConflict: 'Оберіть одну категорію або витрати без категорії, не обидва',
     },
     date: {
       format: 'Дата має бути у форматі РРРР-ММ-ДД',

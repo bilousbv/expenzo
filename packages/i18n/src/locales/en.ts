@@ -72,12 +72,14 @@ export const en = {
 
   nav: {
     limits: 'Limits',
+    primary: 'Main',
     profile: 'You',
     settings: 'Settings',
     subscriptions: 'Subscriptions',
     notFound: 'Not found',
     newExpense: 'New expense',
     manageCategories: 'Manage categories',
+    backToDashboard: 'Back to the dashboard',
     backToExpenses: 'Back to your expenses',
     goToExpenses: 'Go to your expenses',
     goToExpenseList: 'Go to the expense list',
@@ -292,6 +294,9 @@ export const en = {
     },
     currency: {
       invalid: 'Currency must be a three-letter uppercase ISO code',
+    },
+    filter: {
+      categoryConflict: 'Ask for one category or for those with none, not both',
     },
     date: {
       format: 'Date must be formatted YYYY-MM-DD',

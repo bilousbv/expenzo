@@ -54,11 +54,14 @@ export async function listExpenses(
 ): Promise<ExpensePage> {
   let query = db.from('expenses').select(COLUMNS).is('deleted_at', null);
 
-  const { from, to, categoryId, memberId } = filter as ExpenseFilter;
+  const { from, to, categoryId, uncategorised, memberId } = filter as ExpenseFilter;
 
   if (from) query = query.gte('occurred_on', from);
   if (to) query = query.lte('occurred_on', to);
   if (categoryId) query = query.eq('category_id', categoryId);
+  // A distinct filter rather than a sentinel id: the column is a uuid, so
+  // anything standing in for "none" could one day be a real category.
+  if (uncategorised) query = query.is('category_id', null);
   // The author filter. Every member sees every expense, so this narrows the
   // list rather than deciding what is reachable.
   if (memberId) query = query.eq('created_by', memberId);

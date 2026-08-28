@@ -76,12 +76,14 @@ export type {
 } from './schemas/limit';
 
 export {
+  categoryFilter,
   createExpenseInput,
   currencyCodeSchema,
   expenseDirectionSchema,
   expenseFilter,
   isoDateSchema,
   updateExpenseInput,
+  UNCATEGORISED,
   uuidSchema,
 } from './schemas/expense';
 export type { CreateExpenseInput, ExpenseFilter, UpdateExpenseInput } from './schemas/expense';

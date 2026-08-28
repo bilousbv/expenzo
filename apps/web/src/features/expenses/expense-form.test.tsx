@@ -241,3 +241,66 @@ describe('ExpenseForm', () => {
     );
   });
 });
+
+describe('ExpenseForm, recording income', () => {
+  /*
+   * Income is money arriving, and the three fields that describe a purchase
+   * have nothing to say about it: there is no shop, no category of spending,
+   * and the note was only ever there to disambiguate one purchase from
+   * another. Leaving them on the form asks a question with no answer.
+   */
+  it('drops the fields that only describe a purchase', async () => {
+    renderForm();
+
+    expect(screen.getByLabelText('Merchant')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByTestId('direction-income'));
+
+    expect(screen.queryByLabelText('Merchant')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Note')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('category-select')).not.toBeInTheDocument();
+  });
+
+  // The amount is the whole point, and the date and currency still apply.
+  it('keeps the amount, the date and the currency', async () => {
+    renderForm(vi.fn().mockResolvedValue(undefined), ['EUR', 'USD']);
+
+    await userEvent.click(screen.getByTestId('direction-income'));
+
+    expect(screen.getByLabelText('Amount')).toBeInTheDocument();
+    expect(screen.getByLabelText('Date')).toBeInTheDocument();
+    expect(screen.getByTestId('currency-select')).toBeInTheDocument();
+  });
+
+  it('submits income with no category, merchant or note', async () => {
+    const onCreate = renderForm();
+
+    await userEvent.click(screen.getByTestId('direction-income'));
+    await userEvent.type(screen.getByLabelText('Amount'), '1500');
+    await userEvent.click(screen.getByRole('button', { name: /add expense/i }));
+
+    await waitFor(() => expect(onCreate).toHaveBeenCalled());
+    expect(onCreate.mock.calls[0]?.[0]).toMatchObject({
+      direction: 'income',
+      categoryId: undefined,
+      merchant: undefined,
+      note: undefined,
+    });
+  });
+
+  /*
+   * Switching to income and back must not silently carry a merchant the user
+   * can no longer see into the saved row.
+   */
+  it('discards what was typed before switching to income', async () => {
+    const onCreate = renderForm();
+
+    await userEvent.type(screen.getByLabelText('Merchant'), 'Blue Bottle');
+    await userEvent.click(screen.getByTestId('direction-income'));
+    await userEvent.type(screen.getByLabelText('Amount'), '1500');
+    await userEvent.click(screen.getByRole('button', { name: /add expense/i }));
+
+    await waitFor(() => expect(onCreate).toHaveBeenCalled());
+    expect(onCreate.mock.calls[0]?.[0]).toMatchObject({ merchant: undefined });
+  });
+});

@@ -4,6 +4,8 @@ import { limitProgress } from '@expenzo/domain';
 import { useTranslation } from '@expenzo/i18n';
 import type { DisplayCurrency } from '@expenzo/data';
 import { Card, categoryDotClass, categoryDotStyle, formatApprox } from '@expenzo/ui';
+import Link from 'next/link';
+import type { ReactNode } from 'react';
 
 export interface CategoryBreakdownRow {
   categoryId: string | null;
@@ -16,10 +18,34 @@ export interface CategoryBreakdownRow {
 export interface CategoryBreakdownProps {
   rows: CategoryBreakdownRow[];
   display: DisplayCurrency;
+  /**
+   * Where a row leads. Absent means the rows are not links: the household-wide
+   * limit is rendered through this component too, and it is not a category with
+   * expenses behind it.
+   */
+  hrefFor?: (categoryId: string | null) => string;
   loading?: boolean;
 }
 
-export function CategoryBreakdown({ rows, display, loading = false }: CategoryBreakdownProps) {
+const ROW_LAYOUT = 'flex flex-row items-center justify-between';
+
+/** One row's contents, as a link when it has somewhere to go. */
+function Row({ href, children }: { href?: string; children: ReactNode }) {
+  return href ? (
+    <Link href={href} className={`${ROW_LAYOUT} rounded-tile hover:bg-surface-muted`}>
+      {children}
+    </Link>
+  ) : (
+    <div className={ROW_LAYOUT}>{children}</div>
+  );
+}
+
+export function CategoryBreakdown({
+  rows,
+  display,
+  hrefFor,
+  loading = false,
+}: CategoryBreakdownProps) {
   const { t } = useTranslation();
 
   return (
@@ -39,7 +65,12 @@ export function CategoryBreakdown({ rows, display, loading = false }: CategoryBr
 
             return (
               <li key={row.categoryId ?? 'uncategorised'} data-testid="category-row">
-                <div className="flex flex-row items-center justify-between">
+                {/* The whole row is the target, not just the name: it is the
+                    only way into a category's expenses now that the dashboard
+                    does not list them. Rendered plain when there is nowhere to
+                    go — the household-wide limit comes through here too, and it
+                    is not a category. */}
+                <Row href={hrefFor?.(row.categoryId)}>
                   <span className="flex flex-row items-center gap-2 text-content">
                     <span
                       aria-hidden
@@ -62,7 +93,7 @@ export function CategoryBreakdown({ rows, display, loading = false }: CategoryBr
                       ? ` / ${formatApprox(display.convert(progress.limitMinor), display.currency, display.approximate)}`
                       : ''}
                   </span>
-                </div>
+                </Row>
 
                 {/* Only categories with a limit get a bar. A bar with no limit
                     behind it would be measuring against nothing. */}

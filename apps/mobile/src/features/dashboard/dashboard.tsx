@@ -7,7 +7,13 @@ import {
   useLimits,
   usePeriodSummary,
 } from '@expenzo/data';
-import { limitProgress, PERIOD_PRESETS, presetRange, type PeriodPreset } from '@expenzo/domain';
+import {
+  limitProgress,
+  PERIOD_PRESETS,
+  presetRange,
+  UNCATEGORISED,
+  type PeriodPreset,
+} from '@expenzo/domain';
 import {
   Button,
   Card,
@@ -20,9 +26,7 @@ import {
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from '@expenzo/i18n';
-import { ActivityIndicator, Text, View } from 'react-native';
-
-import { ExpenseListView } from '../expenses/expense-list';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 export function Dashboard() {
   const { t } = useTranslation();
@@ -193,9 +197,25 @@ export function Dashboard() {
               const progress = limitProgress(row.spentMinor, row.limitMinor);
 
               return (
-                <View
-                  key={row.categoryId ?? 'uncategorised'}
+                /* The rollup is the way into the expenses now that this screen
+                   does not list them, so the whole row is the target. The
+                   period travels with it, so the category screen opens on the
+                   window the rollup was showing. */
+                <Pressable
+                  key={row.categoryId ?? UNCATEGORISED}
                   testID="category-row"
+                  accessibilityRole="button"
+                  accessibilityLabel={row.name}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/category/[categoryId]',
+                      params: {
+                        categoryId: row.categoryId ?? UNCATEGORISED,
+                        from: range.start,
+                        to: range.end,
+                      },
+                    })
+                  }
                   className="gap-1"
                 >
                   <View className="flex-row items-center justify-between">
@@ -230,13 +250,11 @@ export function Dashboard() {
                       />
                     </View>
                   ) : null}
-                </View>
+                </Pressable>
               );
             })
           )}
         </Card>
-
-        <ExpenseListView filter={window} />
       </View>
     </View>
   );

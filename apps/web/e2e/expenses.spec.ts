@@ -11,11 +11,30 @@ async function openDialog(page: Page) {
 }
 
 async function addExpense(page: Page, amount: string, merchant: string) {
+  // The figure this add will move. Waiting for it to change is what replaces
+  // the row that used to appear on this page: without a barrier the navigation
+  // below races the rollup refetch and opens a category that does not hold the
+  // new expense yet.
+  const spent = page.getByTestId('budget-spent');
+  await expect(spent).not.toBeEmpty();
+  const before = await spent.textContent();
+
   await openDialog(page);
   await page.getByLabel('Amount').fill(amount);
   await page.getByLabel('Merchant').fill(merchant);
   await page.getByRole('button', { name: 'Add expense' }).click();
   await expect(page.getByTestId('expense-dialog')).toBeHidden();
+  await expect(spent).not.toHaveText(before ?? '');
+}
+
+/**
+ * The dashboard is a summary now and lists no expenses, so the category rollup
+ * is the way in. Nothing here is added with a category, so everything lands
+ * under Uncategorised.
+ */
+async function openUncategorised(page: Page) {
+  await page.getByTestId('category-row').filter({ hasText: 'Uncategorised' }).click();
+  await expect(page.getByTestId('category-title')).toHaveText('Uncategorised');
 }
 
 test.describe('expenses', () => {
@@ -24,6 +43,7 @@ test.describe('expenses', () => {
 
     await page.goto('/');
     await addExpense(page, '12.50', merchant);
+    await openUncategorised(page);
 
     const row = page.getByTestId('expense-row').filter({ hasText: merchant });
     await expect(row).toBeVisible();
@@ -50,6 +70,7 @@ test.describe('expenses', () => {
 
     await page.goto('/');
     await addExpense(page, '7,25', merchant);
+    await openUncategorised(page);
 
     const row = page.getByTestId('expense-row').filter({ hasText: merchant });
     await expect(row.getByTestId('expense-amount')).toHaveText('$7.25');
@@ -63,27 +84,31 @@ test.describe('expenses', () => {
 
     await page.goto('/');
     await addExpense(page, '9.99', merchant);
+    await openUncategorised(page);
 
     const row = page.getByTestId('expense-row').filter({ hasText: merchant });
     await expect(row.getByTestId('expense-author')).not.toBeEmpty();
   });
 
-  test('narrows the list to one author and back', async ({ page }) => {
-    const merchant = uniqueMerchant('Mine');
-
+  /*
+   * The author filter used to narrow a list on the dashboard. The dashboard no
+   * longer holds one, so what it narrows now is the rollup and the figures
+   * above it — which is the thing that has to keep working.
+   */
+  test('narrows the rollup to one author and back', async ({ page }) => {
     await page.goto('/');
-    await addExpense(page, '4.00', merchant);
+    await addExpense(page, '4.00', uniqueMerchant('Mine'));
 
-    const row = page.getByTestId('expense-row').filter({ hasText: merchant });
-    await expect(row).toBeVisible();
+    const uncategorised = page.getByTestId('category-row').filter({ hasText: 'Uncategorised' });
+    await expect(uncategorised).toBeVisible();
 
     // The signed-in member is the only one in this household, so filtering to
-    // them keeps the row and "Everyone" brings the unfiltered list back.
+    // them keeps the row and "Everyone" brings the unfiltered rollup back.
     await page.getByRole('radiogroup', { name: 'Author' }).getByRole('radio').nth(1).click();
-    await expect(row).toBeVisible();
+    await expect(uncategorised).toBeVisible();
 
     await page.getByTestId('author-all').click();
-    await expect(row).toBeVisible();
+    await expect(uncategorised).toBeVisible();
   });
 
   test('refuses an amount that is not a number', async ({ page }) => {
@@ -105,6 +130,7 @@ test.describe('expenses', () => {
 
     await page.goto('/');
     await addExpense(page, '5.00', merchant);
+    await openUncategorised(page);
 
     const row = page.getByTestId('expense-row').filter({ hasText: merchant });
     await expect(row).toBeVisible();
@@ -134,6 +160,7 @@ test.describe('multi-currency', () => {
     await page.getByLabel('Merchant').fill(merchant);
     await page.getByRole('button', { name: 'Add expense' }).click();
     await expect(page.getByTestId('expense-dialog')).toBeHidden();
+    await openUncategorised(page);
 
     const row = page.getByTestId('expense-row').filter({ hasText: merchant });
     await expect(row.getByTestId('expense-amount')).toHaveText('€20.00');
@@ -153,6 +180,8 @@ test.describe('multi-currency', () => {
     await page.getByLabel('Amount').fill('100');
     await page.getByLabel('Merchant').fill(merchant);
     await page.getByRole('button', { name: 'Add expense' }).click();
+    await expect(page.getByTestId('expense-dialog')).toBeHidden();
+    await openUncategorised(page);
 
     const row = page.getByTestId('expense-row').filter({ hasText: merchant });
     const converted = await row.getByTestId('expense-base-amount').textContent();
@@ -167,6 +196,7 @@ test.describe('multi-currency', () => {
 
     await page.goto('/');
     await addExpense(page, '12.50', merchant);
+    await openUncategorised(page);
 
     const row = page.getByTestId('expense-row').filter({ hasText: merchant });
     await expect(row.getByTestId('expense-amount')).toHaveText('$12.50');

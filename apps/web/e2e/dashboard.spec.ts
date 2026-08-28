@@ -4,22 +4,37 @@ function uniqueMerchant(prefix: string) {
   return `${prefix} ${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 }
 
-/** Adds one expense through the dialog and waits for the list to show it. */
+/** Adds one expense through the dialog. The dashboard lists none, so the
+ *  proof it landed is the rollup or the figures above it. */
 async function addExpense(
   page: Page,
   { amount, merchant, income = false }: { amount: string; merchant: string; income?: boolean },
 ) {
+  // The figure this add is going to move. Waiting for it to change afterwards
+  // is what replaces the row that used to appear on this page: without a
+  // barrier the next assertion races the summary refetch.
+  const total = page.getByTestId(income ? 'budget-income' : 'budget-spent');
+  await expect(total).not.toBeEmpty();
+  const before = await total.textContent();
+
   await page.getByTestId('open-expense-dialog').click();
   await expect(page.getByTestId('expense-dialog')).toBeVisible();
 
   if (income) await page.getByTestId('direction-income').click();
 
   await page.getByLabel('Amount').fill(amount);
-  await page.getByLabel('Merchant').fill(merchant);
+  // Income has no merchant field at all — money arriving has no shop.
+  if (!income) await page.getByLabel('Merchant').fill(merchant);
   await page.getByRole('button', { name: 'Add expense' }).click();
 
   await expect(page.getByTestId('expense-dialog')).toBeHidden();
-  await expect(page.getByTestId('expense-row').filter({ hasText: merchant })).toBeVisible();
+  await expect(total).not.toHaveText(before ?? '');
+}
+
+/** Opens a category from the rollup, which is the only way into its expenses. */
+async function openCategory(page: Page, name: string) {
+  await page.getByTestId('category-row').filter({ hasText: name }).click();
+  await expect(page.getByTestId('category-title')).toHaveText(name);
 }
 
 test.describe('dashboard', () => {
@@ -42,6 +57,11 @@ test.describe('dashboard', () => {
     await expect(page.getByTestId('expense-dialog')).toBeHidden();
 
     await addExpense(page, { amount: '12.50', merchant });
+
+    // The dashboard is a summary, so the expense is proved by opening the
+    // category it landed in rather than by a row appearing here.
+    await openCategory(page, 'Uncategorised');
+    await expect(page.getByTestId('expense-row').filter({ hasText: merchant })).toBeVisible();
   });
 
   // Escape closing a <dialog> is the behaviour the native element gives for
@@ -68,8 +88,12 @@ test.describe('dashboard', () => {
     await page.getByLabel('Category').selectOption({ label: 'Groceries' });
     await page.getByRole('button', { name: 'Add expense' }).click();
 
-    const row = page.getByTestId('expense-row').filter({ hasText: merchant });
-    await expect(row).toContainText('Groceries');
+    await expect(page.getByTestId('expense-dialog')).toBeHidden();
+
+    // The point of the dropdown is that the expense lands in that category, and
+    // the rollup is now where that is visible.
+    await openCategory(page, 'Groceries');
+    await expect(page.getByTestId('expense-row').filter({ hasText: merchant })).toBeVisible();
   });
 
   // The arithmetic this design exists to get right: income moves the balance up
@@ -108,7 +132,8 @@ test.describe('dashboard', () => {
     await page.getByTestId('period-last-month').click();
 
     await expect(page.getByTestId('budget-spent')).toHaveText('$0.00');
-    await expect(page.getByTestId('no-expenses')).toBeVisible();
+    // The rollup is what empties now; the dashboard holds no list to empty.
+    await expect(page.getByTestId('no-category-spend')).toBeVisible();
 
     await page.getByTestId('period-this-month').click();
     await expect(page.getByTestId('budget-spent')).not.toHaveText('$0.00');
@@ -169,5 +194,52 @@ test.describe('spending limits', () => {
     await page.getByRole('button', { name: 'Set limit' }).click();
 
     await expect(page.getByTestId('limit-error')).toBeVisible();
+  });
+});
+
+test.describe('navigation', () => {
+  /*
+   * The header used to live inside the dashboard's gradient panel, which meant
+   * it existed on exactly one page: every settings screen was a dead end you
+   * could only leave with the browser's back button.
+   */
+  for (const path of ['/', '/subscriptions', '/settings/limits', '/settings/profile']) {
+    test(`shows the header on ${path}`, async ({ page }) => {
+      await page.goto(path);
+
+      await expect(page.getByRole('navigation')).toBeVisible();
+      await expect(page.getByTestId('go-home')).toBeVisible();
+    });
+  }
+
+  test('gets back to the dashboard from a settings page', async ({ page }) => {
+    await page.goto('/settings/limits');
+
+    await page.getByTestId('go-home').click();
+
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByTestId('budget-balance')).toBeVisible();
+  });
+});
+
+test.describe('category expenses', () => {
+  // The dashboard is a summary now. Item by item lives one level down.
+  test('lists no expenses on the dashboard itself', async ({ page }) => {
+    await page.goto('/');
+
+    await expect(page.getByTestId('budget-balance')).toBeVisible();
+    await expect(page.getByTestId('expense-row')).toHaveCount(0);
+  });
+
+  test('opens a category and comes back', async ({ page }) => {
+    await page.goto('/');
+    await addExpense(page, { amount: '6.00', merchant: uniqueMerchant('Drilldown') });
+
+    await openCategory(page, 'Uncategorised');
+    // The period travels with the link rather than resetting to this month.
+    await expect(page.getByTestId('category-range')).toBeVisible();
+
+    await page.getByTestId('back-to-dashboard').click();
+    await expect(page).toHaveURL(/\/$/);
   });
 });
