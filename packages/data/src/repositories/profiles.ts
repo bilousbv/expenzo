@@ -9,7 +9,7 @@ type MemberRole = Database['public']['Enums']['member_role'];
  * parsing this as a type, and anything built with `+` widens to
  * `GenericStringError[]`.
  */
-const PROFILE_COLUMNS = 'id, first_name, last_name, display_name, display_currency';
+const PROFILE_COLUMNS = 'id, first_name, last_name, display_name, display_currency, avatar_path';
 
 export interface ProfileRow {
   readonly id: string;
@@ -19,12 +19,18 @@ export interface ProfileRow {
   readonly displayName: string | null;
   /** Null means the household's own currency. */
   readonly displayCurrency: string | null;
+  /**
+   * Object name in the private avatars bucket, not a URL. A usable URL has to
+   * be signed at read time, so it cannot be stored alongside this.
+   */
+  readonly avatarPath: string | null;
 }
 
 export interface HouseholdMember {
   userId: string;
   role: MemberRole;
   displayName: string;
+  avatarPath: string | null;
 }
 
 function toProfile(row: {
@@ -33,6 +39,7 @@ function toProfile(row: {
   last_name: string | null;
   display_name: string | null;
   display_currency: string | null;
+  avatar_path: string | null;
 }): ProfileRow {
   return {
     id: row.id,
@@ -40,6 +47,7 @@ function toProfile(row: {
     lastName: row.last_name,
     displayName: row.display_name,
     displayCurrency: row.display_currency,
+    avatarPath: row.avatar_path,
   };
 }
 
@@ -115,7 +123,7 @@ export async function listHouseholdMembers(db: Db): Promise<HouseholdMember[]> {
       .select('user_id, role, joined_at')
       .eq('status', 'active')
       .order('joined_at'),
-    db.from('profiles').select('id, first_name, last_name, display_name'),
+    db.from('profiles').select('id, first_name, last_name, display_name, avatar_path'),
   ]);
 
   if (error) throw new Error(error.message);
@@ -131,6 +139,10 @@ export async function listHouseholdMembers(db: Db): Promise<HouseholdMember[]> {
     ]),
   );
 
+  // The stored path, not a URL: the bucket is private, so a usable URL has to
+  // be signed at read time and would be stale by the time this was cached.
+  const avatarFor = new Map((profiles ?? []).map((profile) => [profile.id, profile.avatar_path]));
+
   return (members ?? []).map((member) => ({
     userId: member.user_id,
     role: member.role,
@@ -138,5 +150,6 @@ export async function listHouseholdMembers(db: Db): Promise<HouseholdMember[]> {
     // members, so a removed one leaves a gap. An expense still has to render
     // with something in the author slot.
     displayName: nameFor.get(member.user_id) ?? 'Member',
+    avatarPath: avatarFor.get(member.user_id) ?? null,
   }));
 }

@@ -67,8 +67,8 @@ describe('listHouseholdMembers', () => {
     const roster = await listHouseholdMembers(db);
 
     expect(roster).toEqual([
-      { userId: ANA, role: 'owner', displayName: 'Ana' },
-      { userId: BEN, role: 'adult', displayName: 'Ben' },
+      { userId: ANA, role: 'owner', displayName: 'Ana', avatarPath: null },
+      { userId: BEN, role: 'adult', displayName: 'Ben', avatarPath: null },
     ]);
   });
 
@@ -80,7 +80,12 @@ describe('listHouseholdMembers', () => {
 
     const roster = await listHouseholdMembers(db);
 
-    expect(roster[1]).toEqual({ userId: BEN, role: 'adult', displayName: 'Member' });
+    expect(roster[1]).toEqual({
+      userId: BEN,
+      role: 'adult',
+      displayName: 'Member',
+      avatarPath: null,
+    });
   });
 
   it('returns an empty roster rather than null', async () => {
@@ -223,5 +228,34 @@ describe('listHouseholdMembers, once people have names', () => {
     const roster = await listHouseholdMembers(db);
 
     expect(roster.map((member) => member.displayName)).toEqual(['Ana Petrenko', 'ben']);
+  });
+});
+
+describe('listHouseholdMembers, with photos', () => {
+  /*
+   * The roster is where every face on the app comes from, so it carries the
+   * stored path. The URL cannot live here: the bucket is private, so it has to
+   * be signed at read time and would be stale by the time it was cached.
+   */
+  it('carries each member’s photo path', async () => {
+    const { db } = fakeDb(members, [
+      { id: ANA, display_name: 'ana', avatar_path: `${ANA}/avatar` },
+      { id: BEN, display_name: 'ben', avatar_path: null },
+    ]);
+
+    const roster = await listHouseholdMembers(db);
+
+    expect(roster[0]?.avatarPath).toBe(`${ANA}/avatar`);
+    expect(roster[1]?.avatarPath).toBeNull();
+  });
+
+  // A profile row can be missing entirely — the policy exposes profiles only
+  // for active members — and the row still has to render.
+  it('reports no photo rather than undefined when the profile is missing', async () => {
+    const { db } = fakeDb(members, []);
+
+    const roster = await listHouseholdMembers(db);
+
+    expect(roster[0]?.avatarPath).toBeNull();
   });
 });

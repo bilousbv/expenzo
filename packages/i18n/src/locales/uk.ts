@@ -255,6 +255,12 @@ export const uk: Messages & {
     displayCurrency: 'Показувати мої підсумки в',
     displayCurrencyExplainer:
       'Усе й далі записується у валюті домогосподарства. Це змінює лише те, що бачите ви, — за сьогоднішнім курсом.',
+    photo: 'Фото',
+    choosePhoto: 'Обрати фото',
+    replacePhoto: 'Замінити фото',
+    removePhoto: 'Видалити фото',
+    uploadingPhoto: 'Завантаження…',
+    photoExplainer: 'Його бачать лише учасники вашого домогосподарства.',
     save: 'Зберегти',
     saving: 'Збереження…',
     saved: 'Збережено',
@@ -269,6 +275,10 @@ export const uk: Messages & {
     name: {
       required: 'Введіть ім’я',
       tooLong: 'Це ім’я задовге',
+    },
+    avatar: {
+      notAnImage: 'Оберіть зображення JPEG, PNG або WebP',
+      tooLarge: 'Це зображення завелике — не більше 2 МБ',
     },
     password: {
       tooShort: 'Використайте щонайменше {{min}} символів',

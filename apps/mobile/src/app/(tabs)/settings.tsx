@@ -1,6 +1,6 @@
 import { personDisplayName } from '@expenzo/domain';
-import { Button, Card } from '@expenzo/ui';
-import { useSupabase } from '@expenzo/data';
+import { Avatar, Button, Card } from '@expenzo/ui';
+import { signedAvatarUrls, useSupabase } from '@expenzo/data';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useTranslation } from '@expenzo/i18n';
@@ -32,7 +32,7 @@ export default function SettingsTab() {
     queryFn: async () => {
       const [{ data: rows, error }, { data: profiles }] = await Promise.all([
         supabase.from('household_members').select('user_id, role').eq('status', 'active'),
-        supabase.from('profiles').select('id, first_name, last_name, display_name'),
+        supabase.from('profiles').select('id, first_name, last_name, display_name, avatar_path'),
       ]);
 
       if (error) throw new Error(error.message);
@@ -49,9 +49,24 @@ export default function SettingsTab() {
           }),
         ]),
       );
+      // Signed in one request for the whole roster: the bucket is private, so
+      // a usable URL cannot be stored, and one call per member would be five
+      // round trips for a household of five before any face appeared.
+      const urls = await signedAvatarUrls(
+        supabase,
+        (profiles ?? []).map((p) => p.avatar_path ?? ''),
+      );
+      const avatarFor = new Map(
+        (profiles ?? []).map((p) => [
+          p.id,
+          p.avatar_path ? (urls.get(p.avatar_path) ?? null) : null,
+        ]),
+      );
+
       return (rows ?? []).map((row) => ({
         ...row,
         displayName: nameFor.get(row.user_id) ?? t('common.member'),
+        avatarUrl: avatarFor.get(row.user_id) ?? null,
       }));
     },
   });
@@ -70,10 +85,13 @@ export default function SettingsTab() {
             <ActivityIndicator />
           ) : (
             (members.data ?? []).map((member) => (
-              <View key={member.user_id} className="flex-row justify-between">
-                <Text testID="member-name" className="text-content">
-                  {member.displayName}
-                </Text>
+              <View key={member.user_id} className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-3">
+                  <Avatar name={member.displayName} url={member.avatarUrl} size="sm" />
+                  <Text testID="member-name" className="text-content">
+                    {member.displayName}
+                  </Text>
+                </View>
                 <Text className="text-sm text-content-muted">{member.role}</Text>
               </View>
             ))

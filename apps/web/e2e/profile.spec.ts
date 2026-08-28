@@ -123,3 +123,64 @@ test.describe('profile', () => {
     await expect(page.getByTestId('budget-spent')).not.toContainText('≈');
   });
 });
+
+test.describe('profile photo', () => {
+  /** The smallest valid PNG, so the upload is real without shipping a fixture. */
+  const PNG = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+    'base64',
+  );
+
+  test('uploads a photo and shows it on the roster', async ({ page }) => {
+    await register(page, { firstName: 'Ana', lastName: 'Petrenko', currency: 'USD' });
+
+    await page.goto('/settings/profile');
+
+    // Initials until there is a photo: most members never upload one, so the
+    // fallback is the ordinary case rather than an error state.
+    await expect(page.getByTestId('profile-avatar')).toHaveText('AP');
+
+    await page
+      .getByTestId('avatar-input')
+      .setInputFiles({ name: 'me.png', mimeType: 'image/png', buffer: PNG });
+
+    // The bucket is private, so what renders is a signed URL rather than a
+    // public one — proof that the object was stored and could be read back.
+    const photo = page.getByRole('img', { name: 'Ana Petrenko' });
+    await expect(photo).toBeVisible();
+    await expect(photo).toHaveAttribute('src', /token=/);
+
+    await page.goto('/settings/household');
+    await expect(page.getByRole('img', { name: 'Ana Petrenko' })).toBeVisible();
+  });
+
+  test('takes the photo down again', async ({ page }) => {
+    await register(page, { firstName: 'Ira', currency: 'USD' });
+
+    await page.goto('/settings/profile');
+    await page
+      .getByTestId('avatar-input')
+      .setInputFiles({ name: 'me.png', mimeType: 'image/png', buffer: PNG });
+    await expect(page.getByTestId('avatar-remove')).toBeVisible();
+
+    await page.getByTestId('avatar-remove').click();
+
+    await expect(page.getByTestId('avatar-remove')).toBeHidden();
+    await expect(page.getByTestId('profile-avatar')).toHaveText('I');
+  });
+
+  // The bucket refuses this too, but only after the file has been sent. Saying
+  // so first is the difference between an explanation and a failed request.
+  test('refuses a file that is not an image before sending it', async ({ page }) => {
+    await register(page, { firstName: 'Ana', currency: 'USD' });
+
+    await page.goto('/settings/profile');
+    await page.getByTestId('avatar-input').setInputFiles({
+      name: 'statement.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('%PDF-1.4'),
+    });
+
+    await expect(page.getByTestId('avatar-error')).toBeVisible();
+  });
+});

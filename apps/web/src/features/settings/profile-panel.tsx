@@ -1,15 +1,19 @@
 'use client';
 
-import type { UpdateProfileInput } from '@expenzo/domain';
+import { personDisplayName, type UpdateProfileInput } from '@expenzo/domain';
 import {
+  useClearMyAvatar,
   useCurrentHousehold,
+  useMyAvatarUrl,
   useMyProfile,
+  useSetMyAvatar,
   useSupportedCurrencies,
   useUpdateMyProfile,
 } from '@expenzo/data';
 import { useTranslation } from '@expenzo/i18n';
 import { Card } from '@expenzo/ui';
 
+import { AvatarField } from './avatar-field';
 import { ProfileForm } from './profile-form';
 
 /**
@@ -27,6 +31,9 @@ export function ProfilePanel() {
   const baseCurrency = household.data?.base_currency ?? 'USD';
   const currencies = useSupportedCurrencies(household.data?.base_currency);
   const save = useUpdateMyProfile();
+  const avatarUrl = useMyAvatarUrl();
+  const setAvatar = useSetMyAvatar();
+  const clearAvatar = useClearMyAvatar();
 
   if (!profile.data || !household.data) {
     return <p className="text-sm text-content-muted">{t('common.loading')}</p>;
@@ -40,6 +47,13 @@ export function ProfilePanel() {
     <Card className="gap-gutter">
       <h1 className="text-2xl font-bold text-content">{t('profile.title')}</h1>
       <p className="text-sm text-content-muted">{t('profile.explainer')}</p>
+
+      <AvatarField
+        name={personDisplayName(profile.data)}
+        url={avatarUrl}
+        onChoose={(file) => setAvatar.mutateAsync(file).then(() => undefined)}
+        onRemove={() => clearAvatar.mutateAsync().then(() => undefined)}
+      />
 
       <ProfileForm
         profile={profile.data}
