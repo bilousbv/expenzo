@@ -2,6 +2,7 @@ import {
   useCategories,
   useCategorySpend,
   useCurrentHousehold,
+  useDisplayCurrency,
   useHouseholdMembers,
   useLimits,
   usePeriodSummary,
@@ -12,7 +13,7 @@ import {
   Card,
   categoryDotClass,
   categoryDotStyle,
-  formatCurrency,
+  formatApprox,
   GradientSurface,
   type CategoryOption,
 } from '@expenzo/ui';
@@ -27,7 +28,12 @@ export function Dashboard() {
   const { t } = useTranslation();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
-  const currency = household.data?.base_currency ?? 'USD';
+  /*
+   * What this member reads in. The household still records everything in its
+   * own currency; this converts on the way to the screen, so two people can
+   * read one ledger in two currencies without either of them changing it.
+   */
+  const display = useDisplayCurrency();
   const timeZone = household.data?.timezone ?? 'UTC';
 
   const [preset, setPreset] = useState<PeriodPreset>('this-month');
@@ -85,7 +91,7 @@ export function Dashboard() {
           {/* Not reddened when negative: on a dark panel red reads as an error
               rather than as a number, and the minus sign already says it. */}
           <Text testID="budget-balance" className="text-5xl font-bold text-content-inverse">
-            {formatCurrency(balance, currency)}
+            {formatApprox(display.convert(balance), display.currency, display.approximate)}
           </Text>
         </View>
 
@@ -93,7 +99,11 @@ export function Dashboard() {
           <View className="flex-1 items-center gap-1">
             <Text className="text-xs text-content-inverse/70">{t('dashboard.income')}</Text>
             <Text testID="budget-income" className="text-lg font-semibold text-content-inverse">
-              {formatCurrency(summary.data?.incomeMinor ?? 0, currency)}
+              {formatApprox(
+                display.convert(summary.data?.incomeMinor ?? 0),
+                display.currency,
+                display.approximate,
+              )}
             </Text>
           </View>
 
@@ -102,7 +112,11 @@ export function Dashboard() {
           <View className="flex-1 items-center gap-1">
             <Text className="text-xs text-content-inverse/70">{t('dashboard.spent')}</Text>
             <Text testID="budget-spent" className="text-lg font-semibold text-content-inverse">
-              {formatCurrency(summary.data?.spentMinor ?? 0, currency)}
+              {formatApprox(
+                display.convert(summary.data?.spentMinor ?? 0),
+                display.currency,
+                display.approximate,
+              )}
             </Text>
           </View>
         </View>
@@ -193,9 +207,13 @@ export function Dashboard() {
                       testID="category-amount"
                       className={progress.exceeded ? 'text-red-600' : 'text-content'}
                     >
-                      {formatCurrency(row.spentMinor, currency)}
+                      {formatApprox(
+                        display.convert(row.spentMinor),
+                        display.currency,
+                        display.approximate,
+                      )}
                       {progress.limitMinor !== null
-                        ? ` / ${formatCurrency(progress.limitMinor, currency)}`
+                        ? ` / ${formatApprox(display.convert(progress.limitMinor), display.currency, display.approximate)}`
                         : ''}
                     </Text>
                   </View>

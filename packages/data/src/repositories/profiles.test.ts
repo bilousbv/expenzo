@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Db } from '../types';
-import { listHouseholdMembers } from './profiles';
+import { getMyProfile, listHouseholdMembers, updateMyProfile } from './profiles';
 
 const ANA = '11111111-1111-4111-8111-111111111111';
 const BEN = '22222222-2222-4222-8222-222222222222';
@@ -93,5 +93,135 @@ describe('listHouseholdMembers', () => {
     const { db } = fakeDb(null, null, { message: 'JWT expired' });
 
     await expect(listHouseholdMembers(db)).rejects.toThrow('JWT expired');
+  });
+});
+
+/** A single-row read or write, recording the payload it was handed. */
+function fakeProfileDb(row: unknown, error: { message: string } | null = null) {
+  const updates: unknown[] = [];
+  const filters: Array<[string, unknown]> = [];
+
+  const chain: Record<string, unknown> = {
+    select: () => chain,
+    update: (payload: unknown) => {
+      updates.push(payload);
+      return chain;
+    },
+    eq: (column: string, value: unknown) => {
+      filters.push([column, value]);
+      return chain;
+    },
+    maybeSingle: () => Promise.resolve({ data: row, error }),
+    single: () => Promise.resolve({ data: row, error }),
+  };
+
+  return { db: { from: vi.fn(() => chain) } as unknown as Db, updates, filters };
+}
+
+describe('getMyProfile', () => {
+  it('reads the caller row and names its fields in the app', async () => {
+    const { db, filters } = fakeProfileDb({
+      id: ANA,
+      first_name: 'Ana',
+      last_name: 'Petrenko',
+      display_name: 'ana',
+      display_currency: 'UAH',
+    });
+
+    await expect(getMyProfile(db, ANA)).resolves.toEqual({
+      id: ANA,
+      firstName: 'Ana',
+      lastName: 'Petrenko',
+      displayName: 'ana',
+      displayCurrency: 'UAH',
+    });
+    expect(filters).toContainEqual(['id', ANA]);
+  });
+
+  // The row is created by a trigger on signup, but a session can outlive the
+  // profile — a deleted account with a live token — and a settings screen has
+  // to render rather than throw.
+  it('returns null when there is no profile yet', async () => {
+    const { db } = fakeProfileDb(null);
+
+    await expect(getMyProfile(db, ANA)).resolves.toBeNull();
+  });
+
+  it('throws the database message', async () => {
+    const { db } = fakeProfileDb(null, { message: 'JWT expired' });
+
+    await expect(getMyProfile(db, ANA)).rejects.toThrow('JWT expired');
+  });
+});
+
+describe('updateMyProfile', () => {
+  it('writes only the fields it was given', async () => {
+    const { db, updates } = fakeProfileDb({
+      id: ANA,
+      first_name: 'Anna',
+      last_name: null,
+      display_name: 'ana',
+      display_currency: null,
+    });
+
+    await updateMyProfile(db, ANA, { firstName: 'Anna' });
+
+    expect(updates).toEqual([{ first_name: 'Anna' }]);
+  });
+
+  /*
+   * Null is a value here, not an absence: it is how a member says "show me the
+   * household's currency". Dropping it alongside undefined would make the
+   * choice impossible to undo.
+   */
+  it('writes a cleared display currency as null', async () => {
+    const { db, updates } = fakeProfileDb({
+      id: ANA,
+      first_name: 'Ana',
+      last_name: null,
+      display_name: 'ana',
+      display_currency: null,
+    });
+
+    await updateMyProfile(db, ANA, { displayCurrency: null });
+
+    expect(updates).toEqual([{ display_currency: null }]);
+  });
+
+  // The update policy is scoped to the caller's own row, but a missing filter
+  // would still be an unbounded update statement against the whole table.
+  it('scopes the write to the caller', async () => {
+    const { db, filters } = fakeProfileDb({
+      id: ANA,
+      first_name: 'Ana',
+      last_name: null,
+      display_name: 'ana',
+      display_currency: null,
+    });
+
+    await updateMyProfile(db, ANA, { firstName: 'Ana' });
+
+    expect(filters).toEqual([['id', ANA]]);
+  });
+
+  it('throws the database message', async () => {
+    const { db } = fakeProfileDb(null, { message: 'currency CLP is not quoted' });
+
+    await expect(updateMyProfile(db, ANA, { displayCurrency: 'CLP' })).rejects.toThrow(
+      'currency CLP is not quoted',
+    );
+  });
+});
+
+describe('listHouseholdMembers, once people have names', () => {
+  it('prefers the name a member typed over the one signup derived', async () => {
+    const { db } = fakeDb(members, [
+      { id: ANA, display_name: 'ana.p', first_name: 'Ana', last_name: 'Petrenko' },
+      { id: BEN, display_name: 'ben', first_name: null, last_name: null },
+    ]);
+
+    const roster = await listHouseholdMembers(db);
+
+    expect(roster.map((member) => member.displayName)).toEqual(['Ana Petrenko', 'ben']);
   });
 });

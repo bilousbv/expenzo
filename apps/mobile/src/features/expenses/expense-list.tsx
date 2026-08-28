@@ -2,6 +2,7 @@ import {
   useCategories,
   useCurrentHousehold,
   useDeleteExpense,
+  useDisplayCurrency,
   useExpenses,
   useHouseholdMembers,
 } from '@expenzo/data';
@@ -10,6 +11,7 @@ import { useTranslation } from '@expenzo/i18n';
 import {
   Button,
   Card,
+  formatApprox,
   formatCurrency,
   IconTile,
   iconTileGlyphClass,
@@ -29,7 +31,8 @@ export function ExpenseListView({ filter }: { filter: ExpenseFilter }) {
   const { t } = useTranslation();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
-  const baseCurrency = household.data?.base_currency;
+  // What this member reads in; the household still records in its own.
+  const display = useDisplayCurrency();
   const timeZone = household.data?.timezone ?? 'UTC';
 
   const categories = useCategories(householdId);
@@ -89,7 +92,7 @@ export function ExpenseListView({ filter }: { filter: ExpenseFilter }) {
                 className={`text-sm ${netMinor > 0 ? 'text-positive' : 'text-content-muted'}`}
               >
                 {netMinor > 0 ? '+' : ''}
-                {formatCurrency(netMinor, baseCurrency ?? 'USD')}
+                {formatApprox(display.convert(netMinor), display.currency, display.approximate)}
               </Text>
             </View>
 
@@ -141,9 +144,15 @@ export function ExpenseListView({ filter }: { filter: ExpenseFilter }) {
                           {formatCurrency(row.amount_minor, row.currency)}
                         </Text>
 
-                        {baseCurrency && row.currency !== baseCurrency ? (
+                        {row.currency !== display.currency ? (
                           <Text testID="expense-base-amount" className="text-xs text-content-muted">
-                            ≈ {formatCurrency(row.base_amount_minor, baseCurrency)}
+                            {/* Always marked: this figure was converted
+                                whichever currency the reader is in. */}
+                            {formatApprox(
+                              display.convert(row.base_amount_minor),
+                              display.currency,
+                              true,
+                            )}
                           </Text>
                         ) : null}
                       </View>

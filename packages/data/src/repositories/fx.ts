@@ -1,4 +1,4 @@
-import type { EcbDailyRates } from '@expenzo/domain';
+import { deriveRate, type EcbDailyRates } from '@expenzo/domain';
 
 import type { Db } from '../types';
 
@@ -79,4 +79,49 @@ export async function listSupportedCurrencies(db: Db, baseCurrency: string): Pro
   for (const row of quoted.data ?? []) codes.add(row.quote);
 
   return [...codes].sort();
+}
+
+/**
+ * Today's rate between two currencies, for showing stored figures in a
+ * member's own money.
+ *
+ * Deliberately one number rather than a re-query: household totals are already
+ * summed in the base currency, so presenting them elsewhere is a single
+ * multiplication. Nothing stored moves — the amounts stay frozen at the rates
+ * of the days they happened, and only the presentation is converted, which is
+ * why every figure it produces is marked approximate.
+ *
+ * Null rather than 1 when a rate is missing. A missing rate is not a rate of
+ * one, and pretending otherwise prints a hryvnia total under a dollar sign.
+ */
+export async function getDisplayRate(db: Db, from: string, to: string): Promise<number | null> {
+  // Answerable without the table, and most members read in the household's own
+  // currency — a round trip on every screen to learn that would be waste.
+  if (from === to) return 1;
+
+  const latest = await db
+    .from('fx_rates')
+    .select('as_of')
+    .eq('base', 'EUR')
+    .order('as_of', { ascending: false })
+    .limit(1);
+
+  if (latest.error) throw new Error(latest.error.message);
+
+  const asOf = (latest.data ?? [])[0]?.as_of;
+
+  if (!asOf) return null;
+
+  const quoted = await db
+    .from('fx_rates')
+    .select('quote, rate')
+    .eq('base', 'EUR')
+    .eq('as_of', asOf);
+
+  if (quoted.error) throw new Error(quoted.error.message);
+
+  const eurRates: Record<string, number> = {};
+  for (const row of quoted.data ?? []) eurRates[row.quote] = Number(row.rate);
+
+  return deriveRate(from, to, eurRates);
 }

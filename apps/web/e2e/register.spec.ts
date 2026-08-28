@@ -21,6 +21,7 @@ test.describe('registration', () => {
 
     await page.goto('/register');
 
+    await page.getByLabel('First name').fill('Ana');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
     await page.getByLabel('Confirm password').fill(PASSWORD);
@@ -38,6 +39,8 @@ test.describe('registration', () => {
     const email = uniqueEmail();
 
     await page.goto('/register');
+
+    await page.getByLabel('First name').fill('Ana');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
     await page.getByLabel('Confirm password').fill(PASSWORD);
@@ -63,6 +66,8 @@ test.describe('registration', () => {
     const email = uniqueEmail();
 
     await page.goto('/register');
+
+    await page.getByLabel('First name').fill('Ana');
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
     await page.getByLabel('Confirm password').fill(PASSWORD);
@@ -96,6 +101,7 @@ test.describe('registration', () => {
   test('rejects a mismatched confirmation before contacting the server', async ({ page }) => {
     await page.goto('/register');
 
+    await page.getByLabel('First name').fill('Ana');
     await page.getByLabel('Email').fill(uniqueEmail());
     await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
     await page.getByLabel('Confirm password').fill('something-else-9');

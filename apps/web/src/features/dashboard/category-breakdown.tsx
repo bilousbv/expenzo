@@ -2,7 +2,8 @@
 
 import { limitProgress } from '@expenzo/domain';
 import { useTranslation } from '@expenzo/i18n';
-import { Card, categoryDotClass, categoryDotStyle, formatCurrency } from '@expenzo/ui';
+import type { DisplayCurrency } from '@expenzo/data';
+import { Card, categoryDotClass, categoryDotStyle, formatApprox } from '@expenzo/ui';
 
 export interface CategoryBreakdownRow {
   categoryId: string | null;
@@ -14,11 +15,11 @@ export interface CategoryBreakdownRow {
 
 export interface CategoryBreakdownProps {
   rows: CategoryBreakdownRow[];
-  currency: string;
+  display: DisplayCurrency;
   loading?: boolean;
 }
 
-export function CategoryBreakdown({ rows, currency, loading = false }: CategoryBreakdownProps) {
+export function CategoryBreakdown({ rows, display, loading = false }: CategoryBreakdownProps) {
   const { t } = useTranslation();
 
   return (
@@ -52,9 +53,13 @@ export function CategoryBreakdown({ rows, currency, loading = false }: CategoryB
                     data-testid="category-amount"
                     className={progress.exceeded ? 'text-red-600' : 'text-content'}
                   >
-                    {formatCurrency(row.spentMinor, currency)}
+                    {formatApprox(
+                      display.convert(row.spentMinor),
+                      display.currency,
+                      display.approximate,
+                    )}
                     {progress.limitMinor !== null
-                      ? ` / ${formatCurrency(progress.limitMinor, currency)}`
+                      ? ` / ${formatApprox(display.convert(progress.limitMinor), display.currency, display.approximate)}`
                       : ''}
                   </span>
                 </div>

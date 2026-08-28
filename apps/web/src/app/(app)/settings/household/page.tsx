@@ -1,3 +1,4 @@
+import { personDisplayName } from '@expenzo/domain';
 import { Card } from '@expenzo/ui';
 import { headers } from 'next/headers';
 import Link from 'next/link';
@@ -31,10 +32,22 @@ export default async function HouseholdSettingsPage() {
       .select('user_id, role, joined_at')
       .eq('status', 'active')
       .order('joined_at'),
-    supabase.from('profiles').select('id, display_name'),
+    supabase.from('profiles').select('id, first_name, last_name, display_name'),
   ]);
 
-  const nameFor = new Map((profiles ?? []).map((profile) => [profile.id, profile.display_name]));
+  // Assembled by the domain helper rather than here, so the roster, the expense
+  // rows and the mobile screen cannot drift into naming the same person three
+  // different ways.
+  const nameFor = new Map(
+    (profiles ?? []).map((profile) => [
+      profile.id,
+      personDisplayName({
+        firstName: profile.first_name,
+        lastName: profile.last_name,
+        displayName: profile.display_name,
+      }),
+    ]),
+  );
 
   // Building the invite link needs the host the browser actually used, and a
   // server component has no window.

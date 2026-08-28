@@ -39,6 +39,11 @@ export const en = {
       'You get a household of your own, and can invite people to it afterwards.',
     email: 'Email',
     emailPlaceholder: 'you@example.com',
+    firstName: 'First name',
+    lastName: 'Last name',
+    baseCurrency: 'Currency',
+    baseCurrencyExplainer:
+      'What your household counts in. It cannot be changed once anything is recorded.',
     password: 'Password',
     confirmPassword: 'Confirm password',
     magicLinkExplainer: 'We will email you a link. No password needed.',
@@ -67,6 +72,7 @@ export const en = {
 
   nav: {
     limits: 'Limits',
+    profile: 'You',
     settings: 'Settings',
     subscriptions: 'Subscriptions',
     notFound: 'Not found',
@@ -86,6 +92,7 @@ export const en = {
     register: 'Create an account · Expenzo',
     invite: 'Join a household · Expenzo',
     subscriptions: 'Subscriptions · Expenzo',
+    profile: 'Your profile · Expenzo',
     description: 'Track expenses on web and mobile.',
   },
 
@@ -233,6 +240,20 @@ export const en = {
     },
   },
 
+  profile: {
+    title: 'Your profile',
+    explainer: 'Your name is what the rest of your household sees on every expense.',
+    firstName: 'First name',
+    lastName: 'Last name',
+    displayCurrency: 'Show my totals in',
+    displayCurrencyExplainer:
+      'Everything stays recorded in your household currency. This changes only what you are shown, converted at today’s rate.',
+    save: 'Save',
+    saving: 'Saving…',
+    saved: 'Saved',
+    saveFailed: 'Could not save your profile. Try again.',
+  },
+
   /**
    * Keys emitted by the zod schemas in packages/domain. The schemas stay free
    * of React and of locale — they return a key and the interpolation values it
@@ -242,6 +263,10 @@ export const en = {
     email: {
       required: 'Enter your email address',
       invalid: 'Enter a valid email address',
+    },
+    name: {
+      required: 'Enter a name',
+      tooLong: 'That name is too long',
     },
     password: {
       // Deliberately not {{count}}: that name is reserved by i18next for

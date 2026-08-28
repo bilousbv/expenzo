@@ -71,3 +71,11 @@ export {
 export { useCurrentHousehold } from './hooks/use-household';
 
 export type { Database, Db } from './types';
+
+export { displayCurrencyFrom } from './display-currency';
+export type { DisplayCurrency } from './display-currency';
+
+export { getDisplayRate } from './repositories/fx';
+export { getMyProfile, updateMyProfile } from './repositories/profiles';
+export type { ProfileRow } from './repositories/profiles';
+export { useDisplayCurrency, useMyProfile, useUpdateMyProfile } from './hooks/use-profile';

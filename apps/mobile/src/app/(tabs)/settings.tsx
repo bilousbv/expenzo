@@ -1,3 +1,4 @@
+import { personDisplayName } from '@expenzo/domain';
 import { Button, Card } from '@expenzo/ui';
 import { useSupabase } from '@expenzo/data';
 import { useQuery } from '@tanstack/react-query';
@@ -31,12 +32,23 @@ export default function SettingsTab() {
     queryFn: async () => {
       const [{ data: rows, error }, { data: profiles }] = await Promise.all([
         supabase.from('household_members').select('user_id, role').eq('status', 'active'),
-        supabase.from('profiles').select('id, display_name'),
+        supabase.from('profiles').select('id, first_name, last_name, display_name'),
       ]);
 
       if (error) throw new Error(error.message);
 
-      const nameFor = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+      // Assembled by the domain helper so this screen, the web roster and every
+      // expense row cannot drift into naming one person three different ways.
+      const nameFor = new Map(
+        (profiles ?? []).map((p) => [
+          p.id,
+          personDisplayName({
+            firstName: p.first_name,
+            lastName: p.last_name,
+            displayName: p.display_name,
+          }),
+        ]),
+      );
       return (rows ?? []).map((row) => ({
         ...row,
         displayName: nameFor.get(row.user_id) ?? t('common.member'),
@@ -66,6 +78,13 @@ export default function SettingsTab() {
               </View>
             ))
           )}
+        </Card>
+
+        <Card className="gap-gutter">
+          <Text className="text-lg font-semibold text-content">{t('profile.title')}</Text>
+          <Button testID="open-profile" variant="secondary" onPress={() => router.push('/profile')}>
+            {t('profile.title')}
+          </Button>
         </Card>
 
         <Card className="gap-gutter">

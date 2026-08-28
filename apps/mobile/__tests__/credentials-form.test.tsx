@@ -71,17 +71,22 @@ describe('CredentialsForm (native)', () => {
 
   // The confirmation is only ever compared. Sending it would put a second copy
   // of the password on the wire for no reason.
-  it('sends only the email and the password when registering', async () => {
+  // The confirmation is compared and then dropped. It is the one field on the
+  // form that must never leave the device.
+  it('never sends the confirmation', async () => {
     const onSubmit = jest.fn<Submit>().mockResolvedValue(undefined);
     render(<CredentialsForm mode="signUp" onSubmit={onSubmit} />);
 
+    fireEvent.changeText(screen.getByTestId('credentials-first-name'), 'Ana');
     fireEvent.changeText(screen.getByTestId('credentials-email'), 'ana@example.com');
     fireEvent.changeText(screen.getByTestId('credentials-password'), 'hunter22');
     fireEvent.changeText(screen.getByTestId('credentials-confirm'), 'hunter22');
     fireEvent.press(screen.getByTestId('credentials-submit'));
 
     await waitFor(() =>
-      expect(onSubmit).toHaveBeenCalledWith({ email: 'ana@example.com', password: 'hunter22' }),
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.not.objectContaining({ confirmPassword: expect.anything() }),
+      ),
     );
   });
 
@@ -126,5 +131,66 @@ describe('CredentialsForm (native)', () => {
 
     expect(screen.getByTestId('credentials-password').props.secureTextEntry).toBe(true);
     expect(screen.getByTestId('credentials-confirm').props.secureTextEntry).toBe(true);
+  });
+});
+
+type SignUpSubmit = (input: {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  baseCurrency?: string;
+}) => Promise<void>;
+
+describe('CredentialsForm, registering (native)', () => {
+  function fillRequired() {
+    fireEvent.changeText(screen.getByTestId('credentials-first-name'), 'Ana');
+    fireEvent.changeText(screen.getByTestId('credentials-email'), 'ana@example.com');
+    fireEvent.changeText(screen.getByTestId('credentials-password'), 'hunter22');
+    fireEvent.changeText(screen.getByTestId('credentials-confirm'), 'hunter22');
+  }
+
+  // Signing in is not the moment to ask anyone their name.
+  it('asks for a name and a currency only when registering', () => {
+    const { unmount } = render(<CredentialsForm mode="signIn" onSubmit={jest.fn<Submit>()} />);
+    expect(screen.queryByTestId('credentials-first-name')).toBeNull();
+    unmount();
+
+    render(<CredentialsForm mode="signUp" onSubmit={jest.fn<SignUpSubmit>()} />);
+    expect(screen.getByTestId('credentials-first-name')).toBeTruthy();
+    expect(screen.getByTestId('credentials-last-name')).toBeTruthy();
+    expect(screen.getByTestId('signup-currency')).toBeTruthy();
+  });
+
+  it('submits the profile alongside the credentials', async () => {
+    const onSubmit = jest.fn<SignUpSubmit>().mockResolvedValue(undefined);
+    render(<CredentialsForm mode="signUp" onSubmit={onSubmit} />);
+
+    fillRequired();
+    fireEvent.changeText(screen.getByTestId('credentials-last-name'), 'Petrenko');
+    fireEvent.press(screen.getByTestId('credentials-submit'));
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: 'ana@example.com',
+          firstName: 'Ana',
+          lastName: 'Petrenko',
+        }),
+      ),
+    );
+  });
+
+  it('refuses to submit without a first name', async () => {
+    const onSubmit = jest.fn<SignUpSubmit>().mockResolvedValue(undefined);
+    render(<CredentialsForm mode="signUp" onSubmit={onSubmit} />);
+
+    fireEvent.changeText(screen.getByTestId('credentials-email'), 'ana@example.com');
+    fireEvent.changeText(screen.getByTestId('credentials-password'), 'hunter22');
+    fireEvent.changeText(screen.getByTestId('credentials-confirm'), 'hunter22');
+    fireEvent.press(screen.getByTestId('credentials-submit'));
+
+    await waitFor(() => expect(screen.getByTestId('credentials-error')).toBeTruthy());
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

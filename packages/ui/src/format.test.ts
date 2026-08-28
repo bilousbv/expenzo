@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatCurrency } from './format';
+import { formatApprox, formatCurrency } from './format';
 
 describe('formatCurrency', () => {
   it('renders cents as dollars', () => {
@@ -35,5 +35,25 @@ describe('formatCurrency', () => {
 
   it('renders a one-decimal currency correctly', () => {
     expect(formatCurrency(15, 'MGA', 'en-US')).toContain('1.5');
+  });
+});
+
+describe('formatApprox', () => {
+  it('formats an exact figure with nothing added', () => {
+    expect(formatApprox(1250, 'USD', false)).toContain('12.50');
+    expect(formatApprox(1250, 'USD', false)).not.toContain('≈');
+  });
+
+  /*
+   * A figure a member reads in their own currency is today's rate applied to
+   * amounts frozen at the rates of the days they happened. It will differ
+   * slightly from the same total read tomorrow, and a number that moves on its
+   * own has to say that it is an approximation.
+   */
+  it('marks a converted figure as approximate', () => {
+    const marked = formatApprox(62_500, 'UAH', true);
+
+    expect(marked.startsWith('≈')).toBe(true);
+    expect(marked).toContain('625');
   });
 });

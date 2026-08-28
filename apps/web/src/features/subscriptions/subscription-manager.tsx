@@ -4,6 +4,7 @@ import {
   useCategories,
   useCreateSubscription,
   useCurrentHousehold,
+  useDisplayCurrency,
   useServices,
   useSupportedCurrencies,
 } from '@expenzo/data';
@@ -19,7 +20,9 @@ export function SubscriptionManager({ userId }: { userId: string | undefined }) 
 
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
-  const currency = household.data?.base_currency ?? 'USD';
+  // The currency a new subscription defaults to is the one this member lives
+  // in, not the one the household reports in. The picker still offers the rest.
+  const display = useDisplayCurrency();
   const timeZone = household.data?.timezone ?? 'UTC';
 
   const categories = useCategories(householdId);
@@ -44,7 +47,7 @@ export function SubscriptionManager({ userId }: { userId: string | undefined }) 
         <h2 className="text-lg font-semibold text-content">{t('subscriptions.heading')}</h2>
 
         <SubscriptionForm
-          currency={currency}
+          currency={display.currency}
           currencies={currencies.data}
           services={services.data ?? []}
           categories={options}

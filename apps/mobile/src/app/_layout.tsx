@@ -40,6 +40,11 @@ function RootNavigator() {
           name="categories"
           options={{ headerShown: true, title: t('categories.title'), presentation: 'modal' }}
         />
+        {/* Pushed from Settings, like the categories screen. */}
+        <Stack.Screen
+          name="profile"
+          options={{ headerShown: true, title: t('profile.title'), presentation: 'modal' }}
+        />
         {/* Its own route because M6 deep-links straight here from a wallet
             payment: expenzo://expense/new. */}
         <Stack.Screen

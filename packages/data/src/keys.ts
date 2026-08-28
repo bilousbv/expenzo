@@ -21,6 +21,11 @@ export interface ExpenseListFilter {
 }
 
 export const queryKeys = {
+  // The caller's own row, not scoped by household: it is the same profile
+  // whichever household it belongs to.
+  profile: {
+    me: () => ['profile', 'me'] as const,
+  },
   households: {
     current: (householdId: string) => ['households', householdId] as const,
     members: (householdId: string) => ['households', householdId, 'members'] as const,
@@ -33,6 +38,7 @@ export const queryKeys = {
   // switching household could leak.
   currencies: {
     supported: (baseCurrency: string) => ['currencies', baseCurrency] as const,
+    rate: (from: string, to: string) => ['currencies', 'rate', from, to] as const,
   },
   limits: {
     all: (householdId: string) => ['limits', householdId] as const,

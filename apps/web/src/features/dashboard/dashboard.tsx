@@ -5,6 +5,7 @@ import {
   useCategorySpend,
   useCreateExpense,
   useCurrentHousehold,
+  useDisplayCurrency,
   useHouseholdMembers,
   useLimits,
   usePeriodSummary,
@@ -39,7 +40,12 @@ export function Dashboard({
   const { t } = useTranslation();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
-  const currency = household.data?.base_currency ?? 'USD';
+  /*
+   * What this member reads in. The household still records everything in its
+   * own currency; this converts on the way to the screen, so two people can
+   * read one ledger in two currencies without either of them changing it.
+   */
+  const display = useDisplayCurrency();
   const timeZone = household.data?.timezone ?? 'UTC';
 
   const [preset, setPreset] = useState<PeriodPreset>('this-month');
@@ -105,7 +111,7 @@ export function Dashboard({
         spentMinor={summary.data?.spentMinor ?? 0}
         incomeMinor={summary.data?.incomeMinor ?? 0}
         balanceMinor={summary.data?.balanceMinor ?? 0}
-        currency={currency}
+        display={display}
         loading={summary.isPending}
         header={header}
       />
@@ -204,7 +210,7 @@ export function Dashboard({
           </button>
         </div>
 
-        <CategoryBreakdown rows={breakdown} currency={currency} loading={categorySpend.isPending} />
+        <CategoryBreakdown rows={breakdown} display={display} loading={categorySpend.isPending} />
 
         {overallLimit !== null ? (
           <CategoryBreakdown
@@ -217,7 +223,7 @@ export function Dashboard({
                 limitMinor: overallLimit,
               },
             ]}
-            currency={currency}
+            display={display}
           />
         ) : null}
 
@@ -229,7 +235,9 @@ export function Dashboard({
           title={t('expenses.addDialogTitle')}
         >
           <ExpenseForm
-            currency={currency}
+            // The currency a new expense defaults to is the one this member
+            // lives in, not the one the household reports in.
+            currency={display.currency}
             timeZone={timeZone}
             today={localDateIn(new Date(), timeZone)}
             categories={options}

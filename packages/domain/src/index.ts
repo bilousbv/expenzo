@@ -1,4 +1,4 @@
-export { isCurrencyCode, minorUnitsFor, normalizeCurrency } from './currency';
+export { isCurrencyCode, minorUnitsFor, normalizeCurrency, SIGNUP_CURRENCIES } from './currency';
 export type { CurrencyCode } from './currency';
 
 export { addMoney, compareMoney, isZeroMoney, money, negateMoney, sumMoney } from './money';
@@ -88,3 +88,6 @@ export type { CreateExpenseInput, ExpenseFilter, UpdateExpenseInput } from './sc
 
 export { createCategoryInput, hexColorSchema, updateCategoryInput } from './schemas/category';
 export type { CreateCategoryInput, UpdateCategoryInput } from './schemas/category';
+
+export { personDisplayName, personNameSchema, updateProfileInput } from './schemas/profile';
+export type { PersonNames, UpdateProfileInput } from './schemas/profile';
