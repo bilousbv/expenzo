@@ -6,29 +6,23 @@ packages:
 # so the mobile app needs a flat node_modules tree.
 nodeLinker: hoisted
 
+# React Native tolerates exactly one copy of React in the tree. The root
+# workspace depends on react-i18next without pinning React, so pnpm was free to
+# resolve that peer to whatever was newest and gave it a nested copy — two
+# Reacts, and every hook in the mobile suite failing with "Cannot read
+# properties of null (reading 'useContext')". Pinning it here is what keeps the
+# web app, the native app and the shared packages on one instance.
+#
+# The React typings are pinned for the same reason: they declare globals, the
+# hoisted linker leaves exactly one copy standing, and Expo checks the version
+# it finds against what SDK 54 was built for.
+overrides:
+  react: 19.1.0
+  react-dom: 19.1.0
+  "@types/react": ~19.1.10
+  "@types/react-dom": ~19.1.9
+
 allowBuilds:
   unrs-resolver: true
   esbuild: true
   playwright: true
-
-minimumReleaseAgeExclude:
-  - '@tanstack/query-core@5.102.2'
-  - '@tanstack/react-query@5.102.2'
-  - '@expo/metro-runtime@57.0.13'
-  - '@expo/ui@57.0.13'
-  - expo-constants@57.0.14
-  - expo-router@57.0.16
-  - '@expo/cli@57.0.18'
-  - '@expo/config-plugins@57.0.9'
-  - '@expo/config@57.0.9'
-  - '@expo/fingerprint@0.20.10'
-  - '@expo/image-utils@0.11.5'
-  - '@expo/metro-config@57.0.10'
-  - '@expo/metro-file-map@57.0.2'
-  - '@expo/prebuild-config@57.0.14'
-  - '@expo/require-utils@57.0.5'
-  - babel-preset-expo@57.0.8
-  - expo-asset@57.0.14
-  - expo-modules-autolinking@57.0.11
-  - expo-modules-core@57.0.13
-  - expo@57.0.16
