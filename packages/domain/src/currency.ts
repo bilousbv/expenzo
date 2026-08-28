@@ -59,3 +59,26 @@ export function minorUnitsFor(code: string): number {
 
   return 2;
 }
+
+/**
+ * The currencies offered on the registration form.
+ *
+ * A fixed shortlist rather than the rate table, because the table is readable
+ * only once signed in and there is no session yet. Every code here is quoted by
+ * one of the two feeds, so a household opened in any of them can convert from
+ * the first expense onwards.
+ *
+ * The hryvnia leads it: this app's default language is Ukrainian.
+ */
+export const SIGNUP_CURRENCIES = [
+  'UAH',
+  'EUR',
+  'USD',
+  'GBP',
+  'PLN',
+  'CZK',
+  'CHF',
+  'CAD',
+  'AUD',
+  'JPY',
+] as const;

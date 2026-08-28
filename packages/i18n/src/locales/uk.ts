@@ -43,6 +43,11 @@ export const uk: Messages & {
       'Ви отримаєте власне домогосподарство і зможете запросити до нього людей.',
     email: 'Електронна пошта',
     emailPlaceholder: 'ви@приклад.com',
+    firstName: 'Ім’я',
+    lastName: 'Прізвище',
+    baseCurrency: 'Валюта',
+    baseCurrencyExplainer:
+      'Валюта, в якій рахує ваше домогосподарство. Її не можна змінити, щойно щось записано.',
     password: 'Пароль',
     confirmPassword: 'Підтвердьте пароль',
     magicLinkExplainer: 'Ми надішлемо посилання на пошту. Пароль не потрібен.',
@@ -72,6 +77,7 @@ export const uk: Messages & {
 
   nav: {
     limits: 'Ліміти',
+    profile: 'Ви',
     settings: 'Налаштування',
     subscriptions: 'Підписки',
     notFound: 'Не знайдено',
@@ -91,6 +97,7 @@ export const uk: Messages & {
     register: 'Створення акаунта · Expenzo',
     invite: 'Приєднання до домогосподарства · Expenzo',
     subscriptions: 'Підписки · Expenzo',
+    profile: 'Ваш профіль · Expenzo',
     description: 'Облік витрат у браузері та на телефоні.',
   },
 
@@ -240,10 +247,28 @@ export const uk: Messages & {
     },
   },
 
+  profile: {
+    title: 'Ваш профіль',
+    explainer: 'Ваше ім’я бачитимуть інші учасники домогосподарства біля кожної витрати.',
+    firstName: 'Ім’я',
+    lastName: 'Прізвище',
+    displayCurrency: 'Показувати мої підсумки в',
+    displayCurrencyExplainer:
+      'Усе й далі записується у валюті домогосподарства. Це змінює лише те, що бачите ви, — за сьогоднішнім курсом.',
+    save: 'Зберегти',
+    saving: 'Збереження…',
+    saved: 'Збережено',
+    saveFailed: 'Не вдалося зберегти профіль. Спробуйте ще раз.',
+  },
+
   validation: {
     email: {
       required: 'Введіть адресу електронної пошти',
       invalid: 'Введіть коректну адресу електронної пошти',
+    },
+    name: {
+      required: 'Введіть ім’я',
+      tooLong: 'Це ім’я задовге',
     },
     password: {
       tooShort: 'Використайте щонайменше {{min}} символів',

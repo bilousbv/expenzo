@@ -122,6 +122,11 @@ export function convertMinor(amountMinor: number, from: string, to: string, rate
   const sourceExponent = minorUnitsFor(from);
   const targetExponent = minorUnitsFor(to);
 
+  // Zero is not a small amount, it is nothing, and the floor below exists to
+  // stop something becoming nothing rather than to turn nothing into something.
+  // A household that spent nothing must not be shown a penny.
+  if (amountMinor === 0) return 0;
+
   const major = amountMinor / 10 ** sourceExponent;
 
   return Math.max(Math.round(major * rate * 10 ** targetExponent), 1);

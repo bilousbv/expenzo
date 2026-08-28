@@ -14,7 +14,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(26);
+select plan(27);
 
 ---------------------------------------------------------------------------
 -- Minor units, mirroring packages/domain/src/currency.ts
@@ -49,6 +49,13 @@ select is(app.convert_minor(1000, 'USD', 'KWD', 0.306), 3060::bigint,
 -- happened must not convert to an expense of nothing.
 select is(app.convert_minor(1, 'CLP', 'USD', 0.001), 1::bigint,
   'and never rounds a real amount away to zero');
+
+-- The floor above exists to stop something becoming nothing, not to turn
+-- nothing into something. Expense amounts are constrained positive, but the
+-- same arithmetic converts household totals for display, and a household that
+-- spent nothing must not be shown a penny.
+select is(app.convert_minor(0, 'UAH', 'USD', 0.024), 0::bigint,
+  'but converts nothing into nothing');
 
 ---------------------------------------------------------------------------
 -- The rate table

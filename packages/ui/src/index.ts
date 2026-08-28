@@ -5,7 +5,7 @@ export { CategoryPicker } from './category-picker';
 export { CategorySelect } from './category-select';
 export { CurrencySelect } from './currency-select';
 export { cn } from './cn';
-export { formatCurrency } from './format';
+export { formatApprox, formatCurrency } from './format';
 export { fieldGroupClass, fieldInputClass, fieldLabelClass } from './field.styles';
 export { GradientSurface } from './gradient-surface';
 export { IconTile } from './icon-tile';

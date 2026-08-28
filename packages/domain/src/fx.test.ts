@@ -150,3 +150,20 @@ describe('convertMinor', () => {
     expect(() => convertMinor(12.5, 'USD', 'EUR', 0.85)).toThrow(/minor units/i);
   });
 });
+
+describe('convertMinor, at zero', () => {
+  /*
+   * The floor of one minor unit exists so that a small amount in a weak
+   * currency does not become an expense of nothing. Zero is not a small
+   * amount — it is nothing already, and a household that spent nothing this
+   * month must not be told it spent a penny.
+   */
+  it('converts nothing into nothing', () => {
+    expect(convertMinor(0, 'UAH', 'USD', 0.024)).toBe(0);
+    expect(convertMinor(0, 'USD', 'JPY', 147)).toBe(0);
+  });
+
+  it('still refuses to round a real amount away', () => {
+    expect(convertMinor(1, 'CLP', 'USD', 0.001)).toBe(1);
+  });
+});

@@ -10,7 +10,11 @@ import { useState } from 'react';
 import { env } from '@/env';
 import { createClient } from '@/lib/supabase/browser';
 
-import { CredentialsForm, type CredentialsMode } from './credentials-form';
+import {
+  CredentialsForm,
+  type CredentialsMode,
+  type CredentialsSubmission,
+} from './credentials-form';
 import { LoginForm } from './login-form';
 import { OAuthButtons } from './oauth-buttons';
 
@@ -34,14 +38,29 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
     return `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`;
   }
 
-  async function submitCredentials({ email, password }: { email: string; password: string }) {
+  async function submitCredentials({
+    email,
+    password,
+    firstName,
+    lastName,
+    baseCurrency,
+  }: CredentialsSubmission) {
     const supabase = createClient();
 
     const { error } = registering
       ? await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: callbackUrl() },
+          options: {
+            emailRedirectTo: callbackUrl(),
+            /*
+             * Read by the signup trigger, which writes the profile, the
+             * household and the membership in one transaction. Sending these
+             * as a second write once the session exists would leave a
+             * half-filled account every time that write failed.
+             */
+            data: { first_name: firstName, last_name: lastName, base_currency: baseCurrency },
+          },
         })
       : await supabase.auth.signInWithPassword({ email, password });
 

@@ -1,14 +1,20 @@
 'use client';
 
 import { useTranslation } from '@expenzo/i18n';
-import { formatCurrency, GradientSurface } from '@expenzo/ui';
+import type { DisplayCurrency } from '@expenzo/data';
+import { formatApprox, GradientSurface } from '@expenzo/ui';
 import type { ReactNode } from 'react';
 
 export interface BudgetSummaryProps {
   spentMinor: number;
   incomeMinor: number;
   balanceMinor: number;
-  currency: string;
+  /**
+   * What this member reads in. Figures arrive in the household currency and
+   * are converted on the way to the screen, which is why a converted one is
+   * marked rather than silently relabelled.
+   */
+  display: DisplayCurrency;
   loading?: boolean;
   /** Rendered inside the panel, above the figure — the app name and its links. */
   header?: ReactNode;
@@ -26,7 +32,7 @@ export function BudgetSummary({
   spentMinor,
   incomeMinor,
   balanceMinor,
-  currency,
+  display,
   loading = false,
   header,
 }: BudgetSummaryProps) {
@@ -46,7 +52,7 @@ export function BudgetSummary({
           // minus sign already says it.
           className="text-5xl font-bold text-content-inverse"
         >
-          {formatCurrency(balanceMinor, currency)}
+          {formatApprox(display.convert(balanceMinor), display.currency, display.approximate)}
         </p>
 
         {loading ? (
@@ -60,7 +66,7 @@ export function BudgetSummary({
         <div className="flex flex-1 flex-col items-center gap-1">
           <span className="text-xs text-content-inverse/70">{t('dashboard.income')}</span>
           <span data-testid="budget-income" className="text-lg font-semibold text-content-inverse">
-            {formatCurrency(incomeMinor, currency)}
+            {formatApprox(display.convert(incomeMinor), display.currency, display.approximate)}
           </span>
         </div>
 
@@ -69,7 +75,7 @@ export function BudgetSummary({
         <div className="flex flex-1 flex-col items-center gap-1">
           <span className="text-xs text-content-inverse/70">{t('dashboard.spent')}</span>
           <span data-testid="budget-spent" className="text-lg font-semibold text-content-inverse">
-            {formatCurrency(spentMinor, currency)}
+            {formatApprox(display.convert(spentMinor), display.currency, display.approximate)}
           </span>
         </div>
       </div>

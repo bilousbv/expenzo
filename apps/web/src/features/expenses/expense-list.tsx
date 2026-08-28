@@ -4,6 +4,7 @@ import {
   useCategories,
   useCurrentHousehold,
   useDeleteExpense,
+  useDisplayCurrency,
   useExpenses,
   useHouseholdMembers,
 } from '@expenzo/data';
@@ -13,6 +14,7 @@ import {
   buttonContainerClass,
   buttonLabelClass,
   Card,
+  formatApprox,
   formatCurrency,
   IconTile,
   iconTileGlyphClass,
@@ -37,7 +39,8 @@ export function ExpenseList({
   const { t } = useTranslation();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
-  const baseCurrency = household.data?.base_currency;
+  // What this member reads in; the household still records in its own.
+  const display = useDisplayCurrency();
   const timeZone = household.data?.timezone ?? 'UTC';
 
   const categories = useCategories(householdId);
@@ -97,7 +100,7 @@ export function ExpenseList({
                 className={`text-sm ${netMinor > 0 ? 'text-positive' : 'text-content-muted'}`}
               >
                 {netMinor > 0 ? '+' : ''}
-                {formatCurrency(netMinor, baseCurrency ?? 'USD')}
+                {formatApprox(display.convert(netMinor), display.currency, display.approximate)}
               </span>
             </div>
 
@@ -155,12 +158,18 @@ export function ExpenseList({
                             only when it differs, so the common case stays
                             uncluttered and a foreign amount never looks like it
                             was ignored. */}
-                        {baseCurrency && row.currency !== baseCurrency ? (
+                        {row.currency !== display.currency ? (
                           <span
                             data-testid="expense-base-amount"
                             className="text-xs text-content-muted"
                           >
-                            ≈ {formatCurrency(row.base_amount_minor, baseCurrency)}
+                            {/* Always marked: this figure was converted
+                                whichever currency the reader is in. */}
+                            {formatApprox(
+                              display.convert(row.base_amount_minor),
+                              display.currency,
+                              true,
+                            )}
                           </span>
                         ) : null}
                       </span>

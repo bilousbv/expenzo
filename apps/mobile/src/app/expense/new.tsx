@@ -2,6 +2,7 @@ import {
   useCategories,
   useCreateExpense,
   useCurrentHousehold,
+  useDisplayCurrency,
   useSupportedCurrencies,
 } from '@expenzo/data';
 import { localDateIn, type CreateExpenseInput } from '@expenzo/domain';
@@ -29,6 +30,7 @@ export default function NewExpenseScreen() {
   const create = useCreateExpense(householdId, session?.user.id);
   // Held for a day: rates change daily, the set of quoted currencies does not.
   const currencies = useSupportedCurrencies(household.data?.base_currency);
+  const display = useDisplayCurrency();
 
   const options: CategoryOption[] = (categories.data ?? []).map((category) => ({
     id: category.id,
@@ -49,7 +51,9 @@ export default function NewExpenseScreen() {
       <ScrollView contentContainerClassName="p-gutter">
         <Card className="gap-gutter">
           <ExpenseForm
-            currency={household.data?.base_currency ?? 'USD'}
+            // The currency a new expense defaults to is the one this member
+            // lives in, not the one the household reports in.
+            currency={display.currency}
             today={localDateIn(new Date(), timeZone)}
             categories={options}
             currencies={currencies.data}

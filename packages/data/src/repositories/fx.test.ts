@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { Db } from '../types';
-import { listSupportedCurrencies, upsertEcbRates } from './fx';
+import { getDisplayRate, listSupportedCurrencies, upsertEcbRates } from './fx';
 
 const feed = {
   asOf: '2026-08-25',
@@ -130,5 +130,71 @@ describe('listSupportedCurrencies', () => {
     const { db } = fakeDb([{ data: null, error: { message: 'JWT expired' } }]);
 
     await expect(listSupportedCurrencies(db, 'USD')).rejects.toThrow('JWT expired');
+  });
+});
+
+describe('getDisplayRate', () => {
+  /**
+   * One number, applied to every figure on the screen.
+   *
+   * Household totals are stored in the base currency, so showing them in a
+   * member's own currency is a single multiplication rather than a re-query.
+   * It is deliberately today's rate and not the rate of the day each expense
+   * happened: the stored figures stay frozen, and only the presentation moves.
+   */
+  it('derives the rate between two currencies through the euro', async () => {
+    const { db } = fakeDb([
+      { data: [{ as_of: '2026-08-25' }] },
+      {
+        data: [
+          { quote: 'EUR', rate: 1 },
+          { quote: 'USD', rate: 1.2 },
+          { quote: 'UAH', rate: 60 },
+        ],
+      },
+    ]);
+
+    // 1 USD buys 50 UAH when a euro buys 1.2 dollars and 60 hryvnia.
+    await expect(getDisplayRate(db, 'USD', 'UAH')).resolves.toBeCloseTo(50, 10);
+  });
+
+  // Answerable without the table, and asking would be a round trip on every
+  // screen for the majority of members, who read in the household's own money.
+  it('answers one for a currency against itself without reading anything', async () => {
+    const { db } = fakeDb([]);
+
+    await expect(getDisplayRate(db, 'USD', 'USD')).resolves.toBe(1);
+    expect(db.from).not.toHaveBeenCalled();
+  });
+
+  /*
+   * Null rather than 1: a missing rate is not a rate of one, and pretending
+   * otherwise would print a hryvnia total under a dollar sign. The caller
+   * falls back to showing the base currency, which is at least true.
+   */
+  it('returns null when one side is not quoted', async () => {
+    const { db } = fakeDb([
+      { data: [{ as_of: '2026-08-25' }] },
+      {
+        data: [
+          { quote: 'EUR', rate: 1 },
+          { quote: 'USD', rate: 1.2 },
+        ],
+      },
+    ]);
+
+    await expect(getDisplayRate(db, 'USD', 'CLP')).resolves.toBeNull();
+  });
+
+  it('returns null before the first sync has filled the table', async () => {
+    const { db } = fakeDb([{ data: [] }]);
+
+    await expect(getDisplayRate(db, 'USD', 'UAH')).resolves.toBeNull();
+  });
+
+  it('throws the database message', async () => {
+    const { db } = fakeDb([{ data: null, error: { message: 'JWT expired' } }]);
+
+    await expect(getDisplayRate(db, 'USD', 'UAH')).rejects.toThrow('JWT expired');
   });
 });

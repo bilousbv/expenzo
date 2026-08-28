@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+import { currencyCodeSchema } from './expense';
+import { personNameSchema } from './profile';
+
 /**
  * Credentials, shared by the browser, the phone and the end-to-end tests.
  *
@@ -62,7 +65,24 @@ export const credentialsSchema = z.object({
 export type Credentials = z.input<typeof credentialsSchema>;
 
 export const registrationSchema = credentialsSchema
-  .extend({ confirmPassword: z.string() })
+  .extend({
+    confirmPassword: z.string(),
+    /*
+     * Collected here because registration is the only moment anyone is
+     * reliably willing to type their name, and because it is what labels every
+     * expense once a second person joins the household.
+     */
+    firstName: personNameSchema,
+    // Plenty of people have one name, and plenty more will not hand a surname
+    // to a budgeting app. Neither is a reason to refuse the account.
+    lastName: personNameSchema.optional(),
+    /*
+     * The currency the household is opened in. Asked rather than assumed
+     * because it cannot be changed once anything is recorded: every stored
+     * figure is converted into it and frozen at the rate of its own day.
+     */
+    baseCurrency: currencyCodeSchema,
+  })
   // `check` rather than `refine` on the object: a superRefine-style check runs
   // only once the fields themselves have parsed, so a password that is too
   // short reports as too short rather than as a mismatch, and the message

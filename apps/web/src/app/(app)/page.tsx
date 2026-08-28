@@ -35,6 +35,13 @@ export default async function Home() {
         <Link href="/settings/household" className="text-sm text-content-inverse/80">
           {t('nav.settings')}
         </Link>
+        <Link
+          href="/settings/profile"
+          data-testid="go-to-profile"
+          className="text-sm text-content-inverse/80"
+        >
+          {t('nav.profile')}
+        </Link>
       </div>
     </div>
   );

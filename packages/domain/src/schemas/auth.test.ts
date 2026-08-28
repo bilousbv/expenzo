@@ -88,6 +88,8 @@ describe('registrationSchema', () => {
     email: 'ana@example.com',
     password: 'hunter22',
     confirmPassword: 'hunter22',
+    firstName: 'Ana',
+    baseCurrency: 'USD',
   };
 
   it('accepts a matching confirmation', () => {
@@ -125,5 +127,58 @@ describe('registrationSchema', () => {
     if (!result.success) {
       expect(result.error.issues[0]?.path).toEqual(['password']);
     }
+  });
+});
+
+describe('registrationSchema, the parts that become a profile', () => {
+  const valid = {
+    email: 'ana@example.com',
+    password: 'hunter22',
+    confirmPassword: 'hunter22',
+    firstName: 'Ana',
+    baseCurrency: 'UAH',
+  };
+
+  it('carries the names and the chosen currency through', () => {
+    expect(registrationSchema.parse({ ...valid, lastName: 'Petrenko' })).toMatchObject({
+      firstName: 'Ana',
+      lastName: 'Petrenko',
+      baseCurrency: 'UAH',
+    });
+  });
+
+  /*
+   * A first name is what labels every expense once a second person joins, and
+   * the signup form is the only moment anyone is reliably willing to type it.
+   * The magic-link path has no form at all and keeps the trigger's fallback.
+   */
+  it('requires a first name', () => {
+    const result = registrationSchema.safeParse({ ...valid, firstName: '' });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.path).toEqual(['firstName']);
+    }
+  });
+
+  // Plenty of people have one name, and plenty more will not give a surname to
+  // a budgeting app. Neither is a reason to refuse the account.
+  it('does not require a last name', () => {
+    expect(registrationSchema.safeParse(valid).success).toBe(true);
+  });
+
+  /*
+   * This is the household's base currency, the one every expense is converted
+   * into and frozen at, and it cannot be changed once anything is recorded.
+   * Guessing it and being wrong is expensive, so the form has to ask.
+   */
+  it('requires a currency to open the household in', () => {
+    const { baseCurrency: _dropped, ...withoutCurrency } = valid;
+
+    expect(registrationSchema.safeParse(withoutCurrency).success).toBe(false);
+  });
+
+  it('rejects a currency that is not an ISO code', () => {
+    expect(registrationSchema.safeParse({ ...valid, baseCurrency: 'uah' }).success).toBe(false);
   });
 });

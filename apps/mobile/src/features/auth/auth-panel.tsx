@@ -9,7 +9,11 @@ import { Text, View } from 'react-native';
 import { env } from '../../env';
 import { supabase } from '../../lib/supabase';
 
-import { CredentialsForm, type CredentialsMode } from './credentials-form';
+import {
+  CredentialsForm,
+  type CredentialsMode,
+  type CredentialsSubmission,
+} from './credentials-form';
 import { SignInForm } from './sign-in-form';
 
 /**
@@ -27,9 +31,24 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
   // supabase/config.toml allows as a redirect target.
   const redirectTo = Linking.createURL('/auth/callback');
 
-  async function submitCredentials({ email, password }: { email: string; password: string }) {
+  async function submitCredentials({
+    email,
+    password,
+    firstName,
+    lastName,
+    baseCurrency,
+  }: CredentialsSubmission) {
     const { error } = registering
-      ? await supabase.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo } })
+      ? await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectTo,
+            // Read by the signup trigger, which writes the profile, the
+            // household and the membership in one transaction.
+            data: { first_name: firstName, last_name: lastName, base_currency: baseCurrency },
+          },
+        })
       : await supabase.auth.signInWithPassword({ email, password });
 
     if (error) throw new Error(error.message);

@@ -85,6 +85,7 @@ describe('CredentialsForm', () => {
     const onSubmit = vi.fn();
     render(<CredentialsForm mode="signUp" onSubmit={onSubmit} />);
 
+    await userEvent.type(screen.getByLabelText('First name'), 'Ana');
     await userEvent.type(screen.getByLabelText('Email'), 'ana@example.com');
     await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
     await userEvent.type(screen.getByLabelText('Confirm password'), 'hunter23');
@@ -94,20 +95,20 @@ describe('CredentialsForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  // The confirmation field is not sent anywhere — it only has to equal what was
-  // already typed.
-  it('sends only the email and the password when registering', async () => {
+  // The confirmation is compared and then dropped. It is the one field on the
+  // form that must never leave the browser.
+  it('never sends the confirmation', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<CredentialsForm mode="signUp" onSubmit={onSubmit} />);
 
+    await userEvent.type(screen.getByLabelText('First name'), 'Ana');
     await userEvent.type(screen.getByLabelText('Email'), 'ana@example.com');
     await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
     await userEvent.type(screen.getByLabelText('Confirm password'), 'hunter22');
     await userEvent.click(screen.getByRole('button', { name: CREATE }));
 
-    await waitFor(() =>
-      expect(onSubmit).toHaveBeenCalledWith({ email: 'ana@example.com', password: 'hunter22' }),
-    );
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]?.[0]).not.toHaveProperty('confirmPassword');
   });
 
   it('surfaces a server failure without losing the address', async () => {
@@ -154,5 +155,84 @@ describe('CredentialsForm', () => {
 
     render(<CredentialsForm mode="signUp" onSubmit={vi.fn()} />);
     expect(screen.getByLabelText('Password')).toHaveAttribute('autocomplete', 'new-password');
+  });
+});
+
+describe('CredentialsForm, registering', () => {
+  async function fillRequired() {
+    await userEvent.type(screen.getByLabelText('First name'), 'Ana');
+    await userEvent.type(screen.getByLabelText('Email'), 'ana@example.com');
+    await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+    await userEvent.type(screen.getByLabelText('Confirm password'), 'hunter22');
+  }
+
+  // Signing in is not the moment to ask anyone their name.
+  it('asks for a name and a currency only when registering', () => {
+    const { unmount } = render(<CredentialsForm mode="signIn" onSubmit={vi.fn()} />);
+    expect(screen.queryByLabelText('First name')).not.toBeInTheDocument();
+    unmount();
+
+    render(<CredentialsForm mode="signUp" onSubmit={vi.fn()} />);
+    expect(screen.getByLabelText('First name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Last name')).toBeInTheDocument();
+    expect(screen.getByTestId('signup-currency')).toBeInTheDocument();
+  });
+
+  it('submits the profile alongside the credentials', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<CredentialsForm mode="signUp" onSubmit={onSubmit} />);
+
+    await fillRequired();
+    await userEvent.type(screen.getByLabelText('Last name'), 'Petrenko');
+    await userEvent.selectOptions(screen.getByTestId('signup-currency'), 'UAH');
+    await userEvent.click(screen.getByRole('button', { name: CREATE }));
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith({
+        email: 'ana@example.com',
+        password: 'hunter22',
+        firstName: 'Ana',
+        lastName: 'Petrenko',
+        baseCurrency: 'UAH',
+      }),
+    );
+  });
+
+  // Plenty of people have one name, and plenty more will not give a surname to
+  // a budgeting app.
+  it('leaves out a last name that was not given', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<CredentialsForm mode="signUp" onSubmit={onSubmit} />);
+
+    await fillRequired();
+    await userEvent.click(screen.getByRole('button', { name: CREATE }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ firstName: 'Ana', lastName: undefined });
+  });
+
+  it('refuses to submit without a first name', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<CredentialsForm mode="signUp" onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText('Email'), 'ana@example.com');
+    await userEvent.type(screen.getByLabelText('Password'), 'hunter22');
+    await userEvent.type(screen.getByLabelText('Confirm password'), 'hunter22');
+    await userEvent.click(screen.getByRole('button', { name: CREATE }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(await screen.findByTestId('credentials-error')).toBeInTheDocument();
+  });
+
+  /*
+   * The currency the household is opened in cannot be changed once anything is
+   * recorded, so the form has to offer a real choice rather than assume the
+   * dollar. The list is a fixed shortlist: the rate table is readable only once
+   * signed in, and there is no session yet.
+   */
+  it('offers the hryvnia', () => {
+    render(<CredentialsForm mode="signUp" onSubmit={vi.fn()} />);
+
+    expect(screen.getByRole('option', { name: 'UAH' })).toBeInTheDocument();
   });
 });

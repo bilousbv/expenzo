@@ -6,6 +6,7 @@ import {
   credentialsSchema,
   expenseFilter,
   registrationSchema,
+  updateProfileInput,
   VALIDATION_PARAMS,
 } from '@expenzo/domain';
 import { createI18n, locales } from '@expenzo/i18n';
@@ -42,7 +43,29 @@ const REJECTED: [string, ZodType, unknown][] = [
   [
     'registration, mismatched confirmation',
     registrationSchema,
-    { email: 'a@b.co', password: 'correct-horse', confirmPassword: 'something-else' },
+    {
+      email: 'a@b.co',
+      password: 'correct-horse',
+      confirmPassword: 'something-else',
+      firstName: 'Ana',
+      baseCurrency: 'USD',
+    },
+  ],
+  [
+    'registration, no name given',
+    registrationSchema,
+    {
+      email: 'a@b.co',
+      password: 'correct-horse',
+      confirmPassword: 'correct-horse',
+      firstName: '',
+      baseCurrency: 'USD',
+    },
+  ],
+  [
+    'profile, a name long enough to be a paste accident',
+    updateProfileInput,
+    { firstName: 'a'.repeat(200) },
   ],
   [
     'expense, everything wrong at once',
