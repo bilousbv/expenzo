@@ -7,7 +7,7 @@ Turborepo monorepo sharing components between a Next.js web app and a React Nati
 ```
 apps/
   web/                 Next.js 16, App Router, Tailwind CSS
-  mobile/              Expo SDK 57 / React Native 0.86, NativeWind
+  mobile/              Expo SDK 54 / React Native 0.81, NativeWind
 packages/
   ui/                  Shared components and helpers
   tailwind-config/     Design tokens shared by both apps
@@ -138,7 +138,7 @@ It runs against `next start` on port 3100 — deliberately not 3000, so a runnin
 
 - pnpm uses `nodeLinker: hoisted` (see `pnpm-workspace.yaml`) because Metro does
   not follow pnpm's symlinked store reliably.
-- Native dependency versions are pinned to what Expo SDK 57 expects; verify with
+- Native dependency versions are pinned to what Expo SDK 54 expects; verify with
   `pnpm --filter @expenzo/mobile exec expo install --check`.
 - The shared ESLint config avoids type-aware rules, since `eslint-config-next`
   substitutes its own parser that does not forward `parserOptions.project`.

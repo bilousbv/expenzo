@@ -2,6 +2,10 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./base.json",
   "compilerOptions": {
+    // DOM stays, even though this is React Native: tsc always resolves the
+    // web half of a shared component (foo.tsx, never foo.native.tsx), so the
+    // mobile program typechecks packages/ui's <input> and <select> handlers
+    // and needs HTMLInputElement to do it. Metro is what picks the native half.
     "lib": ["ES2022", "DOM"],
     "jsx": "react-jsx",
     "jsxImportSource": "nativewind",
