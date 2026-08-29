@@ -40,3 +40,17 @@ export type { CurrencySelectProps } from './currency-select.styles';
 export { Avatar } from './avatar';
 export { avatarClass, avatarInitials, avatarLabelClass } from './avatar.styles';
 export type { AvatarProps, AvatarSize } from './avatar.styles';
+
+export { isTheme, resolveTheme, THEME_COOKIE, THEMES } from './theme';
+export type { Theme } from './theme';
+export { COLOR_TOKENS, DARK, LIGHT, paletteCss, paletteVariables } from './palette';
+export type { ColorToken, Palette } from './palette';
+
+export { PeriodBar } from './period-bar';
+export type { PeriodBarProps } from './period-bar.styles';
+
+export { formatMonthLabel, formatRange } from './period-label';
+
+export { SavedCard } from './saved-card';
+export { isSaving, savedGlyph } from './saved-card.styles';
+export type { SavedCardProps } from './saved-card.styles';

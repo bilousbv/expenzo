@@ -12,24 +12,41 @@ import {
   useSupportedCurrencies,
 } from '@expenzo/data';
 import {
+  describePeriod,
+  isIsoDate,
+  periodUnit,
   localDateIn,
-  PERIOD_PRESETS,
   presetRange,
+  shiftPeriod,
   type CreateExpenseInput,
-  type PeriodPreset,
+  type DateRange,
 } from '@expenzo/domain';
 import { useTranslation } from '@expenzo/i18n';
-import { buttonContainerClass, buttonLabelClass, Card, type CategoryOption } from '@expenzo/ui';
+import {
+  buttonContainerClass,
+  buttonLabelClass,
+  Card,
+  formatApprox,
+  formatMonthLabel,
+  formatRange,
+  PeriodBar,
+  SavedCard,
+  type CategoryOption,
+} from '@expenzo/ui';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { ExpenseDialog } from '@/features/expenses/expense-dialog';
 import { ExpenseForm } from '@/features/expenses/expense-form';
 
 import { BudgetSummary } from './budget-summary';
+import { PeriodPicker } from './period-picker';
 import { CategoryBreakdown, type CategoryBreakdownRow } from './category-breakdown';
 
 export function Dashboard({ userId }: { userId: string | undefined }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
   /*
@@ -40,13 +57,44 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
   const display = useDisplayCurrency();
   const timeZone = household.data?.timezone ?? 'UTC';
 
-  const [preset, setPreset] = useState<PeriodPreset>('this-month');
   const [memberId, setMemberId] = useState<string | undefined>(undefined);
   const [adding, setAdding] = useState(false);
+  const [picking, setPicking] = useState(false);
 
-  // Resolved in the household's timezone: an expense entered at 23:30 in Madrid
-  // belongs to the month it was entered in there, not in UTC.
-  const range = useMemo(() => presetRange(preset, new Date(), timeZone), [preset, timeZone]);
+  /*
+   * The period lives in the URL, so it survives a reload, the back button and
+   * being sent to somebody else — and the category page already reads the same
+   * two parameters, which is what keeps the drill-down on the window the
+   * dashboard was showing.
+   *
+   * Resolved in the household's timezone: an expense entered at 23:30 in Madrid
+   * belongs to the month it was entered in there, not in UTC.
+   */
+  const from = searchParams.get('from');
+  const to = searchParams.get('to');
+
+  const range = useMemo(
+    () =>
+      from && to && isIsoDate(from) && isIsoDate(to) && from <= to
+        ? { start: from, end: to }
+        : presetRange('this-month', new Date(), timeZone),
+    [from, to, timeZone],
+  );
+
+  function setRange(next: DateRange) {
+    // replace rather than push: stepping through periods would otherwise fill
+    // the history with entries the back button has to walk out of one by one.
+    router.replace(`/?from=${next.start}&to=${next.end}`, { scroll: false });
+  }
+
+  const described = describePeriod(range, new Date(), timeZone);
+
+  const periodLabel =
+    described.kind === 'preset'
+      ? t(`period.${described.preset}`)
+      : described.kind === 'month'
+        ? formatMonthLabel(described.year, described.month, i18n.language)
+        : t('period.custom');
 
   const window = useMemo(
     () => ({ from: range.start, to: range.end, memberId }),
@@ -92,6 +140,13 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
 
   const overallLimit = limitFor.get(null) ?? null;
 
+  /** What the household kept over the period: income minus spending. */
+  const saved = summary.data?.balanceMinor ?? 0;
+
+  /** Converted into the reader's currency, and marked when it was converted. */
+  const amount = (minor: number) =>
+    formatApprox(display.convert(minor), display.currency, display.approximate);
+
   async function handleCreate(input: CreateExpenseInput) {
     await create.mutateAsync(input);
     setAdding(false);
@@ -99,6 +154,22 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
 
   return (
     <div className="flex flex-col">
+      {/* At the top of the page, above everything it filters. The arrows step
+          by whatever unit the period is: a month by a month, a quarter by a
+          quarter, a year by a year, a week by seven days. An arbitrary range
+          has no unit, so they are hidden for it. */}
+      <div className="p-gutter pb-0">
+        <PeriodBar
+          label={periodLabel}
+          dates={formatRange(range, i18n.language)}
+          onStep={periodUnit(range) ? (steps) => setRange(shiftPeriod(range, steps)) : undefined}
+          onOpen={() => setPicking(true)}
+          openLabel={t('period.change')}
+          previousLabel={t('period.previousPeriod')}
+          nextLabel={t('period.nextPeriod')}
+        />
+      </div>
+
       <BudgetSummary
         spentMinor={summary.data?.spentMinor ?? 0}
         incomeMinor={summary.data?.incomeMinor ?? 0}
@@ -107,34 +178,21 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
         loading={summary.isPending}
       />
 
+      {/* Directly under the panel, in the same family of surfaces. It answers
+          the one question the panel does not name: what was kept. */}
+      <div className="p-gutter pb-0">
+        <SavedCard
+          savedMinor={saved}
+          savedLabel={amount(saved)}
+          title={t('saved.title')}
+          explainer={t('saved.explainer')}
+        />
+      </div>
+
       {/* Everything below the panel sits on the grey app background, which is
           what makes the panel read as the one thing worth looking at first. */}
       <div className="flex flex-col gap-gutter p-gutter">
         <Card className="gap-gutter">
-          <div
-            role="radiogroup"
-            aria-label={t('dashboard.period')}
-            className="flex flex-row flex-wrap gap-2"
-          >
-            {PERIOD_PRESETS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                role="radio"
-                aria-checked={preset === option}
-                data-testid={`period-${option}`}
-                onClick={() => setPreset(option)}
-                className={buttonContainerClass(preset === option ? 'primary' : 'secondary', 'sm')}
-              >
-                <span
-                  className={buttonLabelClass(preset === option ? 'primary' : 'secondary', 'sm')}
-                >
-                  {t(`period.${option}`)}
-                </span>
-              </button>
-            ))}
-          </div>
-
           <div
             role="radiogroup"
             aria-label={t('dashboard.author')}
@@ -182,10 +240,6 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
               </button>
             ))}
           </div>
-
-          <p data-testid="period-range" className="text-xs text-content-muted">
-            {range.start} {t('dashboard.rangeSeparator')} {range.end}
-          </p>
         </Card>
 
         <div className="flex flex-row items-center justify-between">
@@ -246,6 +300,14 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
             disabled={!householdId}
           />
         </ExpenseDialog>
+
+        <PeriodPicker
+          open={picking}
+          onClose={() => setPicking(false)}
+          range={range}
+          timeZone={timeZone}
+          onPick={setRange}
+        />
       </div>
     </div>
   );

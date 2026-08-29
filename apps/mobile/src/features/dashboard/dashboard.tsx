@@ -8,11 +8,13 @@ import {
   usePeriodSummary,
 } from '@expenzo/data';
 import {
+  describePeriod,
+  periodUnit,
   limitProgress,
-  PERIOD_PRESETS,
   presetRange,
+  shiftPeriod,
   UNCATEGORISED,
-  type PeriodPreset,
+  type DateRange,
 } from '@expenzo/domain';
 import {
   Button,
@@ -20,16 +22,21 @@ import {
   categoryDotClass,
   categoryDotStyle,
   formatApprox,
+  formatMonthLabel,
+  formatRange,
   GradientSurface,
+  PeriodBar,
+  SavedCard,
   type CategoryOption,
 } from '@expenzo/ui';
 import { router } from 'expo-router';
+import { PeriodPicker } from './period-picker';
 import { useMemo, useState } from 'react';
 import { useTranslation } from '@expenzo/i18n';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 export function Dashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
   /*
@@ -40,12 +47,21 @@ export function Dashboard() {
   const display = useDisplayCurrency();
   const timeZone = household.data?.timezone ?? 'UTC';
 
-  const [preset, setPreset] = useState<PeriodPreset>('this-month');
   const [memberId, setMemberId] = useState<string | undefined>(undefined);
+  const [picking, setPicking] = useState(false);
 
-  // Resolved in the household's timezone, so an expense entered late in the
-  // evening belongs to the month it was entered in there rather than in UTC.
-  const range = useMemo(() => presetRange(preset, new Date(), timeZone), [preset, timeZone]);
+  /*
+   * Held on the screen rather than in the URL: there is no address bar to put
+   * it in, and the category screen is handed the dates through its route
+   * params, which is the same idea by another means.
+   *
+   * Resolved in the household's timezone, so an expense entered late in the
+   * evening belongs to the month it was entered in there rather than in UTC.
+   */
+  const [range, setRange] = useState<DateRange>(() =>
+    presetRange('this-month', new Date(), timeZone),
+  );
+
   const window = useMemo(
     () => ({ from: range.start, to: range.end, memberId }),
     [range.start, range.end, memberId],
@@ -84,8 +100,39 @@ export function Dashboard() {
 
   const balance = summary.data?.balanceMinor ?? 0;
 
+  /** What the household kept over the period: income minus spending. */
+  const saved = balance;
+
+  const described = describePeriod(range, new Date(), timeZone);
+
+  const periodLabel =
+    described.kind === 'preset'
+      ? t(`period.${described.preset}`)
+      : described.kind === 'month'
+        ? formatMonthLabel(described.year, described.month, i18n.language)
+        : t('period.custom');
+
+  /** Converted into the reader's currency, and marked when it was converted. */
+  const amount = (minor: number) =>
+    formatApprox(display.convert(minor), display.currency, display.approximate);
+
   return (
     <View>
+      {/* At the top of the screen, above everything it filters. The arrows step
+          by whatever unit the period is, and are hidden for an arbitrary range,
+          which has no unit to step by. */}
+      <View className="p-gutter pb-0">
+        <PeriodBar
+          label={periodLabel}
+          dates={formatRange(range, i18n.language)}
+          onStep={periodUnit(range) ? (steps) => setRange(shiftPeriod(range, steps)) : undefined}
+          onOpen={() => setPicking(true)}
+          openLabel={t('period.change')}
+          previousLabel={t('period.previousPeriod')}
+          nextLabel={t('period.nextPeriod')}
+        />
+      </View>
+
       {/* The one surface in the app that is not a white card on grey. The point
           is that "how are we doing" should be legible from arm's length, which
           a figure set in the same size as its neighbours is not. */}
@@ -111,7 +158,7 @@ export function Dashboard() {
             </Text>
           </View>
 
-          <View className="w-px bg-content-inverse/20" />
+          <View className="w-px bg-content/20" />
 
           <View className="flex-1 items-center gap-1">
             <Text className="text-xs text-content-inverse/70">{t('dashboard.spent')}</Text>
@@ -130,25 +177,18 @@ export function Dashboard() {
         </Text>
       </GradientSurface>
 
-      <View className="gap-gutter p-gutter">
-        <View
-          accessibilityRole="radiogroup"
-          accessibilityLabel={t('dashboard.period')}
-          className="flex-row flex-wrap gap-2"
-        >
-          {PERIOD_PRESETS.map((option) => (
-            <Button
-              key={option}
-              testID={`period-${option}`}
-              variant={preset === option ? 'primary' : 'secondary'}
-              size="sm"
-              onPress={() => setPreset(option)}
-            >
-              {t(`period.${option}`)}
-            </Button>
-          ))}
-        </View>
+      {/* Directly under the panel, in the same family of surfaces. It answers
+          the one question the panel does not name: what was kept. */}
+      <View className="p-gutter pb-0">
+        <SavedCard
+          savedMinor={saved}
+          savedLabel={amount(saved)}
+          title={t('saved.title')}
+          explainer={t('saved.explainer')}
+        />
+      </View>
 
+      <View className="gap-gutter p-gutter">
         <View
           accessibilityRole="radiogroup"
           accessibilityLabel={t('dashboard.author')}
@@ -225,7 +265,7 @@ export function Dashboard() {
                     </View>
                     <Text
                       testID="category-amount"
-                      className={progress.exceeded ? 'text-red-600' : 'text-content'}
+                      className={progress.exceeded ? 'text-negative' : 'text-content'}
                     >
                       {formatApprox(
                         display.convert(row.spentMinor),
@@ -241,12 +281,12 @@ export function Dashboard() {
                   {/* Only categories with a limit get a bar — one with nothing
                     behind it would be measuring against nothing. */}
                   {progress.ratio !== null ? (
-                    <View className="h-2 w-full overflow-hidden rounded-full bg-brand-100">
+                    <View className="h-2 w-full overflow-hidden rounded-full bg-surface-muted">
                       <View
                         // Capped so an overspend does not paint outside the
                         // track; the figures above already say by how much.
                         style={{ width: `${Math.min(progress.ratio, 1) * 100}%` }}
-                        className={`h-full ${progress.exceeded ? 'bg-red-600' : 'bg-brand-600'}`}
+                        className={`h-full ${progress.exceeded ? 'bg-negative' : 'bg-brand'}`}
                       />
                     </View>
                   ) : null}
@@ -256,6 +296,14 @@ export function Dashboard() {
           )}
         </Card>
       </View>
+
+      <PeriodPicker
+        open={picking}
+        onClose={() => setPicking(false)}
+        range={range}
+        timeZone={timeZone}
+        onPick={setRange}
+      />
     </View>
   );
 }

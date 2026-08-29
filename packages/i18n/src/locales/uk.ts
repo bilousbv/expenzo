@@ -124,7 +124,25 @@ export const uk: Messages & {
   period: {
     'this-month': 'Цей місяць',
     'last-month': 'Минулий місяць',
+    'this-quarter': 'Цей квартал',
+    'last-quarter': 'Минулий квартал',
+    'this-year': 'Цей рік',
+    'last-year': 'Минулий рік',
     'this-week': 'Цей тиждень',
+    custom: 'Власний період',
+    change: 'Змінити період',
+    previousPeriod: 'Попередній період',
+    nextPeriod: 'Наступний період',
+    pick: 'Оберіть період',
+    from: 'Від',
+    to: 'До',
+    apply: 'Застосувати',
+    reversed: 'Кінець періоду не може бути раніше за початок',
+  },
+
+  saved: {
+    title: 'Заощаджено',
+    explainer: 'Доходи мінус витрати за цей період',
   },
 
   expenses: {
@@ -246,6 +264,14 @@ export const uk: Messages & {
     errors: {
       inviteFailed: 'Не вдалося створити запрошення.',
       noToken: 'Сервер не повернув токен запрошення.',
+    },
+  },
+
+  settings: {
+    appearance: 'Вигляд',
+    theme: {
+      dark: 'Темна',
+      light: 'Світла',
     },
   },
 

@@ -9,6 +9,9 @@ export interface ExpenseDialogProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  /** Defaults to the expense dialog, which was the first thing to use this. */
+  testID?: string;
+  closeTestID?: string;
 }
 
 /**
@@ -20,7 +23,14 @@ export interface ExpenseDialogProps {
  * miss — focus trapping and inertness — are the ones a keyboard or screen
  * reader user notices immediately.
  */
-export function ExpenseDialog({ open, onClose, title, children }: ExpenseDialogProps) {
+export function ExpenseDialog({
+  open,
+  onClose,
+  title,
+  children,
+  testID = 'expense-dialog',
+  closeTestID = 'close-expense-dialog',
+}: ExpenseDialogProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -37,19 +47,19 @@ export function ExpenseDialog({ open, onClose, title, children }: ExpenseDialogP
   return (
     <dialog
       ref={ref}
-      data-testid="expense-dialog"
+      data-testid={testID}
       // Escape fires `cancel` and then `close`; listening for `close` covers
       // both that and the button, so the caller's state cannot drift out of
       // step with what is on screen.
       onClose={onClose}
-      className="w-full max-w-md rounded-card border border-brand-100 bg-surface p-gutter text-content backdrop:bg-black/40"
+      className="w-full max-w-md rounded-card border border-border bg-surface p-gutter text-content backdrop:bg-black/40"
     >
       <div className="flex flex-col gap-gutter">
         <div className="flex flex-row items-center justify-between">
           <h2 className="text-lg font-semibold text-content">{title}</h2>
           <button
             type="button"
-            data-testid="close-expense-dialog"
+            data-testid={closeTestID}
             aria-label={t('common.close')}
             onClick={onClose}
             className={buttonContainerClass('ghost', 'sm')}

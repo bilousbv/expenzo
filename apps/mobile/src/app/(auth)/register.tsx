@@ -19,7 +19,7 @@ export default function RegisterScreen() {
 
         <View className="flex-row justify-center gap-1">
           <Text className="text-sm text-content-muted">Already have an account?</Text>
-          <Link href="/sign-in" testID="go-to-sign-in" className="text-sm text-brand-600">
+          <Link href="/sign-in" testID="go-to-sign-in" className="text-sm text-link">
             Sign in
           </Link>
         </View>

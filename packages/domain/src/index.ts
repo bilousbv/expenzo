@@ -10,6 +10,11 @@ export type { EcbDailyRates } from './fx';
 export {
   addDays,
   daysInMonth,
+  describePeriod,
+  isWholeMonth,
+  periodUnit,
+  shiftMonth,
+  shiftPeriod,
   isIsoDate,
   localDateIn,
   monthBounds,

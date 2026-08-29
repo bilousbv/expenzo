@@ -20,7 +20,7 @@ export default function SignInScreen() {
 
         <View className="flex-row justify-center gap-1">
           <Text className="text-sm text-content-muted">No account yet?</Text>
-          <Link href="/register" testID="go-to-register" className="text-sm text-brand-600">
+          <Link href="/register" testID="go-to-register" className="text-sm text-link">
             Create one
           </Link>
         </View>

@@ -21,12 +21,18 @@ const container: Record<ButtonVariant, string> = {
   secondary: 'bg-surface-muted',
   ghost: 'bg-transparent',
 };
-
-// Dark on the accent fill: the mint is bright enough that a white label falls
-// below the contrast floor, so this filled button breaks the usual rule that a
-// coloured fill takes an inverse label.
+/*
+ * Dark on the accent fill. The amber is bright enough that a white label falls
+ * below the contrast floor, so this filled button breaks the usual rule that a
+ * coloured fill takes an inverse label.
+ *
+ * It is its own token rather than the ordinary content colour, because that one
+ * swaps with the scheme: in light it becomes a near-black that is right on white
+ * and wrong on amber. The amber does not swap, so its label must not either.
+ * palette.test.ts asserts the contrast in both schemes.
+ */
 const label: Record<ButtonVariant, string> = {
-  primary: 'text-content',
+  primary: 'text-content-on-accent',
   secondary: 'text-content',
   ghost: 'text-link',
 };

@@ -98,7 +98,7 @@ export function InviteForm({ onInvite, origin }: InviteFormProps) {
       </button>
 
       {error ? (
-        <p role="alert" data-testid="invite-error" className="text-sm text-red-600">
+        <p role="alert" data-testid="invite-error" className="text-sm text-negative">
           {error}
         </p>
       ) : null}

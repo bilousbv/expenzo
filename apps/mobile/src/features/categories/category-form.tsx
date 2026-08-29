@@ -102,7 +102,7 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
       </Button>
 
       {error ? (
-        <Text testID="category-error" className="text-sm text-red-600">
+        <Text testID="category-error" className="text-sm text-negative">
           {error}
         </Text>
       ) : null}

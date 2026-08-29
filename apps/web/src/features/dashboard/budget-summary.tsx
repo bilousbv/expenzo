@@ -64,7 +64,7 @@ export function BudgetSummary({
           </span>
         </div>
 
-        <div className="w-px bg-content-inverse/20" />
+        <div className="w-px bg-content/20" />
 
         <div className="flex flex-1 flex-col items-center gap-1">
           <span className="text-xs text-content-inverse/70">{t('dashboard.spent')}</span>

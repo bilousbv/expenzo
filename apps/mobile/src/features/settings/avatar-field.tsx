@@ -156,7 +156,7 @@ export function AvatarField({ name, url, onChoose, onRemove }: AvatarFieldProps)
       <Text className="text-xs text-content-muted">{t('profile.photoExplainer')}</Text>
 
       {error ? (
-        <Text testID="avatar-error" className="text-sm text-red-600">
+        <Text testID="avatar-error" className="text-sm text-negative">
           {error}
         </Text>
       ) : null}

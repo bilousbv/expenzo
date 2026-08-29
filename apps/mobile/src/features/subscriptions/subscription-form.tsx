@@ -136,7 +136,7 @@ export function SubscriptionForm({
               accessibilityLabel={t('common.close')}
               onPress={() => setPickingService(false)}
             >
-              <Text className="text-brand-600">{t('common.close')}</Text>
+              <Text className="text-link">{t('common.close')}</Text>
             </Pressable>
           </View>
 
@@ -145,7 +145,7 @@ export function SubscriptionForm({
               testID="subscription-service-none"
               accessibilityRole="button"
               onPress={() => pickService(null)}
-              className="border-b border-brand-100 py-3"
+              className="border-b border-border py-3"
             >
               <Text className="text-content">{t('subscriptions.serviceUnlisted')}</Text>
             </Pressable>
@@ -156,7 +156,7 @@ export function SubscriptionForm({
                 testID={`subscription-service-${service.slug}`}
                 accessibilityRole="button"
                 onPress={() => pickService(service)}
-                className="border-b border-brand-100 py-3"
+                className="border-b border-border py-3"
               >
                 <Text className="text-content">{service.name}</Text>
               </Pressable>
@@ -236,7 +236,7 @@ export function SubscriptionForm({
       </Button>
 
       {error ? (
-        <Text testID="subscription-error" className="text-sm text-red-600">
+        <Text testID="subscription-error" className="text-sm text-negative">
           {error}
         </Text>
       ) : null}

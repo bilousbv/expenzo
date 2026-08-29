@@ -44,7 +44,7 @@ export function SubscriptionList() {
               <li
                 key={row.id}
                 data-testid="subscription-row"
-                className="flex flex-row items-center justify-between border-b border-brand-100 pb-2"
+                className="flex flex-row items-center justify-between border-b border-border pb-2"
               >
                 <div className="flex flex-col">
                   {/* Struck through rather than hidden: it is history, and a
@@ -93,7 +93,7 @@ export function SubscriptionList() {
                         ? reactivate.mutate({ id: row.id, status: 'active' })
                         : cancel.mutate(row.id)
                     }
-                    className="text-sm text-brand-600"
+                    className="text-sm text-link"
                   >
                     {cancelled ? '↻' : '⏸'}
                   </button>

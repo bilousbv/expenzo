@@ -2,7 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * The two colour schemes.
+ *
+ * Light sits on :root and dark is the .dark override, which is Tailwind's own
+ * class strategy and the one NativeWind drives on native. Order matters: :root
+ * and .dark carry the same specificity, so the later block wins and dark has to
+ * come second or it would never apply at all.
+ *
+ * Dark is nonetheless the app's default. The class is written onto <html> by
+ * the server from a cookie, exactly as the locale is, so the right scheme is in
+ * the first byte and neither one flashes.
+ *
+ * Channels rather than hex, so Tailwind can insert its own alpha and modifiers
+ * like `bg-surface/40` keep working. Values come from
+ * packages/ui/src/palette.ts, which is where they are tested for contrast;
+ * palette.test.ts fails if these drift from it.
+ */
+@layer base {
+  :root {
+    --color-background: 244 243 249;
+    --color-surface: 255 255 255;
+    --color-surface-muted: 238 236 246;
+    --color-border: 222 218 238;
+    --color-content: 23 19 38;
+    --color-content-muted: 95 90 117;
+    --color-content-inverse: 255 255 255;
+    --color-content-on-accent: 42 31 5;
+    --color-brand: 91 63 214;
+    --color-brand-muted: 228 220 255;
+    --color-accent: 255 201 60;
+    --color-accent-muted: 255 240 201;
+    --color-positive: 15 122 61;
+    --color-negative: 192 50 43;
+    --color-link: 91 63 214;
+  }
+
+  .dark {
+    --color-background: 14 11 22;
+    --color-surface: 25 21 39;
+    --color-surface-muted: 36 31 56;
+    --color-border: 46 40 68;
+    --color-content: 244 242 250;
+    --color-content-muted: 164 159 192;
+    --color-content-inverse: 14 11 22;
+    --color-content-on-accent: 42 31 5;
+    --color-brand: 139 107 255;
+    --color-brand-muted: 58 45 107;
+    --color-accent: 255 201 60;
+    --color-accent-muted: 74 58 18;
+    --color-positive: 61 220 132;
+    --color-negative: 255 107 107;
+    --color-link: 157 139 255;
+  }
+}
+
 html,
 body {
   height: 100%;
+}
+
+body {
+  background-color: rgb(var(--color-background));
+  color: rgb(var(--color-content));
 }

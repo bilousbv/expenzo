@@ -17,7 +17,7 @@ export default function DashboardTab() {
      */
     <SafeAreaView edges={['left', 'right']} className="flex-1 bg-surface-muted">
       <ScrollView>
-        <View style={{ paddingTop: insets.top }} className="bg-brand-500">
+        <View style={{ paddingTop: insets.top }} className="bg-brand">
           <Text className="px-gutter pt-2 text-2xl font-bold text-content-inverse">
             {t('common.appName')}
           </Text>

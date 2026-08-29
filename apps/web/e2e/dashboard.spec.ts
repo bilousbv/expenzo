@@ -44,7 +44,7 @@ test.describe('dashboard', () => {
     await expect(page.getByTestId('budget-balance')).toBeVisible();
     await expect(page.getByTestId('budget-income')).toBeVisible();
     await expect(page.getByTestId('budget-spent')).toBeVisible();
-    await expect(page.getByRole('radiogroup', { name: 'Period' })).toBeVisible();
+    await expect(page.getByTestId('period-bar')).toBeVisible();
     await expect(page.getByRole('radiogroup', { name: 'Author' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'By category' })).toBeVisible();
   });
@@ -119,6 +119,13 @@ test.describe('dashboard', () => {
     await expect(page.getByTestId('budget-spent')).not.toHaveText('$0.00');
     await expect(page.getByTestId('category-row').first()).toBeVisible();
   });
+  /** Opens the picker and takes a preset from it. */
+  async function choosePreset(page: Page, preset: string) {
+    await page.getByTestId('period-open').click();
+    await expect(page.getByTestId('period-dialog')).toBeVisible();
+    await page.getByTestId(`preset-${preset}`).click();
+    await expect(page.getByTestId('period-dialog')).toBeHidden();
+  }
 
   // The totals come from an aggregate query rather than the loaded page. A
   // period with nothing in it is the cheapest way to prove they are not simply
@@ -129,25 +136,140 @@ test.describe('dashboard', () => {
     await addExpense(page, { amount: '7.00', merchant: uniqueMerchant('This month') });
     await expect(page.getByTestId('budget-spent')).not.toHaveText('$0.00');
 
-    await page.getByTestId('period-last-month').click();
+    await choosePreset(page, 'last-month');
 
     await expect(page.getByTestId('budget-spent')).toHaveText('$0.00');
     // The rollup is what empties now; the dashboard holds no list to empty.
     await expect(page.getByTestId('no-category-spend')).toBeVisible();
 
-    await page.getByTestId('period-this-month').click();
+    await choosePreset(page, 'this-month');
     await expect(page.getByTestId('budget-spent')).not.toHaveText('$0.00');
   });
 
   test('shows the period the figures cover', async ({ page }) => {
     await page.goto('/');
 
-    const range = page.getByTestId('period-range');
-    const thisMonth = await range.textContent();
+    const dates = page.getByTestId('period-dates');
+    const thisMonth = await dates.textContent();
 
-    await page.getByTestId('period-last-month').click();
+    await choosePreset(page, 'last-month');
 
-    await expect(range).not.toHaveText(thisMonth ?? '');
+    await expect(dates).not.toHaveText(thisMonth ?? '');
+  });
+
+  /*
+   * The period is in the URL, so it survives a reload and can be sent to
+   * somebody else — and the category drill-down reads the same two parameters.
+   */
+  test('keeps the period in the address and across a reload', async ({ page }) => {
+    await page.goto('/');
+    await choosePreset(page, 'last-month');
+
+    await expect(page).toHaveURL(/from=\d{4}-\d{2}-\d{2}&to=\d{4}-\d{2}-\d{2}/);
+    const shown = await page.getByTestId('period-dates').textContent();
+
+    await page.reload();
+
+    await expect(page.getByTestId('period-dates')).toHaveText(shown ?? '');
+  });
+
+  /*
+   * The arrows step by whatever unit the period is, so they work the same way
+   * on a month, a quarter, a year and a week. An arbitrary range has no unit,
+   * which is what hides them.
+   */
+  test('steps between months with the arrows', async ({ page }) => {
+    await page.goto('/');
+
+    const dates = page.getByTestId('period-dates');
+    const thisMonth = await dates.textContent();
+
+    await page.getByTestId('period-previous').click();
+    await expect(dates).not.toHaveText(thisMonth ?? '');
+
+    await page.getByTestId('period-next').click();
+    await expect(dates).toHaveText(thisMonth ?? '');
+  });
+
+  /*
+   * Stepping is not month-only. A quarter steps by a quarter and a year by a
+   * year, which is the difference between the arrows being a month control and
+   * being a period control.
+   */
+  for (const preset of ['this-quarter', 'this-year', 'this-week']) {
+    test(`steps by the unit of ${preset}`, async ({ page }) => {
+      await page.goto('/');
+      await choosePreset(page, preset);
+
+      const dates = page.getByTestId('period-dates');
+      const before = await dates.textContent();
+
+      // Present at all is the point: a quarter or a year used to hide them.
+      await expect(page.getByTestId('period-previous')).toBeVisible();
+
+      await page.getByTestId('period-previous').click();
+      await expect(dates).not.toHaveText(before ?? '');
+
+      // And stepping back has to land exactly where it started, or the arrows
+      // drift a day at a time.
+      await page.getByTestId('period-next').click();
+      await expect(dates).toHaveText(before ?? '');
+    });
+  }
+
+  test('hides the arrows once a custom range is picked', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByTestId('period-previous')).toBeVisible();
+
+    await page.getByTestId('period-open').click();
+    await page.getByTestId('period-from').fill('2026-01-05');
+    await page.getByTestId('period-to').fill('2026-02-14');
+    await page.getByTestId('period-apply').click();
+
+    await expect(page.getByTestId('period-dialog')).toBeHidden();
+    await expect(page.getByTestId('period-previous')).toBeHidden();
+    await expect(page.getByTestId('period-next')).toBeHidden();
+  });
+
+  // Refused rather than quietly swapped: a reversed range is a typo, and
+  // reinterpreting it hides which end was wrong.
+  test('refuses a range that ends before it starts', async ({ page }) => {
+    await page.goto('/');
+
+    await page.getByTestId('period-open').click();
+    await page.getByTestId('period-from').fill('2026-03-01');
+    await page.getByTestId('period-to').fill('2026-01-01');
+
+    await expect(page.getByTestId('period-error')).toBeVisible();
+    await expect(page.getByTestId('period-apply')).toBeDisabled();
+  });
+});
+
+test.describe('what was saved', () => {
+  test('sits under the balance panel and follows the period', async ({ page }) => {
+    await page.goto('/');
+
+    const card = page.getByTestId('saved-card');
+    await expect(card).toBeVisible();
+
+    const before = await card.getByTestId('saved-amount').textContent();
+
+    await addExpense(page, { amount: '40.00', merchant: uniqueMerchant('Saved'), income: true });
+
+    // Income raises what was kept, so the figure has to move with it.
+    await expect(card.getByTestId('saved-amount')).not.toHaveText(before ?? '');
+  });
+
+  /*
+   * A period with nothing in it kept nothing, which is still a figure rather
+   * than an empty card.
+   */
+  test('shows a figure for a period with nothing in it', async ({ page }) => {
+    await page.goto('/');
+    await page.getByTestId('period-open').click();
+    await page.getByTestId('preset-last-year').click();
+
+    await expect(page.getByTestId('saved-amount')).not.toBeEmpty();
   });
 });
 

@@ -42,7 +42,7 @@ export function SubscriptionListView() {
             <View
               key={row.id}
               testID="subscription-row"
-              className="flex-row items-center justify-between border-b border-brand-100 pb-2"
+              className="flex-row items-center justify-between border-b border-border pb-2"
             >
               <View className="flex-1">
                 {/* Struck through rather than hidden: a household that stopped
@@ -82,7 +82,7 @@ export function SubscriptionListView() {
                       : cancel.mutate(row.id)
                   }
                 >
-                  <Text className="text-brand-600">{cancelled ? '↻' : '⏸'}</Text>
+                  <Text className="text-link">{cancelled ? '↻' : '⏸'}</Text>
                 </Pressable>
 
                 <Pressable

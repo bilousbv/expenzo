@@ -217,7 +217,7 @@ export function SubscriptionForm({
       </button>
 
       {error ? (
-        <p role="alert" data-testid="subscription-error" className="text-sm text-red-600">
+        <p role="alert" data-testid="subscription-error" className="text-sm text-negative">
           {error}
         </p>
       ) : null}

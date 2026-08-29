@@ -27,25 +27,32 @@ describe('buttonContainerClass', () => {
   });
 
   it('lets caller classes win over the defaults', () => {
-    expect(buttonContainerClass('primary', 'md', false, 'bg-red-500')).toContain('bg-red-500');
-    expect(buttonContainerClass('primary', 'md', false, 'bg-red-500')).not.toContain('bg-accent');
+    expect(buttonContainerClass('primary', 'md', false, 'bg-negative')).toContain('bg-negative');
+    expect(buttonContainerClass('primary', 'md', false, 'bg-negative')).not.toContain('bg-accent');
   });
 });
 
 describe('buttonLabelClass', () => {
-  /**
-   * Dark on the accent fill, not white. The mint is bright enough that a white
-   * label falls below the contrast floor — which is the whole reason the
-   * primary label does not use `content-inverse` like every other filled
-   * button would.
+  /*
+   * Dark on the accent fill, not white. The amber is bright enough that a white
+   * label falls below the contrast floor, which is the whole reason the primary
+   * label does not use `content-inverse` like every other filled button would.
+   *
+   * Asserted as an exact class rather than a substring: `content-on-accent` is
+   * deliberately its own token, and a substring check on `text-content` would
+   * pass for the plain content colour too — which swaps with the scheme and
+   * would be a near-black on amber in light mode and near-white in dark.
    */
   it('puts a dark label on the accent fill', () => {
-    expect(buttonLabelClass('primary')).toContain('text-content');
-    expect(buttonLabelClass('primary')).not.toContain('text-content-inverse');
+    const classes = buttonLabelClass('primary').split(' ');
+
+    expect(classes).toContain('text-content-on-accent');
+    expect(classes).not.toContain('text-content');
+    expect(classes).not.toContain('text-content-inverse');
   });
 
   it('pairs the label colour with its variant', () => {
-    expect(buttonLabelClass('secondary')).toContain('text-content');
-    expect(buttonLabelClass('ghost')).toContain('text-link');
+    expect(buttonLabelClass('secondary').split(' ')).toContain('text-content');
+    expect(buttonLabelClass('ghost').split(' ')).toContain('text-link');
   });
 });

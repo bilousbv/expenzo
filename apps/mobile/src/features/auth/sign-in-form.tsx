@@ -61,7 +61,7 @@ export function SignInForm({ onSubmit }: SignInFormProps) {
       </Button>
 
       {error ? (
-        <Text testID="sign-in-error" className="text-sm text-red-600">
+        <Text testID="sign-in-error" className="text-sm text-negative">
           {error}
         </Text>
       ) : null}

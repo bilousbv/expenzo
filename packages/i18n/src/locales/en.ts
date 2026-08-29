@@ -119,7 +119,25 @@ export const en = {
   period: {
     'this-month': 'This month',
     'last-month': 'Last month',
+    'this-quarter': 'This quarter',
+    'last-quarter': 'Last quarter',
+    'this-year': 'This year',
+    'last-year': 'Last year',
     'this-week': 'This week',
+    custom: 'Custom',
+    change: 'Change the period',
+    previousPeriod: 'Previous period',
+    nextPeriod: 'Next period',
+    pick: 'Pick a period',
+    from: 'From',
+    to: 'To',
+    apply: 'Apply',
+    reversed: 'The end of the range cannot come before its start',
+  },
+
+  saved: {
+    title: 'Saved',
+    explainer: 'Income minus spending over this period',
   },
 
   expenses: {
@@ -239,6 +257,14 @@ export const en = {
     errors: {
       inviteFailed: 'Could not create the invitation.',
       noToken: 'The server did not return an invitation token.',
+    },
+  },
+
+  settings: {
+    appearance: 'Appearance',
+    theme: {
+      dark: 'Dark',
+      light: 'Light',
     },
   },
 
