@@ -82,9 +82,8 @@ setup('authenticate', async ({ page }) => {
 
   await page.goto('/login');
 
-  // The magic link is now the secondary path — password sign-in is the default
-  // — so it has to be revealed first. Locators are scoped to that section
-  // because the page carries a second email field for the password form.
+  // The magic link is the secondary path — password sign-in is the default —
+  // and it lives on a page of its own, so the login page is only the way in.
   await page.getByTestId('show-magic-link').click();
 
   const magicLink = page.getByTestId('magic-link');
