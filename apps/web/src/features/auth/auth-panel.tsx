@@ -88,16 +88,21 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
 
       <OAuthButtons providers={[...env().oauthProviders]} onSignIn={signInWithProvider} />
 
-      {/* A link to a page of its own rather than a section that unfolds here:
-          two email fields on one screen were ambiguous to fill, and asking for
-          a link is a different way in rather than a variation on this form. */}
-      <Link
-        href={magicLinkHref(redirectTo)}
-        data-testid="show-magic-link"
-        className={`text-center ${buttonLabelClass('ghost', 'sm')}`}
-      >
-        {t('auth.showMagicLink')}
-      </Link>
+      {/* Signing in only. A link signs an existing account in and no longer
+          opens one, so offering it here would be offering a way to register
+          that does not register. It points at a page of its own rather than
+          unfolding a section: two email fields on one screen were ambiguous to
+          fill, and asking for a link is a different way in rather than a
+          variation on this form. */}
+      {registering ? null : (
+        <Link
+          href={magicLinkHref(redirectTo)}
+          data-testid="show-magic-link"
+          className={`text-center ${buttonLabelClass('ghost', 'sm')}`}
+        >
+          {t('auth.showMagicLink')}
+        </Link>
+      )}
 
       <p className="text-center text-sm text-content-muted">
         {registering ? t('auth.alreadyHaveAccount') : t('auth.noAccountYet')}

@@ -44,6 +44,18 @@ test.describe('authentication', () => {
     await expect(page).toHaveURL(/\/login$/);
   });
 
+  /*
+   * A sign-in link signs you in; it does not open an account. Offering it on
+   * the register page invited exactly that, and a link that created an account
+   * from a mistyped address left someone in an empty household wondering where
+   * their data had gone.
+   */
+  test('does not offer the sign-in link as a way to register', async ({ page }) => {
+    await page.goto('/register');
+
+    await expect(page.getByTestId('show-magic-link')).toHaveCount(0);
+  });
+
   // Asking for a link from a guarded URL has to land you there afterwards, not
   // on the dashboard — which means `next` has to survive the trip to this page.
   test('carries where you were heading across to the magic-link page', async ({ page }) => {

@@ -45,6 +45,37 @@ describe('MagicLinkPanel', () => {
     expect(args.options.emailRedirectTo).toContain('/auth/callback');
   });
 
+  /*
+   * A link signs an existing account in and never quietly opens a new one.
+   * Left at GoTrue's default, a typo in the address creates a second empty
+   * household and the app comes up with none of the person's data in it.
+   */
+  it('refuses to create an account on the way in', async () => {
+    render(<MagicLinkPanel />);
+
+    fireEvent.changeText(screen.getByTestId('sign-in-email'), 'ana@example.com');
+    fireEvent.press(screen.getByTestId('sign-in-submit'));
+
+    await waitFor(() => expect(mockSignInWithOtp).toHaveBeenCalled());
+
+    const [args] = mockSignInWithOtp.mock.calls[0] as [{ options: { shouldCreateUser: boolean } }];
+    expect(args.options.shouldCreateUser).toBe(false);
+  });
+
+  // GoTrue's own wording is "Signups not allowed for otp", which is written for
+  // whoever wrote the API call rather than whoever is signing in.
+  it('says there is no account rather than repeating the server', async () => {
+    mockSignInWithOtp.mockResolvedValue({ error: { message: 'Signups not allowed for otp' } });
+    render(<MagicLinkPanel />);
+
+    fireEvent.changeText(screen.getByTestId('sign-in-email'), 'ana@example.com');
+    fireEvent.press(screen.getByTestId('sign-in-submit'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('sign-in-error')).toHaveTextContent(/no account/i),
+    );
+  });
+
   it('confirms once the link is on its way', async () => {
     render(<MagicLinkPanel />);
 

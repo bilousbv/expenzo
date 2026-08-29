@@ -114,12 +114,17 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
         </Text>
       ) : null}
 
-      {/* A push to its own screen rather than a section that unfolds here: two
-          email fields in one form were ambiguous to fill, and asking for a link
-          is a different way in rather than a variation on this form. */}
-      <Button testID="show-magic-link" variant="ghost" onPress={() => router.push('/magic-link')}>
-        {t('auth.showMagicLink')}
-      </Button>
+      {/* Signing in only. A link signs an existing account in and no longer
+          opens one, so offering it here would be offering a way to register
+          that does not register. It pushes a screen of its own rather than
+          unfolding a section: two email fields in one form were ambiguous to
+          fill, and asking for a link is a different way in rather than a
+          variation on this form. */}
+      {registering ? null : (
+        <Button testID="show-magic-link" variant="ghost" onPress={() => router.push('/magic-link')}>
+          {t('auth.showMagicLink')}
+        </Button>
+      )}
     </View>
   );
 }

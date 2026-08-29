@@ -1,5 +1,6 @@
 'use client';
 
+import { signInLinkErrorKey } from '@expenzo/domain';
 import { useTranslation } from '@expenzo/i18n';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -27,10 +28,22 @@ export function MagicLinkPanel() {
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: callbackUrl(window.location.origin, redirectTo) },
+      options: {
+        emailRedirectTo: callbackUrl(window.location.origin, redirectTo),
+        /*
+         * A link signs an existing account in; opening one is a deliberate act
+         * that goes through the register form. Left at GoTrue's default, a
+         * typo in the address silently creates a second empty household and
+         * the app comes up with none of the person's data in it.
+         */
+        shouldCreateUser: false,
+      },
     });
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      const key = signInLinkErrorKey(error.message);
+      throw new Error(key ? t(key) : error.message);
+    }
   }
 
   return (

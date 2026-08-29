@@ -66,6 +66,7 @@ export const en = {
       providerUnreachable: 'Could not reach that provider.',
       providerNoUrl: 'That provider did not return a sign-in URL.',
       invalidEmail: 'Enter a valid email address.',
+      noAccountForLink: 'No account uses that address yet. Create one first.',
       missingCode: 'That sign-in link is missing its code.',
       linkFailed: 'That link did not work',
       linkFailedExplainer: 'Sign-in links work once and expire. Ask for a new one.',

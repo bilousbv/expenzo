@@ -70,6 +70,7 @@ export const uk: Messages & {
       providerUnreachable: 'Не вдалося звʼязатися з цим провайдером.',
       providerNoUrl: 'Провайдер не повернув посилання для входу.',
       invalidEmail: 'Введіть коректну адресу електронної пошти.',
+      noAccountForLink: 'Акаунта з такою адресою ще немає. Спочатку створіть його.',
       missingCode: 'У цьому посиланні для входу немає коду.',
       linkFailed: 'Це посилання не спрацювало',
       linkFailedExplainer:
