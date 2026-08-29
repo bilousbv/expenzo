@@ -259,7 +259,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
       {/* Test ids as well as roles: Next's development overlay also renders an
           element with role="alert", so a bare role lookup is ambiguous. */}
       {error ? (
-        <p role="alert" data-testid="credentials-error" className="text-sm text-red-600">
+        <p role="alert" data-testid="credentials-error" className="text-sm text-negative">
           {error}
         </p>
       ) : null}

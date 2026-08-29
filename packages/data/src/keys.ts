@@ -63,6 +63,8 @@ export const queryKeys = {
       ['summary', householdId, 'period', window] as const,
     categories: (householdId: string, window: SummaryWindow) =>
       ['summary', householdId, 'categories', window] as const,
+    daily: (householdId: string, window: SummaryWindow) =>
+      ['summary', householdId, 'daily', window] as const,
   },
   expenses: {
     all: (householdId: string) => ['expenses', householdId] as const,

@@ -29,13 +29,13 @@ export function categoryDotStyle(color: string | null | undefined): CategoryDotS
 export function categoryChipClass(selected: boolean, extra?: string): string {
   return cn(
     'flex-row items-center gap-2 rounded-full border px-3 py-2',
-    selected ? 'border-brand-600 bg-brand-50' : 'border-brand-100 bg-surface',
+    selected ? 'border-brand bg-surface-muted' : 'border-border bg-surface',
     extra,
   );
 }
 
 export function categoryChipLabelClass(selected: boolean): string {
-  return cn('text-sm', selected ? 'text-brand-700 font-semibold' : 'text-content');
+  return cn('text-sm', selected ? 'text-brand font-semibold' : 'text-content');
 }
 
 export function categoryDotClass(): string {

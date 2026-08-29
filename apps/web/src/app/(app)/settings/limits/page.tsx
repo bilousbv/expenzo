@@ -21,7 +21,7 @@ export default async function LimitsPage() {
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-gutter p-gutter">
       <div className="flex flex-row items-baseline justify-between">
         <h1 className="text-3xl font-bold text-content">{t('limits.title')}</h1>
-        <Link href="/" className="text-sm text-brand-600 underline">
+        <Link href="/" className="text-sm text-link underline">
           Dashboard
         </Link>
       </div>

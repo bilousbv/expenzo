@@ -1,56 +1,65 @@
 /**
  * Design tokens shared by the web (Tailwind) and mobile (NativeWind) apps.
  * Keep every value here expressible on both platforms: no CSS-only features
- * such as gradients, filters or pseudo-selectors.
+ * such as filters or pseudo-selectors.
  *
- * The gradient the balance panel uses is the one exception, and it is not
- * expressed here — `GradientSurface` in packages/ui renders it per platform
- * from the `brand` stops below, because a gradient cannot be a class name on
- * native.
+ * Every colour is a CSS variable rather than a literal, because the app ships
+ * two schemes and swaps them by redefining those variables on the root element.
+ * That is what lets one set of class names — `bg-surface`, `text-content` —
+ * serve both, on both platforms, without a `dark:` variant on every element.
+ *
+ * The channels are unwrapped (`255 201 60`, not `#ffc93c`) so Tailwind can
+ * insert an alpha of its own; a hex string in the variable makes every opacity
+ * modifier such as `bg-surface/40` silently do nothing.
+ *
+ * The values live in packages/ui/src/palette.ts, which is where they are
+ * tested — for contrast, and for the two schemes defining the same tokens.
+ *
+ * The gradient the balance panel uses is the one thing not expressed here:
+ * `GradientSurface` in packages/ui renders it per platform, because a gradient
+ * cannot be a class name on native.
  *
  * @type {import('tailwindcss').Config['theme']}
  */
+
+/** `rgb(var(--color-x) / <alpha-value>)`, so opacity modifiers keep working. */
+const token = (name) => `rgb(var(--color-${name}) / <alpha-value>)`;
+
 const theme = {
   extend: {
     colors: {
-      // Teal, dark at the bottom of the ramp so 900 and 500 can serve as the
-      // two stops of the balance gradient.
-      brand: {
-        50: '#eefbf7',
-        100: '#d2f5ec',
-        200: '#a6ead9',
-        300: '#6ddac2',
-        400: '#35c2a5',
-        500: '#16a085',
-        600: '#0f8570',
-        700: '#0d6a5b',
-        800: '#0b4f45',
-        900: '#062b25',
-      },
-      /**
-       * The call-to-action fill. Bright enough that its label has to be dark
-       * rather than white — a white label on this fails contrast, which is why
-       * the primary button's text colour is `content` and not `content-inverse`.
-       */
-      accent: {
-        DEFAULT: '#5fefd8',
-        strong: '#3fe3c7',
-        muted: '#bff7ec',
-      },
+      background: token('background'),
       surface: {
-        DEFAULT: '#ffffff',
-        muted: '#f2f2f4',
-        inverse: '#062b25',
+        DEFAULT: token('surface'),
+        muted: token('surface-muted'),
       },
+      border: token('border'),
       content: {
-        DEFAULT: '#101820',
-        muted: '#6b7280',
-        inverse: '#ffffff',
+        DEFAULT: token('content'),
+        muted: token('content-muted'),
+        inverse: token('content-inverse'),
+        /**
+         * The amber action colour is bright enough that a white label on it
+         * fails contrast, so the primary button's label is this rather than
+         * `content-inverse`. `button.styles.test.ts` asserts it.
+         */
+        'on-accent': token('content-on-accent'),
       },
-      /** Money coming in. Spending is left as ordinary content colour. */
-      positive: '#0b8a3d',
+      brand: {
+        DEFAULT: token('brand'),
+        muted: token('brand-muted'),
+      },
+      /** The call to action: the add button, save, every progress bar. */
+      accent: {
+        DEFAULT: token('accent'),
+        muted: token('accent-muted'),
+      },
+      /** Money arriving. */
+      positive: token('positive'),
+      /** Money leaving, and overspend. */
+      negative: token('negative'),
       /** Secondary actions that are not buttons — filters, inline links. */
-      link: '#2563eb',
+      link: token('link'),
     },
     borderRadius: {
       card: '20px',

@@ -71,3 +71,41 @@ export async function getCategorySpend(db: Db, args: SummaryArgs): Promise<Categ
     totalMinor: Number(row.total_minor),
   }));
 }
+
+/**
+ * Net movement per day.
+ *
+ * Nothing on the dashboard reads this today â the saved figure comes straight
+ * from the period summary. It is kept because `public.daily_net` is the series
+ * the charts in M3 are built from, and re-deriving a tested migration later is
+ * more work than leaving it here.
+ */
+export interface DailyNetRow {
+  occurredOn: string;
+  netMinor: number;
+}
+
+/**
+ * Net movement per day, for the balance swing card.
+ *
+ * Only days that have something on them come back — the caller walks the whole
+ * window itself, and a row per empty day would mean sending a year of zeroes to
+ * describe a quiet year.
+ */
+export async function getDailyNet(db: Db, args: SummaryArgs): Promise<DailyNetRow[]> {
+  const { data, error } = await db.rpc('daily_net', {
+    from_on: args.from,
+    to_on: args.to,
+    member: args.memberId ?? undefined,
+  });
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((row) => ({
+    occurredOn: row.occurred_on,
+    // Postgres returns bigint as a string, because it does not fit a JavaScript
+    // number safely. Left as one it would concatenate rather than add the first
+    // time a running balance was accumulated.
+    netMinor: Number(row.net_minor),
+  }));
+}

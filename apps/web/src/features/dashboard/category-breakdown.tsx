@@ -82,7 +82,7 @@ export function CategoryBreakdown({
 
                   <span
                     data-testid="category-amount"
-                    className={progress.exceeded ? 'text-red-600' : 'text-content'}
+                    className={progress.exceeded ? 'text-negative' : 'text-content'}
                   >
                     {formatApprox(
                       display.convert(row.spentMinor),
@@ -104,13 +104,13 @@ export function CategoryBreakdown({
                     aria-valuemin={0}
                     aria-valuemax={100}
                     aria-valuenow={Math.round(progress.ratio * 100)}
-                    className="mt-1 h-2 w-full overflow-hidden rounded-full bg-brand-100"
+                    className="mt-1 h-2 w-full overflow-hidden rounded-full bg-surface-muted"
                   >
                     <div
                       // Capped at 100% so an overspend does not paint outside
                       // the track; the figures above already say by how much.
                       style={{ width: `${Math.min(progress.ratio, 1) * 100}%` }}
-                      className={`h-full ${progress.exceeded ? 'bg-red-600' : 'bg-brand-600'}`}
+                      className={`h-full ${progress.exceeded ? 'bg-negative' : 'bg-brand'}`}
                     />
                   </div>
                 ) : null}

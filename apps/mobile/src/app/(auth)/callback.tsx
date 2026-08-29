@@ -71,7 +71,7 @@ export default function AuthCallbackScreen() {
             <Text className="text-xl font-semibold text-content">
               {t('auth.errors.linkFailed')}
             </Text>
-            <Text testID="callback-error" className="text-sm text-red-600">
+            <Text testID="callback-error" className="text-sm text-negative">
               {error.translate ? t(error.value) : error.value}
             </Text>
             <Text className="text-sm text-content-muted">

@@ -114,7 +114,7 @@ export function LimitManager({ userId }: { userId: string | undefined }) {
           </button>
 
           {error ? (
-            <p role="alert" data-testid="limit-error" className="text-sm text-red-600">
+            <p role="alert" data-testid="limit-error" className="text-sm text-negative">
               {error}
             </p>
           ) : null}

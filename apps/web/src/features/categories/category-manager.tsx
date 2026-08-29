@@ -46,7 +46,7 @@ export function CategoryManager() {
       <CategoryForm onCreate={handleCreate} disabled={!householdId} />
 
       {categories.isError ? (
-        <p role="alert" className="text-sm text-red-600">
+        <p role="alert" className="text-sm text-negative">
           {categories.error.message}
         </p>
       ) : null}

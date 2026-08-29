@@ -37,7 +37,7 @@ export function CategoryExpenses({ categoryId, from, to }: CategoryExpensesProps
   return (
     <>
       <div className="flex flex-col gap-1">
-        <Link href="/" data-testid="back-to-dashboard" className="text-sm text-brand-600">
+        <Link href="/" data-testid="back-to-dashboard" className="text-sm text-link">
           {t('nav.backToDashboard')}
         </Link>
         <h1 data-testid="category-title" className="text-2xl font-bold text-content">

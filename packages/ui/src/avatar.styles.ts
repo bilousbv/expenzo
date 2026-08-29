@@ -27,14 +27,14 @@ const TEXT: Record<AvatarSize, string> = {
 /** Round, unlike the square icon tile: a face is not a category. */
 export function avatarClass(size: AvatarSize = 'md', extra?: string): string {
   return cn(
-    'rounded-pill bg-brand-100 items-center justify-center overflow-hidden',
+    'rounded-pill bg-surface-muted items-center justify-center overflow-hidden',
     SIZE[size],
     extra,
   );
 }
 
 export function avatarLabelClass(size: AvatarSize = 'md'): string {
-  return cn('text-brand-700 font-semibold', TEXT[size]);
+  return cn('text-brand font-semibold', TEXT[size]);
 }
 
 /**

@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { useTranslation } from '@expenzo/i18n';
 
 import { LanguageSwitcher } from '../../features/settings/language-switcher';
+import { ThemeSwitcher } from '../../features/settings/theme-switcher';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -107,6 +108,7 @@ export default function SettingsTab() {
 
         <Card className="gap-gutter">
           <LanguageSwitcher />
+          <ThemeSwitcher />
         </Card>
 
         <Card className="gap-gutter">

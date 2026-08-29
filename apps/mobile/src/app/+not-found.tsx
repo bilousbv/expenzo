@@ -9,7 +9,7 @@ export default function NotFoundScreen() {
       <Stack.Screen options={{ title: t('nav.notFound') }} />
       <View className="flex-1 items-center justify-center p-gutter">
         <Text className="text-xl font-semibold text-content">This screen does not exist.</Text>
-        <Link href="/" className="mt-4 text-brand-600">
+        <Link href="/" className="mt-4 text-link">
           {t('nav.goToExpenseList')}
         </Link>
       </View>

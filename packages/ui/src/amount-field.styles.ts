@@ -23,7 +23,7 @@ export function amountInputClass(invalid: boolean, extra?: string): string {
 }
 
 export const amountPreviewClass = 'text-content-muted text-sm';
-export const amountErrorClass = 'text-sm text-red-600';
+export const amountErrorClass = 'text-sm text-negative';
 
 /**
  * The text the field should start with for a given stored amount.

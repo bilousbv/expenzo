@@ -10,6 +10,7 @@ import { useTranslation } from '@expenzo/i18n';
 
 import { SessionProvider, useSession } from '../features/auth/use-session';
 import { LocaleProvider } from '../lib/i18n';
+import { ThemeProvider } from '../lib/theme';
 import { supabase } from '../lib/supabase';
 
 // NativeWind's stylesheet. Metro is configured with this same file as its
@@ -83,16 +84,18 @@ export default function RootLayout() {
 
   return (
     <LocaleProvider>
-      <QueryClientProvider client={queryClient}>
-        <SupabaseProvider client={supabase}>
-          <SessionProvider>
-            <SafeAreaProvider>
-              <RootNavigator />
-              <StatusBar style="auto" />
-            </SafeAreaProvider>
-          </SessionProvider>
-        </SupabaseProvider>
-      </QueryClientProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <SupabaseProvider client={supabase}>
+            <SessionProvider>
+              <SafeAreaProvider>
+                <RootNavigator />
+                <StatusBar style="auto" />
+              </SafeAreaProvider>
+            </SessionProvider>
+          </SupabaseProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
     </LocaleProvider>
   );
 }

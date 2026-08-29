@@ -119,13 +119,13 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
       ))}
 
       {providerError ? (
-        <Text testID="oauth-error" className="text-sm text-red-600">
+        <Text testID="oauth-error" className="text-sm text-negative">
           {providerError}
         </Text>
       ) : null}
 
       {showMagicLink ? (
-        <View className="gap-2 border-t border-brand-100 pt-gutter">
+        <View className="gap-2 border-t border-border pt-gutter">
           <Text className="text-sm text-content-muted">{t('auth.magicLinkExplainer')}</Text>
           <SignInForm onSubmit={sendMagicLink} />
         </View>

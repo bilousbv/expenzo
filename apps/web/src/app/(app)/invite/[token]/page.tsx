@@ -29,11 +29,11 @@ export default async function AcceptInvitePage({ params }: { params: Promise<{ t
       <main className="flex min-h-screen items-center justify-center p-gutter">
         <Card className="w-full max-w-sm gap-gutter">
           <h1 className="text-2xl font-bold text-content">{t('invite.failed')}</h1>
-          <p role="alert" data-testid="invite-error" className="text-sm text-red-600">
+          <p role="alert" data-testid="invite-error" className="text-sm text-negative">
             {error.message}
           </p>
           <p className="text-sm text-content-muted">{t('invite.explainer')}</p>
-          <Link href="/" className="text-sm text-brand-600">
+          <Link href="/" className="text-sm text-link">
             {t('nav.backToExpenses')}
           </Link>
         </Card>
@@ -48,7 +48,7 @@ export default async function AcceptInvitePage({ params }: { params: Promise<{ t
           {t('household.joined')}
         </h1>
         <p className="text-sm text-content-muted">{t('household.joinedExplainer')}</p>
-        <Link href="/" className="text-sm text-brand-600">
+        <Link href="/" className="text-sm text-link">
           {t('nav.goToExpenses')}
         </Link>
       </Card>

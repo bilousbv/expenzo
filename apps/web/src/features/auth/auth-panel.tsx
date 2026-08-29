@@ -114,7 +114,7 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
            email fields on the page, and an unscoped lookup matches both. */
         <div
           data-testid="magic-link"
-          className="flex flex-col gap-2 border-t border-brand-100 pt-gutter"
+          className="flex flex-col gap-2 border-t border-border pt-gutter"
         >
           <p className="text-sm text-content-muted">{t('auth.magicLinkExplainer')}</p>
           <LoginForm onSubmit={sendMagicLink} />
@@ -134,7 +134,7 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
         {registering ? t('auth.alreadyHaveAccount') : t('auth.noAccountYet')}
         <Link
           href={registering ? '/login' : '/register'}
-          className="text-brand-600 underline"
+          className="text-link underline"
           data-testid={registering ? 'go-to-login' : 'go-to-register'}
         >
           {registering ? t('auth.signIn') : t('auth.createOne')}

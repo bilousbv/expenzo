@@ -189,7 +189,7 @@ export function ExpenseForm({
       </Button>
 
       {error ? (
-        <Text testID="expense-error" className="text-sm text-red-600">
+        <Text testID="expense-error" className="text-sm text-negative">
           {error}
         </Text>
       ) : null}

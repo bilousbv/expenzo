@@ -635,6 +635,13 @@ export type Database = {
         Args: { invitee_email: string }
         Returns: string
       }
+      daily_net: {
+        Args: { from_on: string; member?: string; to_on: string }
+        Returns: {
+          net_minor: number
+          occurred_on: string
+        }[]
+      }
       expense_summary: {
         Args: { from_on: string; member?: string; to_on: string }
         Returns: {

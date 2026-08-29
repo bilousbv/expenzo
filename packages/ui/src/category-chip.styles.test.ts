@@ -8,12 +8,12 @@ import {
 
 describe('categoryChipClass', () => {
   it('marks the selected chip so it is not colour alone that distinguishes it', () => {
-    expect(categoryChipClass(true)).toContain('border-brand-600');
-    expect(categoryChipClass(false)).not.toContain('border-brand-600');
+    expect(categoryChipClass(true)).toContain('border-brand');
+    expect(categoryChipClass(false)).not.toContain('border-brand');
   });
 
   it('appends caller classes last, so they win the tailwind-merge', () => {
-    expect(categoryChipClass(false, 'bg-red-500')).toContain('bg-red-500');
+    expect(categoryChipClass(false, 'bg-negative')).toContain('bg-negative');
   });
 });
 

@@ -208,7 +208,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
       </Button>
 
       {error ? (
-        <Text testID="credentials-error" className="text-sm text-red-600">
+        <Text testID="credentials-error" className="text-sm text-negative">
           {error}
         </Text>
       ) : null}

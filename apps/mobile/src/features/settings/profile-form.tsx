@@ -102,7 +102,7 @@ export function ProfileForm({ profile, baseCurrency, currencies, onSave }: Profi
       </Button>
 
       {error ? (
-        <Text testID="profile-error" className="text-sm text-red-600">
+        <Text testID="profile-error" className="text-sm text-negative">
           {error}
         </Text>
       ) : null}
