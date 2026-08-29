@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { credentialsSchema, emailSchema, passwordSchema, registrationSchema } from './auth';
+import {
+  credentialsSchema,
+  emailSchema,
+  passwordSchema,
+  registrationSchema,
+  signInLinkErrorKey,
+} from './auth';
 
 describe('emailSchema', () => {
   it('accepts an ordinary address', () => {
@@ -180,5 +186,27 @@ describe('registrationSchema, the parts that become a profile', () => {
 
   it('rejects a currency that is not an ISO code', () => {
     expect(registrationSchema.safeParse({ ...valid, baseCurrency: 'uah' }).success).toBe(false);
+  });
+});
+
+describe('signInLinkErrorKey', () => {
+  /*
+   * A sign-in link no longer creates an account, so GoTrue refuses one for an
+   * address it does not know. Its own wording is written for an API client —
+   * "Signups not allowed for otp" tells whoever asked for a link nothing they
+   * can act on.
+   */
+  it('names the real problem when there is no account to sign in to', () => {
+    expect(signInLinkErrorKey('Signups not allowed for otp')).toBe('auth.errors.noAccountForLink');
+  });
+
+  it('matches however GoTrue happens to case it', () => {
+    expect(signInLinkErrorKey('signups not allowed for OTP')).toBe('auth.errors.noAccountForLink');
+  });
+
+  // Anything else is the server describing something we did not anticipate,
+  // and its own words are more use than a guess of ours.
+  it('leaves any other failure to speak for itself', () => {
+    expect(signInLinkErrorKey('Email rate limit exceeded')).toBeNull();
   });
 });

@@ -59,6 +59,9 @@ function RootNavigator() {
       <Stack.Protected guard={!session}>
         <Stack.Screen name="(auth)/sign-in" />
         <Stack.Screen name="(auth)/register" />
+        {/* Its own screen rather than a section of the sign-in card: two email
+            fields in one form were ambiguous to fill. */}
+        <Stack.Screen name="(auth)/magic-link" />
       </Stack.Protected>
 
       {/* Reachable either way: it is what completes the sign-in. */}

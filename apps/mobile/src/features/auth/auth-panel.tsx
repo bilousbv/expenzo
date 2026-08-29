@@ -1,6 +1,7 @@
 import type { OAuthProvider } from '@expenzo/domain';
 import { Button } from '@expenzo/ui';
 import * as Linking from 'expo-linking';
+import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { useTranslation } from '@expenzo/i18n';
@@ -14,7 +15,6 @@ import {
   type CredentialsMode,
   type CredentialsSubmission,
 } from './credentials-form';
-import { SignInForm } from './sign-in-form';
 
 /**
  * Wires the sign-in and register screens to Supabase, so the forms stay
@@ -22,7 +22,6 @@ import { SignInForm } from './sign-in-form';
  */
 export function AuthPanel({ mode }: { mode: CredentialsMode }) {
   const { t } = useTranslation();
-  const [showMagicLink, setShowMagicLink] = useState(false);
   const [providerError, setProviderError] = useState<string | null>(null);
 
   const registering = mode === 'signUp';
@@ -55,15 +54,6 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
 
     // No navigation here: the listener in SessionProvider sees the new session
     // and the Stack.Protected guards swap the tree over on their own.
-  }
-
-  async function sendMagicLink(email: string) {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: redirectTo },
-    });
-
-    if (error) throw new Error(error.message);
   }
 
   async function signInWithProvider(provider: OAuthProvider) {
@@ -124,13 +114,14 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
         </Text>
       ) : null}
 
-      {showMagicLink ? (
-        <View className="gap-2 border-t border-border pt-gutter">
-          <Text className="text-sm text-content-muted">{t('auth.magicLinkExplainer')}</Text>
-          <SignInForm onSubmit={sendMagicLink} />
-        </View>
-      ) : (
-        <Button testID="show-magic-link" variant="ghost" onPress={() => setShowMagicLink(true)}>
+      {/* Signing in only. A link signs an existing account in and no longer
+          opens one, so offering it here would be offering a way to register
+          that does not register. It pushes a screen of its own rather than
+          unfolding a section: two email fields in one form were ambiguous to
+          fill, and asking for a link is a different way in rather than a
+          variation on this form. */}
+      {registering ? null : (
+        <Button testID="show-magic-link" variant="ghost" onPress={() => router.push('/magic-link')}>
           {t('auth.showMagicLink')}
         </Button>
       )}

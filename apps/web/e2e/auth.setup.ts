@@ -4,6 +4,12 @@ import { ENGLISH_COOKIE } from './locale';
 
 const STORAGE_STATE = 'e2e/.auth/user.json';
 
+/**
+ * Only ever used against the local stack, to bring the end-to-end identity into
+ * existence. Signing in still goes through the magic link.
+ */
+const PASSWORD = 'correct-horse-8';
+
 /** Mailpit, which `supabase start` exposes. Every local mail lands here. */
 const MAIL_API = process.env.E2E_MAIL_API ?? 'http://127.0.0.1:54424/api/v1';
 
@@ -77,14 +83,40 @@ setup('authenticate', async ({ page }) => {
     );
   }
 
+  // A sign-in link no longer opens an account, so the identity has to exist
+  // before one can be asked for. On a freshly reset database this registers it;
+  // on every run after that the server says it is already there, which is the
+  // same outcome by a different route.
+  await page.goto('/register');
+  await page.getByLabel('First name').fill('E2E');
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Confirm password').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Create account' }).click();
+
+  await expect
+    .poll(
+      async () => {
+        if (new URL(page.url()).pathname === '/') return 'registered';
+        return (await page.getByTestId('credentials-error').count()) > 0 ? 'exists' : 'pending';
+      },
+      { message: 'registering the end-to-end identity neither succeeded nor reported why' },
+    )
+    .not.toBe('pending');
+
+  // Whatever session that left behind is discarded: the point of this setup is
+  // to prove the magic-link path still works, so it has to start signed out.
+  // The locale cookie goes back on, because clearing takes it too.
+  await page.context().clearCookies();
+  await page.context().addCookies([ENGLISH_COOKIE]);
+
   // Clear the inbox so the link we pick up is unambiguously the one just sent.
   await fetch(`${MAIL_API}/messages`, { method: 'DELETE' }).catch(() => undefined);
 
   await page.goto('/login');
 
-  // The magic link is now the secondary path — password sign-in is the default
-  // — so it has to be revealed first. Locators are scoped to that section
-  // because the page carries a second email field for the password form.
+  // The magic link is the secondary path — password sign-in is the default —
+  // and it lives on a page of its own, so the login page is only the way in.
   await page.getByTestId('show-magic-link').click();
 
   const magicLink = page.getByTestId('magic-link');

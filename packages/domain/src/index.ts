@@ -49,6 +49,7 @@ export {
   PASSWORD_MIN_LENGTH,
   passwordSchema,
   registrationSchema,
+  signInLinkErrorKey,
   VALIDATION_PARAMS,
 } from './schemas/auth';
 export type { Credentials, OAuthProvider, Registration } from './schemas/auth';

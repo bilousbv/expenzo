@@ -110,13 +110,8 @@ test.describe('registration', () => {
     await expect(page.getByTestId('credentials-error')).toContainText(/do not match/i);
   });
 
-  test('offers the magic link as an alternative', async ({ page }) => {
-    await page.goto('/login');
-
-    await page.getByTestId('show-magic-link').click();
-
-    await expect(page.getByRole('button', { name: /send.*link/i })).toBeVisible();
-  });
+  // The magic link as an alternative to a password now lives in auth.spec,
+  // alongside the rest of what its own page has to do.
 
   test('links between signing in and registering', async ({ page }) => {
     await page.goto('/login');

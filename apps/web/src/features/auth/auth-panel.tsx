@@ -5,7 +5,6 @@ import { useTranslation } from '@expenzo/i18n';
 import { buttonLabelClass } from '@expenzo/ui';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
 
 import { env } from '@/env';
 import { createClient } from '@/lib/supabase/browser';
@@ -15,8 +14,8 @@ import {
   type CredentialsMode,
   type CredentialsSubmission,
 } from './credentials-form';
-import { LoginForm } from './login-form';
 import { OAuthButtons } from './oauth-buttons';
+import { callbackUrl, magicLinkHref } from './urls';
 
 /**
  * Wires every sign-in route to Supabase, so the forms below stay presentational
@@ -26,17 +25,8 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
   const { t } = useTranslation();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('next') ?? '/';
-  const [showMagicLink, setShowMagicLink] = useState(false);
 
   const registering = mode === 'signUp';
-
-  function callbackUrl() {
-    // Built from the origin the browser actually used. Both localhost and
-    // 127.0.0.1 are on the redirect allow-list in supabase/config.toml, because
-    // GoTrue treats them as different origins and silently falls back to
-    // site_url for anything not listed.
-    return `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`;
-  }
 
   async function submitCredentials({
     email,
@@ -52,7 +42,7 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
           email,
           password,
           options: {
-            emailRedirectTo: callbackUrl(),
+            emailRedirectTo: callbackUrl(window.location.origin, redirectTo),
             /*
              * Read by the signup trigger, which writes the profile, the
              * household and the membership in one transaction. Sending these
@@ -72,24 +62,13 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
     window.location.assign(redirectTo);
   }
 
-  async function sendMagicLink(email: string) {
-    const supabase = createClient();
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: callbackUrl() },
-    });
-
-    if (error) throw new Error(error.message);
-  }
-
   async function signInWithProvider(provider: OAuthProvider) {
     const supabase = createClient();
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: callbackUrl(),
+        redirectTo: callbackUrl(window.location.origin, redirectTo),
         // The redirect is issued here rather than by the client, so the failure
         // is visible if the provider is misconfigured instead of the browser
         // simply leaving.
@@ -109,25 +88,20 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
 
       <OAuthButtons providers={[...env().oauthProviders]} onSignIn={signInWithProvider} />
 
-      {showMagicLink ? (
-        /* Wrapped and labelled because once this section is open there are two
-           email fields on the page, and an unscoped lookup matches both. */
-        <div
-          data-testid="magic-link"
-          className="flex flex-col gap-2 border-t border-border pt-gutter"
-        >
-          <p className="text-sm text-content-muted">{t('auth.magicLinkExplainer')}</p>
-          <LoginForm onSubmit={sendMagicLink} />
-        </div>
-      ) : (
-        <button
-          type="button"
+      {/* Signing in only. A link signs an existing account in and no longer
+          opens one, so offering it here would be offering a way to register
+          that does not register. It points at a page of its own rather than
+          unfolding a section: two email fields on one screen were ambiguous to
+          fill, and asking for a link is a different way in rather than a
+          variation on this form. */}
+      {registering ? null : (
+        <Link
+          href={magicLinkHref(redirectTo)}
           data-testid="show-magic-link"
-          onClick={() => setShowMagicLink(true)}
-          className={buttonLabelClass('ghost', 'sm')}
+          className={`text-center ${buttonLabelClass('ghost', 'sm')}`}
         >
           {t('auth.showMagicLink')}
-        </button>
+        </Link>
       )}
 
       <p className="text-center text-sm text-content-muted">

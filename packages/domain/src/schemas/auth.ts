@@ -104,3 +104,16 @@ export type Registration = z.input<typeof registrationSchema>;
 export const oauthProviderSchema = z.enum(['google', 'apple']);
 
 export type OAuthProvider = z.infer<typeof oauthProviderSchema>;
+
+/**
+ * GoTrue's refusal to open an account from a sign-in link, translated.
+ *
+ * A link signs an existing account in and never creates one, so an address the
+ * server does not know comes back as "Signups not allowed for otp" — wording
+ * aimed at whoever wrote the API call. Returns the key to show instead, or
+ * null for anything else, where the server's own words are more use than a
+ * guess of ours.
+ */
+export function signInLinkErrorKey(message: string): string | null {
+  return /signups not allowed for otp/i.test(message) ? 'auth.errors.noAccountForLink' : null;
+}
