@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { StrictMode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { InviteLanding } from './invite-landing';
@@ -36,6 +37,26 @@ describe('InviteLanding', () => {
     render(<InviteLanding {...base} mode="accept" isMobile={false} />);
 
     expect(await screen.findByTestId('invite-error')).toHaveTextContent(/already been used/i);
+  });
+
+  /*
+   * Redeeming is a one-shot side effect against a one-shot token, and React
+   * runs an effect twice on mount in development. The second call is the
+   * database refusing a token the first call has just spent, which is exactly
+   * right of it — so the first person to open a perfectly good invitation
+   * joined the household and was told the link no longer worked.
+   */
+  it('redeems once even when the effect is run twice', async () => {
+    accept
+      .mockReset()
+      .mockResolvedValueOnce('household-id')
+      .mockRejectedValue(new Error('This invitation has already been used'));
+
+    render(<InviteLanding {...base} mode="accept" isMobile={false} />, { wrapper: StrictMode });
+
+    expect(await screen.findByTestId('invite-accepted')).toBeInTheDocument();
+    expect(accept).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId('invite-error')).not.toBeInTheDocument();
   });
 
   // The address is what the invitation was sent to, so it travels into the

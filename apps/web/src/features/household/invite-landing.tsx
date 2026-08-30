@@ -6,7 +6,7 @@ import { useTranslation } from '@expenzo/i18n';
 import { buttonContainerClass, buttonLabelClass, Card } from '@expenzo/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { createClient } from '@/lib/supabase/browser';
 
@@ -52,6 +52,8 @@ export function InviteLanding({
   const [handedOff, setHandedOff] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [joined, setJoined] = useState(false);
+  /** The token this component has already spent, if any. */
+  const redeemed = useRef<string | null>(null);
 
   const appLink = `expenzo://invite/${token}`;
 
@@ -74,19 +76,29 @@ export function InviteLanding({
       return;
     }
 
-    let cancelled = false;
+    /*
+     * Redeeming happens once per token, whatever React does with the effect.
+     *
+     * The token is spent by the first call, so a second is the database
+     * correctly refusing a link that no longer works — and React runs an
+     * effect twice on mount in development. The first person to open a
+     * perfectly good invitation joined the household and was told the
+     * invitation had already been used.
+     *
+     * A ref rather than state: it has to be set before the call goes out, and
+     * a re-render is both too late and beside the point.
+     */
+    if (redeemed.current === token) return;
+    redeemed.current = token;
 
+    // No cancellation on cleanup. React unmounts and remounts around that
+    // double invocation, and dropping the first result would leave the screen
+    // on its placeholder with the household already joined.
     void acceptInvitation(createClient(), token)
-      .then(() => {
-        if (!cancelled) setJoined(true);
-      })
+      .then(() => setJoined(true))
       .catch((cause: unknown) => {
-        if (!cancelled) setError(cause instanceof Error ? cause.message : t('invite.failed'));
+        setError(cause instanceof Error ? cause.message : t('invite.failed'));
       });
-
-    return () => {
-      cancelled = true;
-    };
   }, [email, mode, router, t, token, waiting]);
 
   if (waiting) {
@@ -117,6 +129,20 @@ export function InviteLanding({
     );
   }
 
+  if (joined) {
+    return (
+      <Card className="w-full max-w-sm gap-gutter">
+        <h1 className="text-2xl font-bold text-content" data-testid="invite-accepted">
+          {t('household.joined')}
+        </h1>
+        <p className="text-sm text-content-muted">{t('household.joinedExplainer')}</p>
+        <Link href="/" className="text-sm text-link">
+          {t('nav.goToExpenses')}
+        </Link>
+      </Card>
+    );
+  }
+
   if (mode === 'invalid' || error) {
     return (
       <Card className="w-full max-w-sm gap-gutter">
@@ -129,20 +155,6 @@ export function InviteLanding({
         <p className="text-sm text-content-muted">{t('invite.explainer')}</p>
         <Link href="/" className="text-sm text-link">
           {t('nav.backToExpenses')}
-        </Link>
-      </Card>
-    );
-  }
-
-  if (joined) {
-    return (
-      <Card className="w-full max-w-sm gap-gutter">
-        <h1 className="text-2xl font-bold text-content" data-testid="invite-accepted">
-          {t('household.joined')}
-        </h1>
-        <p className="text-sm text-content-muted">{t('household.joinedExplainer')}</p>
-        <Link href="/" className="text-sm text-link">
-          {t('nav.goToExpenses')}
         </Link>
       </Card>
     );

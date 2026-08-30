@@ -72,6 +72,38 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
+/**
+ * A Subject line a mail server will accept.
+ *
+ * denomailer encodes any non-ASCII header itself, as an RFC 2047
+ * quoted-printable word — and its encoder inserts a soft line break (`=\r\n`)
+ * every 74 characters. That is correct inside a message body and invalid
+ * inside a header: the second line is not a continuation, so the server reads
+ * it as a new and malformed header and refuses the whole message with
+ * `451 4.3.5 Unable to process mail`, leaving the invitation row written and
+ * no email sent.
+ *
+ * Quoted-printable spends six characters on every Cyrillic letter, so a
+ * Ukrainian subject passes 74 immediately. Ukrainian is the app's default, so
+ * this was the ordinary path; English is all ASCII, never encodes and never
+ * wraps, which is exactly why the half of it covered by tests looked healthy.
+ *
+ * So the word is built here, in base64, which stays well under the limit — and
+ * handed over in a form denomailer will leave alone. It encodes a header when
+ * it finds a non-ASCII character *or* a leading `=?`, and one leading space
+ * defeats the second test while the first no longer applies. Whitespace after
+ * the colon is not part of a header's value, so every parser drops it.
+ */
+function encodeSubject(value: string): string {
+  if (!/[^ -~]/.test(value)) return value;
+
+  const bytes = new TextEncoder().encode(value);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+
+  return ` =?UTF-8?B?${btoa(binary)}?=`;
+}
+
 function body(locale: Locale, household: string, role: InvitableRole, link: string) {
   const copy = COPY[locale];
 
@@ -164,7 +196,7 @@ Deno.serve(async (request) => {
     await client.send({
       from: Deno.env.get('INVITE_FROM') ?? 'invites@expenzo.app',
       to: email,
-      subject: mail.subject,
+      subject: encodeSubject(mail.subject),
       content: mail.text,
       html: mail.html,
     });

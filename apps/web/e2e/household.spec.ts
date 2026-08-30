@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { ENGLISH_COOKIE } from './locale';
+
 /** Mailpit, which `supabase start` exposes. Every local mail lands here. */
 const MAIL_API = process.env.E2E_MAIL_API ?? 'http://127.0.0.1:54424/api/v1';
 
@@ -87,6 +89,30 @@ test.describe('household', () => {
 
     // The token is on no screen any more, so the inbox is the only place it
     // can be got from — which is the point of the change.
+    expect((await invitationTokenFor(email)).length).toBeGreaterThan(31);
+  });
+
+  /*
+   * The rest of this suite is pinned to English, so every invitation it sends
+   * carries an all-ASCII subject line. Ukrainian is the app's default and its
+   * subject is not ASCII, which is a different path through the mail encoder
+   * entirely — and the one that was rejected outright, taking the whole send
+   * with it while the English half looked perfectly healthy.
+   */
+  test('emails an invitation from the Ukrainian app too', async ({ page, context }) => {
+    const email = `ukrainian-${Date.now()}@expenzo.test`;
+
+    // Only the locale cookie is replaced, never cleared: clearing would take
+    // the session with it and sign the household's owner out.
+    await context.addCookies([{ ...ENGLISH_COOKIE, value: 'uk' }]);
+    await page.goto('/settings/household');
+
+    await page.getByTestId('open-invite-dialog').click();
+    const dialog = page.getByTestId('invite-dialog');
+    await dialog.getByRole('textbox').fill(email);
+    await dialog.getByRole('button', { name: 'Запросити', exact: true }).click();
+    await expect(dialog.getByTestId('invite-sent')).toContainText(email);
+
     expect((await invitationTokenFor(email)).length).toBeGreaterThan(31);
   });
 
