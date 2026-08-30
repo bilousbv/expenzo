@@ -1,0 +1,15 @@
+-- A child is a member of the household, not a viewer of it.
+--
+-- A child records and edits their own spending and administers nothing: they
+-- cannot invite anyone, change a role or remove a member. That falls out of the
+-- policies already written — every one of them reads
+-- `app.current_member_role() in ('owner', 'adult')` before letting anybody
+-- touch somebody else's row — so this value needs no policy of its own.
+--
+-- `viewer` stays what it was, read-only, and is deliberately different: a child
+-- who cannot record their own pocket money has no reason to open the app.
+--
+-- Alone in its own migration because Postgres refuses to use a new enum value
+-- in the transaction that added it. Everything that mentions 'child' is in the
+-- next file.
+alter type public.member_role add value if not exists 'child';

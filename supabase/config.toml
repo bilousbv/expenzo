@@ -443,8 +443,19 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
-# [edge_runtime.secrets]
-# secret_key = "env(SECRET_VALUE)"
+# What send-invitation needs to put an invitation link in an email.
+#
+# Local only, like every other value in this file. `supabase start` runs the
+# mail catcher as a container in this compose project, so the edge runtime
+# reaches it by container name on the shared network — which works the same on
+# a laptop and in CI, where host.docker.internal does not exist. Production sets
+# these in the dashboard, pointing at a real provider with TLS and credentials.
+[edge_runtime.secrets]
+SMTP_HOST = "inbucket"
+SMTP_PORT = "1025"
+SMTP_TLS = "false"
+INVITE_FROM = "invites@expenzo.test"
+INVITE_APP_URL = "http://127.0.0.1:3000"
 
 [analytics]
 enabled = true

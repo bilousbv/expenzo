@@ -32,6 +32,10 @@ export const queryKeys = {
   households: {
     current: (householdId: string) => ['households', householdId] as const,
     members: (householdId: string) => ['households', householdId, 'members'] as const,
+    // Under the household key alongside the roster: accepting an invitation
+    // moves somebody from one list to the other, and one invalidation has to
+    // reach both.
+    invitations: (householdId: string) => ['households', householdId, 'invitations'] as const,
   },
   categories: {
     all: (householdId: string) => ['categories', householdId] as const,

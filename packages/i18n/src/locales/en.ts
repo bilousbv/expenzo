@@ -17,6 +17,7 @@ export const en = {
     close: 'Close',
     cancel: 'Cancel',
     delete: 'Delete',
+    continueHere: 'Continue in the browser',
     done: 'Done',
     loading: 'Loading…',
     everyone: 'Everyone',
@@ -82,6 +83,7 @@ export const en = {
     notFound: 'Not found',
     newExpense: 'New expense',
     manageCategories: 'Manage categories',
+    manageHousehold: 'Manage the household',
     backToDashboard: 'Back to the dashboard',
     backToExpenses: 'Back to your expenses',
     goToExpenses: 'Go to your expenses',
@@ -106,6 +108,12 @@ export const en = {
     failed: 'That invitation did not work',
     explainer:
       'Invitation links work once and expire after 14 days. Ask whoever invited you to send a new one.',
+    title: 'You have been invited to {{household}}',
+    joinAs: 'You will join as {{role}}.',
+    signInToJoin: 'Sign in as {{email}} to join.',
+    registerToJoin: 'Create an account for {{email}} to join.',
+    openInApp: 'Open in the Expenzo app',
+    openInAppExplainer: 'On a phone the app handles this better than the browser does.',
   },
 
   dashboard: {
@@ -277,11 +285,31 @@ export const en = {
     inviteSomeone: 'Invite someone',
     joined: 'You have joined the household',
     joinedExplainer: 'Shared expenses and subscriptions are now visible to you.',
-    linkExplainer:
-      'Send this link to the person you are inviting. It works once and expires in 14 days.',
+    sent: 'Invitation sent to {{email}}',
+    sentExplainer: 'The link is in their inbox. It works once and expires in 14 days.',
+    joiningAs: 'They join as',
+    pending: 'Invited, not yet joined',
+    pendingNone: 'Nobody is waiting on an invitation.',
+    expires: 'Expires {{date}}',
+    revoke: 'Cancel',
+    remove: 'Remove',
+    removeConfirm: 'Remove {{name}} from the household?',
+    ownerNote: 'The owner cannot be removed or given another role.',
+    manageExplainer: 'Any adult can invite someone or change what another member is.',
+    roles: {
+      owner: 'Owner',
+      adult: 'Adult',
+      child: 'Child',
+      viewer: 'Viewer',
+    },
+    roleExplainer: {
+      adult: 'Records expenses, and can invite and manage the household.',
+      child: 'Records their own expenses. Cannot invite or manage anyone.',
+    },
     errors: {
       inviteFailed: 'Could not create the invitation.',
-      noToken: 'The server did not return an invitation token.',
+      roleFailed: 'Could not change that role.',
+      removeFailed: 'Could not remove that member.',
     },
   },
 

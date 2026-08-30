@@ -110,6 +110,16 @@ export {
 } from './schemas/category';
 export type { CategoryKind, CreateCategoryInput, UpdateCategoryInput } from './schemas/category';
 
+export {
+  canManageMembers,
+  canRemoveMember,
+  invitableRoleSchema,
+  inviteInput,
+  inviteMode,
+  memberRoleSchema,
+} from './schemas/household';
+export type { InvitableRole, InviteInput, InviteMode, MemberRole } from './schemas/household';
+
 export { personDisplayName, personNameSchema, updateProfileInput } from './schemas/profile';
 export type { PersonNames, UpdateProfileInput } from './schemas/profile';
 

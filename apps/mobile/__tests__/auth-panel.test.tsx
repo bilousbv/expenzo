@@ -9,7 +9,11 @@ jest.mock('expo-linking', () => ({
   createURL: (path: string) => `expenzo://${path.replace(/^\//, '')}`,
 }));
 
-jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('expo-router', () => ({
+  router: { push: jest.fn() },
+  // The panel reads the address an invitation link carries.
+  useLocalSearchParams: () => ({}),
+}));
 
 jest.mock('../src/env', () => ({ env: () => ({ oauthProviders: [] }) }));
 
