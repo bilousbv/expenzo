@@ -5,8 +5,9 @@ import {
   useCreateCategory,
   useCurrentHousehold,
 } from '@expenzo/data';
-import type { CreateCategoryInput } from '@expenzo/domain';
+import { categoryKindSchema, type CategoryKind, type CreateCategoryInput } from '@expenzo/domain';
 import {
+  Button,
   Card,
   categoryChipClass,
   categoryChipLabelClass,
@@ -14,6 +15,7 @@ import {
   categoryDotStyle,
 } from '@expenzo/ui';
 import { useTranslation } from '@expenzo/i18n';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
 import { CategoryForm } from '../features/categories/category-form';
@@ -23,7 +25,14 @@ export default function CategoriesScreen() {
   const household = useCurrentHousehold();
   const householdId = household.data?.id;
 
-  const categories = useCategories(householdId);
+  /*
+   * Two taxonomies on one screen rather than two screens. They are the same
+   * job — naming the buckets — and a household that has just filed a
+   * subscription under the wrong one wants the other list a tap away.
+   */
+  const [kind, setKind] = useState<CategoryKind>('expense');
+
+  const categories = useCategories(householdId, kind);
   const create = useCreateCategory(householdId);
   const archive = useArchiveCategory(householdId);
 
@@ -38,9 +47,29 @@ export default function CategoriesScreen() {
   return (
     <FormScreen>
       <Card className="gap-gutter">
+        <View
+          accessibilityRole="radiogroup"
+          accessibilityLabel={t('categories.title')}
+          className="flex-row gap-2"
+        >
+          {categoryKindSchema.options.map((option) => (
+            <Button
+              key={option}
+              testID={`kind-${option}`}
+              variant={kind === option ? 'primary' : 'secondary'}
+              size="sm"
+              onPress={() => setKind(option)}
+            >
+              {t(option === 'expense' ? 'categories.expenseKind' : 'categories.subscriptionKind')}
+            </Button>
+          ))}
+        </View>
+
         {/* The household id scopes the insert and arrives from its own
-              query. Until it lands there is nothing to insert into. */}
-        <CategoryForm onCreate={handleCreate} disabled={!householdId} />
+              query. Until it lands there is nothing to insert into. The kind
+              travels with it, so a category added from this tab joins that
+              list and no other. */}
+        <CategoryForm onCreate={handleCreate} kind={kind} disabled={!householdId} />
       </Card>
 
       <Card className="gap-gutter">

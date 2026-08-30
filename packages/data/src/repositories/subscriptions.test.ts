@@ -7,6 +7,7 @@ import {
   deleteSubscription,
   listServices,
   listSubscriptions,
+  listUpcomingRenewals,
   updateSubscription,
 } from './subscriptions';
 
@@ -16,18 +17,23 @@ const SUBSCRIPTION = '44444444-4444-4444-8444-444444444444';
 
 interface Recorder {
   table?: string;
+  columns?: string;
   inserted?: Record<string, unknown>;
   updated?: Record<string, unknown>;
   filters: Array<[string, unknown]>;
   orders: string[];
   nullFilters: Array<[string, unknown]>;
+  ranges: Array<[string, string, unknown]>;
 }
 
 function fakeDb(result: { data: unknown; error: { message: string; code?: string } | null }) {
-  const recorder: Recorder = { filters: [], orders: [], nullFilters: [] };
+  const recorder: Recorder = { filters: [], orders: [], nullFilters: [], ranges: [] };
 
   const builder = {
-    select: () => builder,
+    select(columns: string) {
+      recorder.columns = columns;
+      return builder;
+    },
     insert(values: Record<string, unknown>) {
       recorder.inserted = values;
       return builder;
@@ -38,6 +44,14 @@ function fakeDb(result: { data: unknown; error: { message: string; code?: string
     },
     eq(column: string, value: unknown) {
       recorder.filters.push([column, value]);
+      return builder;
+    },
+    gte(column: string, value: unknown) {
+      recorder.ranges.push(['gte', column, value]);
+      return builder;
+    },
+    lte(column: string, value: unknown) {
+      recorder.ranges.push(['lte', column, value]);
       return builder;
     },
     is(column: string, value: unknown) {
@@ -243,5 +257,104 @@ describe('deleteSubscription', () => {
 
     expect(recorder.updated).toHaveProperty('deleted_at');
     expect(recorder.filters).toContainEqual(['id', SUBSCRIPTION]);
+  });
+});
+
+describe('listUpcomingRenewals', () => {
+  const window = { from: '2026-08-29', to: '2026-09-05' };
+
+  /*
+   * Both bounds and the status filter together are what let Postgres answer
+   * this from `subscriptions_household_idx`, which is partial on
+   * `status = 'active' and deleted_at is null` and ordered by the same column.
+   */
+  it('asks only for what falls inside the window', async () => {
+    const { db, recorder } = fakeDb({ data: [row], error: null });
+
+    await listUpcomingRenewals(db, window);
+
+    expect(recorder.table).toBe('subscriptions');
+    expect(recorder.ranges).toEqual([
+      ['gte', 'next_renewal_on', '2026-08-29'],
+      ['lte', 'next_renewal_on', '2026-09-05'],
+    ]);
+  });
+
+  /*
+   * A cancelled subscription has a null renewal date, so the range filter
+   * would drop it anyway — but the index is partial on the status, and
+   * without this the planner cannot use it.
+   */
+  it('leaves out the cancelled and the deleted', async () => {
+    const { db, recorder } = fakeDb({ data: [row], error: null });
+
+    await listUpcomingRenewals(db, window);
+
+    expect(recorder.filters).toContainEqual(['status', 'active']);
+    expect(recorder.nullFilters).toContainEqual(['deleted_at', null]);
+  });
+
+  it('returns them soonest first', async () => {
+    const { db, recorder } = fakeDb({ data: [row], error: null });
+
+    await listUpcomingRenewals(db, window);
+
+    expect(recorder.orders[0]).toBe('next_renewal_on');
+  });
+
+  it('throws the message rather than returning an error object', async () => {
+    const { db } = fakeDb({ data: null, error: { message: 'permission denied' } });
+
+    await expect(listUpcomingRenewals(db, window)).rejects.toThrow(/permission denied/);
+  });
+});
+
+describe('a subscription on trial', () => {
+  it('sends the trial length', async () => {
+    const { db, recorder } = fakeDb({ data: row, error: null });
+
+    await createSubscription(db, HOUSEHOLD, USER, { ...input, trialDays: 30 });
+
+    expect(recorder.inserted).toMatchObject({ trial_days: 30 });
+  });
+
+  // Absent means no trial, and a null column is what says so — omitting the
+  // key would leave whatever was there before on an upsert.
+  it('sends null when there is no trial', async () => {
+    const { db, recorder } = fakeDb({ data: row, error: null });
+
+    await createSubscription(db, HOUSEHOLD, USER, input);
+
+    expect(recorder.inserted).toMatchObject({ trial_days: null });
+  });
+
+  /*
+   * Derived by the database from the start date and the length, exactly like
+   * next_renewal_on. Two ways to say when the trial ends is one way for them
+   * to disagree, and the dashboard reads the stored one.
+   */
+  it('never sends the trial end date', async () => {
+    const { db, recorder } = fakeDb({ data: row, error: null });
+
+    await createSubscription(db, HOUSEHOLD, USER, { ...input, trialDays: 14 });
+
+    expect(recorder.inserted).not.toHaveProperty('trial_ends_on');
+  });
+
+  it('reads both back, so the card can say a trial is ending', async () => {
+    const { db, recorder } = fakeDb({ data: [row], error: null });
+
+    await listUpcomingRenewals(db, { from: '2026-08-29', to: '2026-09-05' });
+
+    expect(recorder.columns).toContain('trial_days');
+    expect(recorder.columns).toContain('trial_ends_on');
+  });
+
+  it('changes the trial length on an update', async () => {
+    const { db, recorder } = fakeDb({ data: row, error: null });
+
+    await updateSubscription(db, { id: SUBSCRIPTION, trialDays: 7 });
+
+    expect(recorder.updated).toMatchObject({ trial_days: 7 });
   });
 });

@@ -1,4 +1,11 @@
-import { addDays, daysInMonth, parseIsoDate, toIsoDate, type IsoDate } from './period';
+import {
+  addDays,
+  daysInMonth,
+  parseIsoDate,
+  toIsoDate,
+  type DateRange,
+  type IsoDate,
+} from './period';
 
 export type RenewalCadence = 'weekly' | 'monthly' | 'quarterly' | 'semiannual' | 'yearly';
 
@@ -73,4 +80,66 @@ export function upcomingRenewals(
   }
 
   return dates;
+}
+
+/** How many days the upcoming-renewals card looks ahead. */
+export const RENEWAL_WINDOW_DAYS = 7;
+
+/**
+ * The window the upcoming-renewals card asks for.
+ *
+ * Both ends inclusive. Today counts, because a charge is not history until the
+ * merchant takes it; and the far end is a full week out rather than six days,
+ * because a weekly subscription renews exactly a week from the last charge and
+ * an exclusive bound would keep it off the card permanently.
+ */
+export function renewalWindow(today: IsoDate, days: number = RENEWAL_WINDOW_DAYS): DateRange {
+  if (!Number.isInteger(days) || days < 1) {
+    throw new Error(`A renewal window must be a positive whole number of days, received ${days}`);
+  }
+
+  return { start: today, end: addDays(today, days) };
+}
+
+/**
+ * Whole calendar days from one date to another; negative once `to` is past.
+ *
+ * Counted on the calendar rather than in elapsed hours, so a span containing a
+ * clock change is still a whole number of days.
+ */
+export function daysUntil(from: IsoDate, to: IsoDate): number {
+  const start = parseIsoDate(from);
+  const end = parseIsoDate(to);
+
+  const startUtc = Date.UTC(start.year, start.month - 1, start.day);
+  const endUtc = Date.UTC(end.year, end.month - 1, end.day);
+
+  return Math.round((endUtc - startUtc) / 86_400_000);
+}
+
+/**
+ * The day a free trial runs out, counted from the day it started.
+ *
+ * Mirrors the `trial_ends_on` generated column, and must keep agreeing with
+ * it: the date shown before saving has to be the date stored.
+ */
+export function trialEndsOn(startedOn: IsoDate, trialDays: number): IsoDate {
+  if (!Number.isInteger(trialDays) || trialDays < 1) {
+    throw new Error(`A trial must be a positive whole number of days, received ${trialDays}`);
+  }
+
+  return addDays(startedOn, trialDays);
+}
+
+/**
+ * The day money starts moving: the end of the trial, or the start date when
+ * there is no trial.
+ *
+ * This is what the billing schedule is anchored to, mirroring the `coalesce`
+ * in `app.set_subscription_next_renewal`. Anchoring to the sign-up date
+ * instead would bill a 30-day trial started on the 1st on the 1st, a month
+ * before the merchant does.
+ */
+export function billingStartsOn(startedOn: IsoDate, trialDays?: number): IsoDate {
+  return trialDays === undefined ? startedOn : trialEndsOn(startedOn, trialDays);
 }

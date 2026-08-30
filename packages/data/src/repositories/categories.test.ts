@@ -74,6 +74,7 @@ function fakeDb(result: { data: unknown; error: { message: string } | null }) {
 const row: CategoryRow = {
   id: CATEGORY,
   household_id: null,
+  kind: 'expense',
   slug: 'groceries',
   name: 'Groceries',
   icon: 'shopping-cart',
@@ -242,5 +243,46 @@ describe('archiveCategory', () => {
     await archiveCategory(db, CATEGORY);
 
     expect(recorder.filters).toContainEqual(['eq', 'id', CATEGORY]);
+  });
+});
+
+describe('the two taxonomies', () => {
+  /*
+   * A picker asks for one kind. Without the filter the subscription form would
+   * offer "Groceries" and the expense form "Cloud storage", which is the state
+   * this split exists to end.
+   */
+  it('asks for one kind at a time', async () => {
+    const { db, recorder } = fakeDb({ data: [], error: null });
+
+    await listCategories(db, 'subscription');
+
+    expect(recorder.filters).toContainEqual(['eq', 'kind', 'subscription']);
+  });
+
+  // Every caller that predates the split means an expense category, and there
+  // are several — the dashboard rollup, the expense form, the category screen.
+  it('defaults to expense categories', async () => {
+    const { db, recorder } = fakeDb({ data: [], error: null });
+
+    await listCategories(db);
+
+    expect(recorder.filters).toContainEqual(['eq', 'kind', 'expense']);
+  });
+
+  it('reads the kind back, so a screen can tell which list a row is in', async () => {
+    const { db, recorder } = fakeDb({ data: [], error: null });
+
+    await listCategories(db);
+
+    expect(recorder.columns).toContain('kind');
+  });
+
+  it('files a new category under the kind it was created in', async () => {
+    const { db, recorder } = fakeDb({ data: null, error: null });
+
+    await createCategory(db, HOUSEHOLD, { name: 'Streaming', kind: 'subscription' });
+
+    expect(recorder.inserted).toMatchObject({ kind: 'subscription' });
   });
 });

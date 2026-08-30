@@ -1,4 +1,9 @@
-import { createCategoryInput, VALIDATION_PARAMS, type CreateCategoryInput } from '@expenzo/domain';
+import {
+  createCategoryInput,
+  VALIDATION_PARAMS,
+  type CategoryKind,
+  type CreateCategoryInput,
+} from '@expenzo/domain';
 import { Button, categoryDotStyle, fieldInputClass } from '@expenzo/ui';
 import { useState } from 'react';
 import { useTranslation } from '@expenzo/i18n';
@@ -18,11 +23,13 @@ const PALETTE = [
 
 export interface CategoryFormProps {
   onCreate: (input: CreateCategoryInput) => Promise<void>;
+  /** Which taxonomy the new category joins. Defaults to expenses. */
+  kind?: CategoryKind;
   /** Set while the household this category would belong to is still loading. */
   disabled?: boolean;
 }
 
-export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) {
+export function CategoryForm({ onCreate, kind = 'expense', disabled = false }: CategoryFormProps) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [color, setColor] = useState<string>(PALETTE[0].hex);
@@ -41,7 +48,7 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
 
     // The same schema the repository validates against, so the phone and the
     // database agree on what a category is.
-    const parsed = createCategoryInput.safeParse({ name, color });
+    const parsed = createCategoryInput.safeParse({ name, color, kind });
 
     if (!parsed.success) {
       setError(

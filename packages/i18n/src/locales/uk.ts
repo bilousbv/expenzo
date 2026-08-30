@@ -15,6 +15,7 @@ import type { Messages } from './en';
  */
 export const uk: Messages & {
   expenses: { count_few: string; count_many: string };
+  renewals: { inDays_few: string; inDays_many: string };
 } = {
   common: {
     appName: 'Expenzo',
@@ -185,6 +186,19 @@ export const uk: Messages & {
     yearly: 'Щороку',
   },
 
+  renewals: {
+    title: 'Незабаром',
+    explainer: 'Підписки, за які спишуть кошти протягом семи днів',
+    none: 'Найближчі сім днів списань немає.',
+    tomorrow: 'Завтра',
+    trialEnds: 'Пробний період закінчується {{when}}',
+    inDays_one: 'через {{count}} день',
+    inDays_few: 'через {{count}} дні',
+    inDays_many: 'через {{count}} днів',
+    inDays_other: 'через {{count}} дні',
+    all: 'Переглянути всі',
+  },
+
   subscriptions: {
     title: 'Підписки',
     add: 'Додати підписку',
@@ -198,6 +212,11 @@ export const uk: Messages & {
     billingCycle: 'Періодичність',
     startedOn: 'Початок',
     nextCharge: 'Наступний платіж {{date}}',
+    trial: 'Починається з безкоштовного періоду',
+    trialDays: 'Безкоштовних днів',
+    trialEnds: 'Безкоштовно до {{date}}, потім оплата',
+    onTrial: 'Пробний період',
+    addDialogTitle: 'Додати підписку',
     perYear: '{{amount}} на рік',
     none: 'Ще нічого немає. Додайте те, за що домогосподарство платить щомісяця.',
     cancelled: 'Скасовано',
@@ -212,6 +231,8 @@ export const uk: Messages & {
 
   categories: {
     title: 'Категорії',
+    expenseKind: 'Для витрат',
+    subscriptionKind: 'Для підписок',
     name: 'Назва',
     namePlaceholder: 'Кава',
     colour: 'Колір',
@@ -350,6 +371,7 @@ export const uk: Messages & {
       nameTooLong: 'Ця назва задовга',
       anchorDay: 'День списання має бути від 1 до 31',
       intervalCount: 'Інтервал має бути щонайменше один',
+      trialDays: 'Пробний період триває від 1 до 365 днів',
     },
   },
 };

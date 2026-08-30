@@ -178,6 +178,20 @@ export const en = {
     yearly: 'Yearly',
   },
 
+  renewals: {
+    title: 'Coming up',
+    explainer: 'Subscriptions billing in the next seven days',
+    none: 'Nothing renews in the next seven days.',
+    tomorrow: 'Tomorrow',
+    trialEnds: 'Trial ends {{when}}',
+    inDays_one: 'in {{count}} day',
+    inDays_other: 'in {{count}} days',
+    // Not 'All subscriptions': the header already has a Subscriptions link,
+    // and two links whose accessible names overlap are ambiguous to anybody
+    // navigating by name, a screen reader and an end-to-end test alike.
+    all: 'See all',
+  },
+
   subscriptions: {
     title: 'Subscriptions',
     add: 'Add subscription',
@@ -191,6 +205,11 @@ export const en = {
     billingCycle: 'Billing cycle',
     startedOn: 'Started on',
     nextCharge: 'Next {{date}}',
+    trial: 'Starts with a free trial',
+    trialDays: 'Free days',
+    trialEnds: 'Free until {{date}}, then billed',
+    onTrial: 'Trial',
+    addDialogTitle: 'Add a subscription',
     perYear: '{{amount}} a year',
     none: 'Nothing recorded yet. Add what the household pays for monthly.',
     cancelled: 'Cancelled',
@@ -205,6 +224,8 @@ export const en = {
 
   categories: {
     title: 'Categories',
+    expenseKind: 'For expenses',
+    subscriptionKind: 'For subscriptions',
     name: 'Name',
     namePlaceholder: 'Coffee',
     colour: 'Colour',
@@ -351,6 +372,7 @@ export const en = {
       nameTooLong: 'That name is too long',
       anchorDay: 'The billing day must be between 1 and 31',
       intervalCount: 'The interval must be at least one',
+      trialDays: 'A trial runs between 1 and 365 days',
     },
   },
 };

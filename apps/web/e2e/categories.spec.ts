@@ -80,4 +80,42 @@ test.describe('categories', () => {
 
     await expect(page).toHaveURL(/\/settings\/categories$/);
   });
+  /*
+   * Two taxonomies on one screen rather than two screens: they are the same
+   * job, and a household that has just filed a subscription under the wrong
+   * one wants the other list a click away.
+   */
+  test('manages the subscription taxonomy alongside the expense one', async ({ page }) => {
+    await page.goto('/settings/categories');
+
+    await expect(
+      page.getByTestId('system-category').filter({ hasText: 'Groceries' }),
+    ).toBeVisible();
+
+    await page.getByTestId('kind-subscription').click();
+
+    await expect(
+      page.getByTestId('system-category').filter({ hasText: 'Streaming' }),
+    ).toBeVisible();
+    await expect(page.getByTestId('system-category').filter({ hasText: 'Groceries' })).toHaveCount(
+      0,
+    );
+  });
+
+  test('adds a custom subscription category', async ({ page }) => {
+    const name = uniqueName('Newsletters');
+
+    await page.goto('/settings/categories');
+    await page.getByTestId('kind-subscription').click();
+
+    await page.getByLabel('Name').fill(name);
+    await page.getByRole('button', { name: 'Add category' }).click();
+
+    await expect(page.getByTestId('custom-category').filter({ hasText: name })).toBeVisible();
+
+    // And it belongs to that list alone: a subscription category showing up in
+    // the expense picker is the state the split exists to end.
+    await page.getByTestId('kind-expense').click();
+    await expect(page.getByTestId('custom-category').filter({ hasText: name })).toHaveCount(0);
+  });
 });

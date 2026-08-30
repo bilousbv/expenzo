@@ -31,7 +31,15 @@ export { nbuToEurRates, parseNbuJson } from './nbu';
 export type { NbuDailyRates } from './nbu';
 export type { DayGroup } from './grouping';
 
-export { nextRenewalOn, upcomingRenewals } from './renewal';
+export {
+  billingStartsOn,
+  daysUntil,
+  nextRenewalOn,
+  renewalWindow,
+  trialEndsOn,
+  upcomingRenewals,
+  RENEWAL_WINDOW_DAYS,
+} from './renewal';
 export type { RenewalCadence, RenewalSchedule } from './renewal';
 
 export { matchScore, normalizeMerchant, stringSimilarity } from './dedup';
@@ -94,8 +102,13 @@ export {
 } from './schemas/expense';
 export type { CreateExpenseInput, ExpenseFilter, UpdateExpenseInput } from './schemas/expense';
 
-export { createCategoryInput, hexColorSchema, updateCategoryInput } from './schemas/category';
-export type { CreateCategoryInput, UpdateCategoryInput } from './schemas/category';
+export {
+  categoryKindSchema,
+  createCategoryInput,
+  hexColorSchema,
+  updateCategoryInput,
+} from './schemas/category';
+export type { CategoryKind, CreateCategoryInput, UpdateCategoryInput } from './schemas/category';
 
 export { personDisplayName, personNameSchema, updateProfileInput } from './schemas/profile';
 export type { PersonNames, UpdateProfileInput } from './schemas/profile';

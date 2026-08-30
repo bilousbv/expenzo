@@ -1,7 +1,9 @@
 import type { ServiceRow } from '@expenzo/data';
 import {
   anchorDayFor,
+  billingStartsOn,
   createSubscriptionInput,
+  trialEndsOn,
   subscriptionCadenceSchema,
   VALIDATION_PARAMS,
   type CreateSubscriptionInput,
@@ -49,12 +51,30 @@ export function SubscriptionForm({
   const [chosenCurrency, setChosenCurrency] = useState(currency);
   const [cadence, setCadence] = useState<SubscriptionCadence>('monthly');
   const [startedOn, setStartedOn] = useState(today);
+  /*
+   * Two pieces of state rather than one nullable number: the days keep their
+   * value while the switch is off, so turning it back on does not wipe what
+   * was typed. Only the switch decides what is sent.
+   */
+  const [onTrial, setOnTrial] = useState(false);
+  const [trialDays, setTrialDays] = useState('30');
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
 
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   const chosen = services.find((service) => service.id === serviceId);
+
+  const freeDays = Number(trialDays);
+  const trialLength = onTrial && Number.isInteger(freeDays) && freeDays > 0 ? freeDays : undefined;
+
+  /*
+   * Billing runs from the end of the trial, not the sign-up date: a 30-day
+   * trial started on 1 August bills on the 31st and monthly from there.
+   * app.set_subscription_next_renewal does the same coalesce, and the two have
+   * to agree or the date previewed is not the date stored.
+   */
+  const billingFrom = billingStartsOn(startedOn, trialLength);
 
   /**
    * Picking a service fills the name in rather than owning it. Most people
@@ -80,7 +100,9 @@ export function SubscriptionForm({
       cadence,
       startedOn,
       // Derived from the start date, never asked for separately.
-      anchorDay: anchorDayFor(startedOn),
+      trialDays: trialLength,
+      // With a trial it is the first charge that anchors the schedule.
+      anchorDay: anchorDayFor(billingFrom),
       categoryId,
     });
 
@@ -223,6 +245,54 @@ export function SubscriptionForm({
         placeholder={t('expenses.datePlaceholder')}
         className={fieldInputClass()}
       />
+
+      {/* Hidden until the trial is switched on: a "free days" box sitting
+          empty on every subscription reads as a required field, and most
+          subscriptions have no trial at all. */}
+      {/* A pressable row rather than react-native's Switch: the row is the
+          target, which is a far easier thing to hit than a 50pt track, and it
+          styles like the rest of the form instead of like the platform. */}
+      <Pressable
+        testID="subscription-trial"
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: onTrial }}
+        accessibilityLabel={t('subscriptions.trial')}
+        disabled={disabled}
+        onPress={() => setOnTrial((was) => !was)}
+        className="flex-row items-center gap-3 py-2"
+      >
+        <View
+          className={`h-5 w-5 items-center justify-center rounded border ${
+            onTrial ? 'border-brand bg-brand' : 'border-border'
+          }`}
+        >
+          {onTrial ? <Text className="text-xs text-content">✓</Text> : null}
+        </View>
+        <Text className="text-content">{t('subscriptions.trial')}</Text>
+      </Pressable>
+
+      {onTrial ? (
+        <>
+          <Text className="text-sm font-medium text-content-muted">
+            {t('subscriptions.trialDays')}
+          </Text>
+          <TextInput
+            testID="subscription-trial-days"
+            value={trialDays}
+            onChangeText={setTrialDays}
+            keyboardType="number-pad"
+            className={fieldInputClass()}
+          />
+
+          {/* The date, not just the count: nobody converts "30 days from the
+              12th" in their head, and that date is when money starts moving. */}
+          {trialLength ? (
+            <Text testID="subscription-trial-ends" className="text-xs text-content-muted">
+              {t('subscriptions.trialEnds', { date: trialEndsOn(startedOn, trialLength) })}
+            </Text>
+          ) : null}
+        </>
+      ) : null}
 
       <CategorySelect
         options={categories}

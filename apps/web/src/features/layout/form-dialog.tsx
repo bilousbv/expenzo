@@ -4,7 +4,7 @@ import { useTranslation } from '@expenzo/i18n';
 import { buttonContainerClass, buttonLabelClass } from '@expenzo/ui';
 import { useEffect, useRef, type ReactNode } from 'react';
 
-export interface ExpenseDialogProps {
+export interface FormDialogProps {
   open: boolean;
   onClose: () => void;
   title: string;
@@ -23,14 +23,14 @@ export interface ExpenseDialogProps {
  * miss — focus trapping and inertness — are the ones a keyboard or screen
  * reader user notices immediately.
  */
-export function ExpenseDialog({
+export function FormDialog({
   open,
   onClose,
   title,
   children,
   testID = 'expense-dialog',
   closeTestID = 'close-expense-dialog',
-}: ExpenseDialogProps) {
+}: FormDialogProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDialogElement>(null);
 

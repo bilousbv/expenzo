@@ -12,9 +12,10 @@ export {
   deleteSubscription,
   listServices,
   listSubscriptions,
+  listUpcomingRenewals,
   updateSubscription,
 } from './repositories/subscriptions';
-export type { ServiceRow, SubscriptionRow } from './repositories/subscriptions';
+export type { RenewalWindow, ServiceRow, SubscriptionRow } from './repositories/subscriptions';
 
 export { listSupportedCurrencies, upsertEcbRates, upsertEurRates } from './repositories/fx';
 export type { FxSyncResult } from './repositories/fx';
@@ -31,6 +32,7 @@ export {
   useDeleteSubscription,
   useServices,
   useSubscriptions,
+  useUpcomingRenewals,
   useUpdateSubscription,
 } from './hooks/use-subscriptions';
 export { useCategorySpend, usePeriodSummary } from './hooks/use-summary';

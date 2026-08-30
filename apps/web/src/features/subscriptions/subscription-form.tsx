@@ -3,7 +3,9 @@
 import type { ServiceRow } from '@expenzo/data';
 import {
   anchorDayFor,
+  billingStartsOn,
   createSubscriptionInput,
+  trialEndsOn,
   subscriptionCadenceSchema,
   VALIDATION_PARAMS,
   type CreateSubscriptionInput,
@@ -46,6 +48,7 @@ export function SubscriptionForm({
   const nameId = useId();
   const cadenceId = useId();
   const startedId = useId();
+  const trialId = useId();
 
   const [amountMinor, setAmountMinor] = useState<number | null>(null);
   const [amountKey, setAmountKey] = useState(0);
@@ -55,6 +58,13 @@ export function SubscriptionForm({
   const [chosenCurrency, setChosenCurrency] = useState(currency);
   const [cadence, setCadence] = useState<SubscriptionCadence>('monthly');
   const [startedOn, setStartedOn] = useState(today);
+  /*
+   * Two pieces of state rather than one nullable number: the days keep their
+   * value while the switch is off, so turning it back on does not wipe what
+   * was typed. Only the switch decides what is sent.
+   */
+  const [onTrial, setOnTrial] = useState(false);
+  const [trialDays, setTrialDays] = useState('30');
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
 
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +82,17 @@ export function SubscriptionForm({
     if (service) setName(service.name);
   }
 
+  const freeDays = Number(trialDays);
+  const trialLength = onTrial && Number.isInteger(freeDays) && freeDays > 0 ? freeDays : undefined;
+
+  /*
+   * Billing runs from the end of the trial, not the sign-up date: a 30-day
+   * trial started on 1 August bills on the 31st and monthly from there.
+   * app.set_subscription_next_renewal does the same coalesce, and the two have
+   * to agree or the date previewed is not the date stored.
+   */
+  const billingFrom = billingStartsOn(startedOn, trialLength);
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
 
@@ -86,10 +107,12 @@ export function SubscriptionForm({
       currency: chosenCurrency,
       cadence,
       startedOn,
+      trialDays: trialLength,
       // Derived, never asked for twice. Somebody knows their subscription
       // started on 12 January; nobody thinks of it as "anchored on the 12th",
-      // and asking for both is how the two come to disagree.
-      anchorDay: anchorDayFor(startedOn),
+      // and asking for both is how the two come to disagree. With a trial it
+      // is the first charge that anchors the schedule.
+      anchorDay: anchorDayFor(billingFrom),
       categoryId,
     });
 
@@ -197,6 +220,48 @@ export function SubscriptionForm({
         onChange={(event) => setStartedOn(event.target.value)}
         className={fieldInputClass()}
       />
+
+      {/* Hidden until the trial is switched on: a "free days" box sitting
+          empty on every subscription reads as a required field, and most
+          subscriptions have no trial at all. */}
+      <label className="flex flex-row items-center gap-2 text-sm text-content">
+        <input
+          type="checkbox"
+          data-testid="subscription-trial"
+          checked={onTrial}
+          disabled={disabled}
+          onChange={(event) => setOnTrial(event.target.checked)}
+        />
+        {t('subscriptions.trial')}
+      </label>
+
+      {onTrial ? (
+        <>
+          <label htmlFor={trialId} className="text-sm font-medium text-content-muted">
+            {t('subscriptions.trialDays')}
+          </label>
+          <input
+            id={trialId}
+            name="trialDays"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={365}
+            data-testid="subscription-trial-days"
+            value={trialDays}
+            onChange={(event) => setTrialDays(event.target.value)}
+            className={fieldInputClass()}
+          />
+
+          {/* The date, not just the count: nobody converts "30 days from the
+              12th" in their head, and that date is when money starts moving. */}
+          {trialLength ? (
+            <p data-testid="subscription-trial-ends" className="text-xs text-content-muted">
+              {t('subscriptions.trialEnds', { date: trialEndsOn(startedOn, trialLength) })}
+            </p>
+          ) : null}
+        </>
+      ) : null}
 
       <CategorySelect
         options={categories}

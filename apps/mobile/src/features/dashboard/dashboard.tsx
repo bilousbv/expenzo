@@ -6,12 +6,15 @@ import {
   useHouseholdMembers,
   useLimits,
   usePeriodSummary,
+  useUpcomingRenewals,
 } from '@expenzo/data';
 import {
   describePeriod,
   periodUnit,
   limitProgress,
+  localDateIn,
   presetRange,
+  renewalWindow,
   shiftPeriod,
   UNCATEGORISED,
   type DateRange,
@@ -31,6 +34,7 @@ import {
 } from '@expenzo/ui';
 import { router } from 'expo-router';
 import { PeriodPicker } from './period-picker';
+import { UpcomingRenewals } from './upcoming-renewals';
 import { useMemo, useState } from 'react';
 import { useTranslation } from '@expenzo/i18n';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
@@ -72,6 +76,39 @@ export function Dashboard() {
   const limits = useLimits(householdId);
   const summary = usePeriodSummary(householdId, window);
   const categorySpend = useCategorySpend(householdId, window);
+
+  /*
+   * Today on the household's own calendar, so a charge due tonight reads as
+   * today rather than as tomorrow because UTC has not caught up.
+   */
+  const today = useMemo(() => localDateIn(new Date(), timeZone), [timeZone]);
+  const renewalRange = useMemo(() => {
+    const bounds = renewalWindow(today);
+    return { from: bounds.start, to: bounds.end };
+  }, [today]);
+  const renewals = useUpcomingRenewals(householdId, renewalRange);
+
+  /*
+   * A cancelled subscription has no next renewal, so the null is dropped
+   * rather than rendered as a charge with no date.
+   */
+  const renewalRows = (renewals.data ?? []).flatMap((row) =>
+    row.next_renewal_on
+      ? [
+          {
+            id: row.id,
+            name: row.name,
+            amountMinor: row.amount_minor,
+            currency: row.currency,
+            renewalOn: row.next_renewal_on,
+            // While a trial runs the trigger points the renewal at its end, so
+            // the two dates agreeing is what says this charge is the end of a
+            // free period rather than an ordinary renewal.
+            trial: row.trial_ends_on === row.next_renewal_on,
+          },
+        ]
+      : [],
+  );
 
   const options: CategoryOption[] = (categories.data ?? []).map((category) => ({
     id: category.id,
@@ -189,6 +226,10 @@ export function Dashboard() {
       </View>
 
       <View className="gap-gutter p-gutter">
+        {/* Above the filters, because it is the one thing on this screen that
+            has not happened yet: everything below is money already spent. */}
+        <UpcomingRenewals rows={renewalRows} today={today} loading={renewals.isPending} />
+
         <View
           accessibilityRole="radiogroup"
           accessibilityLabel={t('dashboard.author')}

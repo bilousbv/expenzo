@@ -1,3 +1,5 @@
+import type { CategoryKind } from '@expenzo/domain';
+
 /**
  * Query key factory shared by web and native.
  *
@@ -33,6 +35,10 @@ export const queryKeys = {
   },
   categories: {
     all: (householdId: string) => ['categories', householdId] as const,
+    // One entry per taxonomy, nested under the collection key: a picker asks
+    // for one kind, and a shared key would serve the expense list to the
+    // subscription picker as soon as either screen had been visited.
+    byKind: (householdId: string, kind: CategoryKind) => ['categories', householdId, kind] as const,
   },
   // Rates are reference data shared by every household, so this key is scoped
   // by base currency rather than by household — there is nothing in it that
@@ -51,6 +57,10 @@ export const queryKeys = {
   },
   subscriptions: {
     all: (householdId: string) => ['subscriptions', householdId] as const,
+    // Under the collection key, so adding or cancelling one invalidates the
+    // dashboard card and the subscriptions screen together.
+    upcoming: (householdId: string, window: { from: string; to: string }) =>
+      ['subscriptions', householdId, 'upcoming', window] as const,
   },
   // The catalogue is the same for every household and only a migration
   // changes it, so this key carries no household segment.

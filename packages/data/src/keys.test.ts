@@ -45,4 +45,45 @@ describe('queryKeys', () => {
       queryKeys.expenses.list(HOUSEHOLD, { memberId: MEMBER }),
     );
   });
+  /*
+   * The card and the subscriptions screen read the same rows through different
+   * queries, so adding a subscription has to invalidate both — which it does
+   * only while the narrower key sits under the broader one.
+   */
+  it('nests the upcoming-renewals key under the subscriptions key', () => {
+    const all = queryKeys.subscriptions.all(HOUSEHOLD);
+    const upcoming = queryKeys.subscriptions.upcoming(HOUSEHOLD, {
+      from: '2026-08-29',
+      to: '2026-09-05',
+    });
+
+    expect(upcoming.slice(0, all.length)).toEqual([...all]);
+  });
+
+  it('distinguishes one renewal window from another', () => {
+    expect(
+      queryKeys.subscriptions.upcoming(HOUSEHOLD, { from: '2026-08-29', to: '2026-09-05' }),
+    ).not.toEqual(
+      queryKeys.subscriptions.upcoming(HOUSEHOLD, { from: '2026-08-30', to: '2026-09-06' }),
+    );
+  });
+  /*
+   * The two taxonomies are fetched separately, so they need separate cache
+   * entries — one key for both would serve the expense list to the
+   * subscription picker.
+   */
+  it('keys each category taxonomy separately', () => {
+    expect(queryKeys.categories.byKind(HOUSEHOLD, 'expense')).not.toEqual(
+      queryKeys.categories.byKind(HOUSEHOLD, 'subscription'),
+    );
+  });
+
+  // Adding a category has to refresh whichever list it belongs to, and one
+  // invalidation covering both is simpler than deciding which.
+  it('nests them under the categories key', () => {
+    const all = queryKeys.categories.all(HOUSEHOLD);
+    const byKind = queryKeys.categories.byKind(HOUSEHOLD, 'subscription');
+
+    expect(byKind.slice(0, all.length)).toEqual([...all]);
+  });
 });

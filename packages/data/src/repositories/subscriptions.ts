@@ -23,6 +23,8 @@ export type SubscriptionRow = Pick<
   | 'anchor_day'
   | 'started_on'
   | 'next_renewal_on'
+  | 'trial_days'
+  | 'trial_ends_on'
   | 'category_id'
   | 'status'
   | 'notes'
@@ -35,7 +37,7 @@ export type ServiceRow = Pick<CatalogueRow, 'id' | 'slug' | 'name' | 'domain' | 
 // One literal rather than a concatenation: the generated client parses this
 // string as a type to infer the row shape, and it cannot see through a `+`.
 const COLUMNS =
-  'id, household_id, created_by, service_id, name, amount_minor, currency, cadence, interval_count, anchor_day, started_on, next_renewal_on, category_id, status, notes';
+  'id, household_id, created_by, service_id, name, amount_minor, currency, cadence, interval_count, anchor_day, started_on, next_renewal_on, trial_days, trial_ends_on, category_id, status, notes';
 
 /**
  * Every subscription the household has, active and cancelled alike.
@@ -54,6 +56,41 @@ export async function listSubscriptions(db: Db): Promise<SubscriptionRow[]> {
     // which have no next renewal, sit at the bottom rather than the top.
     .order('status', { ascending: true })
     .order('next_renewal_on', { ascending: true, nullsFirst: false })
+    .order('name', { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  return data ?? [];
+}
+
+/** The window an upcoming-renewals query covers, both ends inclusive. */
+export interface RenewalWindow {
+  readonly from: string;
+  readonly to: string;
+}
+
+/**
+ * The subscriptions billing inside the window, soonest first.
+ *
+ * Deliberately a query of its own rather than a filter over the full list: the
+ * status and the date bounds together are what let Postgres answer this from
+ * subscriptions_household_idx, which is partial on active, undeleted rows and
+ * ordered by the very column being ranged over.
+ * Filtering in the client would read every subscription the household has ever
+ * had to show the two that bill this week.
+ */
+export async function listUpcomingRenewals(
+  db: Db,
+  window: RenewalWindow,
+): Promise<SubscriptionRow[]> {
+  const { data, error } = await db
+    .from('subscriptions')
+    .select(COLUMNS)
+    .eq('status', 'active')
+    .is('deleted_at', null)
+    .gte('next_renewal_on', window.from)
+    .lte('next_renewal_on', window.to)
+    .order('next_renewal_on', { ascending: true })
     .order('name', { ascending: true });
 
   if (error) throw new Error(error.message);
@@ -95,6 +132,11 @@ export async function createSubscription(
       interval_count: parsed.intervalCount,
       anchor_day: parsed.anchorDay,
       started_on: parsed.startedOn,
+      // Null rather than omitted: an absent key would leave whatever was there
+      // before in place. trial_ends_on is deliberately absent — it is a
+      // generated column derived from these two, so there is only one place
+      // the trial end can come from.
+      trial_days: parsed.trialDays ?? null,
       category_id: parsed.categoryId ?? null,
       status: parsed.status,
       notes: parsed.notes ?? null,
@@ -130,6 +172,7 @@ export async function updateSubscription(
   if (changes.intervalCount !== undefined) patch.interval_count = changes.intervalCount;
   if (changes.anchorDay !== undefined) patch.anchor_day = changes.anchorDay;
   if (changes.startedOn !== undefined) patch.started_on = changes.startedOn;
+  if (changes.trialDays !== undefined) patch.trial_days = changes.trialDays;
   if (changes.categoryId !== undefined) patch.category_id = changes.categoryId;
   if (changes.status !== undefined) patch.status = changes.status;
   if (changes.notes !== undefined) patch.notes = changes.notes;

@@ -70,7 +70,16 @@ export function SubscriptionList() {
                     <span data-testid="subscription-next">
                       {cancelled
                         ? t('subscriptions.cancelled')
-                        : t('subscriptions.nextCharge', { date: row.next_renewal_on })}
+                        : /* While the trial runs the next charge *is* its end,
+                             so the date is the same and only the wording
+                             differs — it is the day cancelling stops being
+                             free. */
+                          t(
+                            row.trial_ends_on === row.next_renewal_on
+                              ? 'subscriptions.trialEnds'
+                              : 'subscriptions.nextCharge',
+                            { date: row.next_renewal_on },
+                          )}
                     </span>
                   </span>
                 </div>

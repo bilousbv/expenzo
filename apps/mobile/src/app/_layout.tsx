@@ -54,6 +54,16 @@ function RootNavigator() {
           name="expense/new"
           options={{ headerShown: true, title: t('nav.newExpense'), presentation: 'modal' }}
         />
+        {/* Presented the same way, for the same reason: the list is what the
+            subscriptions tab is for, and adding one is an occasional errand. */}
+        <Stack.Screen
+          name="subscription/new"
+          options={{
+            headerShown: true,
+            title: t('subscriptions.addDialogTitle'),
+            presentation: 'modal',
+          }}
+        />
       </Stack.Protected>
 
       <Stack.Protected guard={!session}>

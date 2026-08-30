@@ -92,3 +92,26 @@ describe('updateCategoryInput', () => {
     expect(updateCategoryInput.safeParse({ id: ID, name: '  ' }).success).toBe(false);
   });
 });
+
+describe('the kind a category belongs to', () => {
+  /*
+   * "Streaming" is an answer to "what do we pay for every month" and
+   * "Groceries" is an answer to "what did we spend money on last week". They
+   * are two lists, and a category has to say which one it is in.
+   */
+  it('accepts a subscription category', () => {
+    expect(createCategoryInput.parse({ name: 'Streaming', kind: 'subscription' }).kind).toBe(
+      'subscription',
+    );
+  });
+
+  // Everything that existed before the split was an expense category, and
+  // every caller that has not been told about kinds still means one.
+  it('defaults to the expense taxonomy', () => {
+    expect(createCategoryInput.parse({ name: 'Coffee' }).kind).toBe('expense');
+  });
+
+  it('refuses a kind that is neither', () => {
+    expect(createCategoryInput.safeParse({ name: 'Coffee', kind: 'wishlist' }).success).toBe(false);
+  });
+});

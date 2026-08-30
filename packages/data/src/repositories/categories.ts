@@ -1,5 +1,6 @@
 import {
   createCategoryInput,
+  type CategoryKind,
   slugify,
   updateCategoryInput,
   type CreateCategoryInput,
@@ -27,10 +28,11 @@ export type CategoryRow = Pick<
   | 'is_system'
   | 'sort_order'
   | 'archived_at'
+  | 'kind'
 >;
 
 const COLUMNS =
-  'id, household_id, slug, name, icon, color, parent_id, is_system, sort_order, archived_at';
+  'id, household_id, slug, name, icon, color, parent_id, is_system, sort_order, archived_at, kind';
 
 /** Postgres' unique_violation. */
 const UNIQUE_VIOLATION = '23505';
@@ -42,11 +44,18 @@ const UNIQUE_VIOLATION = '23505';
  * plus the caller's household, and a filter here could only narrow that
  * further. Filtering on household_id would in fact drop every system category,
  * because theirs is null.
+ *
+ * One kind at a time, defaulting to expenses: a picker asks about one
+ * taxonomy, and every caller that predates the split means that one.
  */
-export async function listCategories(db: Db): Promise<CategoryRow[]> {
+export async function listCategories(
+  db: Db,
+  kind: CategoryKind = 'expense',
+): Promise<CategoryRow[]> {
   const { data, error } = await db
     .from('categories')
     .select(COLUMNS)
+    .eq('kind', kind)
     .is('archived_at', null)
     .order('sort_order')
     .order('name');
@@ -69,6 +78,7 @@ export async function createCategory(
       // Named explicitly because the write policy's WITH CHECK compares it and
       // the column has no default. is_system is generated from it.
       household_id: householdId,
+      kind: parsed.kind,
       slug: slugify(parsed.name),
       name: parsed.name,
       icon: parsed.icon ?? null,

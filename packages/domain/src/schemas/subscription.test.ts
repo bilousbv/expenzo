@@ -90,3 +90,43 @@ describe('anchorDayFor', () => {
     expect(() => anchorDayFor('the twelfth')).toThrow(/date/i);
   });
 });
+
+describe('a subscription on trial', () => {
+  const base = {
+    name: 'Netflix',
+    amountMinor: 1599,
+    currency: 'USD',
+    cadence: 'monthly' as const,
+    anchorDay: 12,
+    startedOn: '2026-01-12',
+  };
+
+  it('accepts a length in free days', () => {
+    const parsed = createSubscriptionInput.parse({ ...base, trialDays: 30 });
+
+    expect(parsed.trialDays).toBe(30);
+  });
+
+  // Absent rather than zero: nought free days is not a trial, and a column
+  // holding 0 would make "is this on trial" two questions instead of one.
+  it('leaves it absent when there is no trial', () => {
+    expect(createSubscriptionInput.parse(base).trialDays).toBeUndefined();
+  });
+
+  it('refuses a trial of no days at all', () => {
+    expect(createSubscriptionInput.safeParse({ ...base, trialDays: 0 }).success).toBe(false);
+  });
+
+  /*
+   * A year is the longest trial anybody actually offers. Past that it is a
+   * typo, and a typo here pushes the first charge out of sight — which is the
+   * one thing this feature exists to prevent.
+   */
+  it('refuses one longer than a year', () => {
+    expect(createSubscriptionInput.safeParse({ ...base, trialDays: 400 }).success).toBe(false);
+  });
+
+  it('refuses a fractional number of days', () => {
+    expect(createSubscriptionInput.safeParse({ ...base, trialDays: 7.5 }).success).toBe(false);
+  });
+});
