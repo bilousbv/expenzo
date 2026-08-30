@@ -1,6 +1,11 @@
 'use client';
 
-import { createCategoryInput, VALIDATION_PARAMS, type CreateCategoryInput } from '@expenzo/domain';
+import {
+  createCategoryInput,
+  VALIDATION_PARAMS,
+  type CategoryKind,
+  type CreateCategoryInput,
+} from '@expenzo/domain';
 import { useTranslation } from '@expenzo/i18n';
 import {
   buttonContainerClass,
@@ -24,11 +29,13 @@ export const PALETTE = [
 
 export interface CategoryFormProps {
   onCreate: (input: CreateCategoryInput) => Promise<void>;
+  /** Which taxonomy the new category joins. Defaults to expenses. */
+  kind?: CategoryKind;
   /** Set while the household this category would belong to is still loading. */
   disabled?: boolean;
 }
 
-export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) {
+export function CategoryForm({ onCreate, kind = 'expense', disabled = false }: CategoryFormProps) {
   const nameId = useId();
   const { t } = useTranslation();
   const [name, setName] = useState('');
@@ -51,7 +58,7 @@ export function CategoryForm({ onCreate, disabled = false }: CategoryFormProps) 
 
     // The same schema the repository validates against, so the browser and the
     // database agree on what a category is.
-    const parsed = createCategoryInput.safeParse({ name, color });
+    const parsed = createCategoryInput.safeParse({ name, color, kind });
 
     if (!parsed.success) {
       setError(

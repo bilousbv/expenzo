@@ -22,6 +22,7 @@ const system: CategoryRow = {
   is_system: true,
   sort_order: 10,
   archived_at: null,
+  kind: 'expense',
 };
 
 const custom: CategoryRow = {
@@ -64,7 +65,10 @@ function newQueryClient() {
 }
 
 describe('useCategories', () => {
-  it('caches under the shared key, so an invalidation from anywhere reaches it', async () => {
+  // Under the collection key rather than at it, since the split into two
+  // taxonomies: an invalidation of the collection still reaches both lists,
+  // which is what keeps every screen picking a new category up.
+  it('caches under the collection key, so an invalidation from anywhere reaches it', async () => {
     const client = newQueryClient();
     const { result } = renderHook(() => useCategories(HOUSEHOLD), {
       wrapper: wrapper(fakeDb([system, custom]), client),
@@ -72,7 +76,9 @@ describe('useCategories', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(client.getQueryData(queryKeys.categories.all(HOUSEHOLD))).toHaveLength(2);
+    const key = queryKeys.categories.byKind(HOUSEHOLD, 'expense');
+    expect(client.getQueryData(key)).toHaveLength(2);
+    expect(key.slice(0, 2)).toEqual([...queryKeys.categories.all(HOUSEHOLD)]);
   });
 
   // System categories come back with a null household_id, so a naive consumer
@@ -112,5 +118,24 @@ describe('useCreateCategory', () => {
     await result.current.mutateAsync({ name: 'Coffee', sortOrder: 500 });
 
     expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.categories.all(HOUSEHOLD) });
+  });
+  /*
+   * Two lists, two cache entries. Sharing one key would show "Groceries" in
+   * the subscription picker as soon as the expense screen had been visited.
+   */
+  it('caches the two taxonomies apart', async () => {
+    const db = fakeDb([system]);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+    const { result } = renderHook(() => useCategories(HOUSEHOLD, 'subscription'), {
+      wrapper: wrapper(db, client),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(
+      client.getQueryData(queryKeys.categories.byKind(HOUSEHOLD, 'subscription')),
+    ).toHaveLength(1);
+    expect(client.getQueryData(queryKeys.categories.byKind(HOUSEHOLD, 'expense'))).toBeUndefined();
   });
 });

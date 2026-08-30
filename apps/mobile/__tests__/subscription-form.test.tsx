@@ -34,13 +34,13 @@ const CATEGORIES: CategoryOption[] = [
   },
 ];
 
-function renderForm(onCreate: jest.Mock<Create>) {
+function renderForm(onCreate: jest.Mock<Create>, today = '2026-08-27') {
   render(
     <SubscriptionForm
       currency="USD"
       services={SERVICES}
       categories={CATEGORIES}
-      today="2026-08-27"
+      today={today}
       onCreate={onCreate}
     />,
   );
@@ -147,5 +147,63 @@ describe('SubscriptionForm (native)', () => {
 
     await waitFor(() => expect(screen.getByTestId('subscription-error')).toBeTruthy());
     expect(screen.getByTestId('subscription-name').props.value).toBe('Netflix');
+  });
+});
+
+describe('a subscription that starts as a free trial (native)', () => {
+  /*
+   * The days are hidden until the trial is switched on: a "free days" box on
+   * every subscription reads as a required field, and most have no trial.
+   */
+  it('asks for the free days only once a trial is declared', () => {
+    renderForm(jest.fn<Create>());
+
+    expect(screen.queryByTestId('subscription-trial-days')).toBeNull();
+
+    fireEvent.press(screen.getByTestId('subscription-trial'));
+
+    expect(screen.getByTestId('subscription-trial-days')).toBeTruthy();
+  });
+
+  it('sends the trial length', async () => {
+    const onCreate = jest.fn<Create>().mockResolvedValue(undefined);
+    renderForm(onCreate);
+
+    fireEvent.changeText(screen.getByTestId('subscription-name'), 'Netflix');
+    fireEvent.changeText(screen.getByTestId('amount-field'), '15.99');
+    fireEvent.press(screen.getByTestId('subscription-trial'));
+    fireEvent.changeText(screen.getByTestId('subscription-trial-days'), '30');
+    fireEvent.press(screen.getByTestId('subscription-submit'));
+
+    await waitFor(() => expect(onCreate).toHaveBeenCalled());
+    expect(onCreate.mock.calls[0]?.[0]).toMatchObject({ trialDays: 30 });
+  });
+
+  /*
+   * Billing runs from the end of the trial rather than the sign-up date, so a
+   * 30-day trial started on 1 August bills on the 31st. The database computes
+   * the same thing, and the two have to agree.
+   */
+  it('anchors the billing day to the end of the trial', async () => {
+    const onCreate = jest.fn<Create>().mockResolvedValue(undefined);
+    renderForm(onCreate, '2026-08-01');
+
+    fireEvent.changeText(screen.getByTestId('subscription-name'), 'Netflix');
+    fireEvent.changeText(screen.getByTestId('amount-field'), '15.99');
+    fireEvent.press(screen.getByTestId('subscription-trial'));
+    fireEvent.changeText(screen.getByTestId('subscription-trial-days'), '30');
+    fireEvent.press(screen.getByTestId('subscription-submit'));
+
+    await waitFor(() => expect(onCreate).toHaveBeenCalled());
+    expect(onCreate.mock.calls[0]?.[0]).toMatchObject({ anchorDay: 31 });
+  });
+
+  it('says when the trial would run out', () => {
+    renderForm(jest.fn<Create>(), '2026-08-27');
+
+    fireEvent.press(screen.getByTestId('subscription-trial'));
+    fireEvent.changeText(screen.getByTestId('subscription-trial-days'), '7');
+
+    expect(screen.getByTestId('subscription-trial-ends')).toHaveTextContent(/2026-09-03/);
   });
 });

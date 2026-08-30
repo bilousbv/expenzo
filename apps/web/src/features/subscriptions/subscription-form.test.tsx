@@ -196,3 +196,94 @@ describe('SubscriptionForm', () => {
     await waitFor(() => expect(screen.getByTestId('subscription-name')).toHaveValue(''));
   });
 });
+
+describe('a subscription that starts as a free trial', () => {
+  /*
+   * The days are hidden until the trial is switched on. A "free days" box
+   * sitting there empty on every subscription reads as a required field, and
+   * most subscriptions have no trial at all.
+   */
+  it('asks for the free days only once a trial is declared', async () => {
+    renderForm(vi.fn());
+
+    expect(screen.queryByTestId('subscription-trial-days')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByTestId('subscription-trial'));
+
+    expect(screen.getByTestId('subscription-trial-days')).toBeInTheDocument();
+  });
+
+  it('sends the trial length', async () => {
+    const onCreate = vi.fn().mockResolvedValue(undefined);
+    renderForm(onCreate);
+
+    await userEvent.type(screen.getByTestId('subscription-name'), 'Netflix');
+    await userEvent.type(screen.getByLabelText('Amount'), '15.99');
+    await userEvent.click(screen.getByTestId('subscription-trial'));
+    await userEvent.clear(screen.getByTestId('subscription-trial-days'));
+    await userEvent.type(screen.getByTestId('subscription-trial-days'), '30');
+    await userEvent.click(screen.getByTestId('subscription-submit'));
+
+    await waitFor(() =>
+      expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ trialDays: 30 })),
+    );
+  });
+
+  /*
+   * Billing runs from the end of the trial rather than from the sign-up date,
+   * so the anchor is the day of the first charge: a 30-day trial started on 1
+   * August bills on the 31st and monthly from there. The database computes the
+   * same thing; if this disagreed, the date previewed would not be the date
+   * stored.
+   */
+  it('anchors the billing day to the end of the trial', async () => {
+    const onCreate = vi.fn().mockResolvedValue(undefined);
+    render(
+      <SubscriptionForm
+        currency="USD"
+        services={SERVICES}
+        categories={CATEGORIES}
+        today="2026-08-01"
+        onCreate={onCreate}
+      />,
+    );
+
+    await userEvent.type(screen.getByTestId('subscription-name'), 'Netflix');
+    await userEvent.type(screen.getByLabelText('Amount'), '15.99');
+    await userEvent.click(screen.getByTestId('subscription-trial'));
+    await userEvent.clear(screen.getByTestId('subscription-trial-days'));
+    await userEvent.type(screen.getByTestId('subscription-trial-days'), '30');
+    await userEvent.click(screen.getByTestId('subscription-submit'));
+
+    await waitFor(() =>
+      expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({ anchorDay: 31 })),
+    );
+  });
+
+  // Switching the trial back off has to take the days with it, or a number
+  // typed and then thought better of still reaches the database.
+  it('drops the days again when the trial is switched off', async () => {
+    const onCreate = vi.fn().mockResolvedValue(undefined);
+    renderForm(onCreate);
+
+    await userEvent.type(screen.getByTestId('subscription-name'), 'Netflix');
+    await userEvent.type(screen.getByLabelText('Amount'), '15.99');
+    await userEvent.click(screen.getByTestId('subscription-trial'));
+    await userEvent.click(screen.getByTestId('subscription-trial'));
+    await userEvent.click(screen.getByTestId('subscription-submit'));
+
+    await waitFor(() => expect(onCreate).toHaveBeenCalled());
+    expect(onCreate.mock.calls[0]?.[0].trialDays).toBeUndefined();
+  });
+
+  it('says when the trial would run out', async () => {
+    renderForm(vi.fn());
+
+    await userEvent.click(screen.getByTestId('subscription-trial'));
+    await userEvent.clear(screen.getByTestId('subscription-trial-days'));
+    await userEvent.type(screen.getByTestId('subscription-trial-days'), '7');
+
+    // today is 2026-08-27 in this fixture.
+    expect(screen.getByTestId('subscription-trial-ends')).toHaveTextContent('2026-09-03');
+  });
+});

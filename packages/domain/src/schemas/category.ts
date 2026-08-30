@@ -29,8 +29,23 @@ const categoryName = z
   // the user gets a sentence rather than a constraint name.
   .refine((value) => slugify(value).length > 0, 'validation.category.nameNeedsCharacter');
 
+/**
+ * Which list a category belongs to.
+ *
+ * "Streaming" answers "what do we pay for every month"; "Groceries" answers
+ * "what did we spend money on last week". They are two taxonomies, and mixing
+ * them into one list made each of them harder to read.
+ */
+export const categoryKindSchema = z.enum(['expense', 'subscription']);
+
+export type CategoryKind = z.infer<typeof categoryKindSchema>;
+
 export const createCategoryInput = z.object({
   name: categoryName,
+  // Defaulted, not required: everything that existed before the split was an
+  // expense category, and every caller that has not been told about kinds
+  // still means one.
+  kind: categoryKindSchema.default('expense'),
   icon: optionalText,
   color: hexColorSchema.optional(),
   parentId: uuidSchema.optional(),

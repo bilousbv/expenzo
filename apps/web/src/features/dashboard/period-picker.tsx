@@ -5,7 +5,7 @@ import { useTranslation } from '@expenzo/i18n';
 import { buttonContainerClass, buttonLabelClass, fieldInputClass } from '@expenzo/ui';
 import { useId, useState } from 'react';
 
-import { ExpenseDialog } from '@/features/expenses/expense-dialog';
+import { FormDialog } from '@/features/layout/form-dialog';
 
 export interface PeriodPickerProps {
   open: boolean;
@@ -66,7 +66,7 @@ export function PeriodPicker({ open, onClose, range, timeZone, onPick }: PeriodP
   }
 
   return (
-    <ExpenseDialog
+    <FormDialog
       open={open}
       onClose={onClose}
       title={t('period.pick')}
@@ -136,6 +136,6 @@ export function PeriodPicker({ open, onClose, range, timeZone, onPick }: PeriodP
           <span className={buttonLabelClass('primary', 'md')}>{t('period.apply')}</span>
         </button>
       </div>
-    </ExpenseDialog>
+    </FormDialog>
   );
 }

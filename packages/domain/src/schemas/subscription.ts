@@ -67,6 +67,19 @@ export const createSubscriptionInput = z.object({
     .min(1, 'validation.subscription.anchorDay')
     .max(31, 'validation.subscription.anchorDay'),
   startedOn: isoDateSchema,
+  /*
+   * How many days are free. Absent rather than zero when there is no trial:
+   * nought free days is not a trial, and a column holding 0 would make "is
+   * this on trial" two questions instead of one. A year is the longest trial
+   * anybody offers; past that it is a typo, and a typo here pushes the first
+   * charge out of sight.
+   */
+  trialDays: z
+    .number()
+    .int('validation.subscription.trialDays')
+    .min(1, 'validation.subscription.trialDays')
+    .max(365, 'validation.subscription.trialDays')
+    .optional(),
   categoryId: uuidSchema.optional(),
   status: subscriptionStatusSchema.default('active'),
   notes: z

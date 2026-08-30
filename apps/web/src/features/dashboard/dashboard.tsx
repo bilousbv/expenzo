@@ -10,6 +10,7 @@ import {
   useLimits,
   usePeriodSummary,
   useSupportedCurrencies,
+  useUpcomingRenewals,
 } from '@expenzo/data';
 import {
   describePeriod,
@@ -17,6 +18,7 @@ import {
   periodUnit,
   localDateIn,
   presetRange,
+  renewalWindow,
   shiftPeriod,
   type CreateExpenseInput,
   type DateRange,
@@ -36,12 +38,13 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import { ExpenseDialog } from '@/features/expenses/expense-dialog';
+import { FormDialog } from '@/features/layout/form-dialog';
 import { ExpenseForm } from '@/features/expenses/expense-form';
 
 import { BudgetSummary } from './budget-summary';
 import { PeriodPicker } from './period-picker';
 import { CategoryBreakdown, type CategoryBreakdownRow } from './category-breakdown';
+import { UpcomingRenewals } from './upcoming-renewals';
 
 export function Dashboard({ userId }: { userId: string | undefined }) {
   const { t, i18n } = useTranslation();
@@ -110,6 +113,17 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
   const categorySpend = useCategorySpend(householdId, window);
   const create = useCreateExpense(householdId, userId);
 
+  /*
+   * Today on the household's own calendar, so a charge due tonight in Madrid
+   * reads as today rather than as tomorrow because UTC has not caught up.
+   */
+  const today = useMemo(() => localDateIn(new Date(), timeZone), [timeZone]);
+  const renewalRange = useMemo(() => {
+    const window = renewalWindow(today);
+    return { from: window.start, to: window.end };
+  }, [today]);
+  const renewals = useUpcomingRenewals(householdId, renewalRange);
+
   const options: CategoryOption[] = (categories.data ?? []).map((category) => ({
     id: category.id,
     name: category.name,
@@ -137,6 +151,28 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
       };
     })
     .sort((a, b) => b.spentMinor - a.spentMinor);
+
+  /*
+   * A cancelled subscription has no next renewal, so the null is dropped
+   * rather than rendered as a charge with no date.
+   */
+  const renewalRows = (renewals.data ?? []).flatMap((row) =>
+    row.next_renewal_on
+      ? [
+          {
+            id: row.id,
+            name: row.name,
+            amountMinor: row.amount_minor,
+            currency: row.currency,
+            renewalOn: row.next_renewal_on,
+            // While a trial runs the trigger points the renewal at its end, so
+            // the two dates agreeing is what says this charge is the end of a
+            // free period rather than an ordinary renewal.
+            trial: row.trial_ends_on === row.next_renewal_on,
+          },
+        ]
+      : [],
+  );
 
   const overallLimit = limitFor.get(null) ?? null;
 
@@ -192,6 +228,10 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
       {/* Everything below the panel sits on the grey app background, which is
           what makes the panel read as the one thing worth looking at first. */}
       <div className="flex flex-col gap-gutter p-gutter">
+        {/* Above the filters, because it is the one thing on this screen that
+            has not happened yet: everything below is money already spent. */}
+        <UpcomingRenewals rows={renewalRows} today={today} loading={renewals.isPending} />
+
         <Card className="gap-gutter">
           <div
             role="radiogroup"
@@ -283,7 +323,7 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
           />
         ) : null}
 
-        <ExpenseDialog
+        <FormDialog
           open={adding}
           onClose={() => setAdding(false)}
           title={t('expenses.addDialogTitle')}
@@ -299,7 +339,7 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
             onCreate={handleCreate}
             disabled={!householdId}
           />
-        </ExpenseDialog>
+        </FormDialog>
 
         <PeriodPicker
           open={picking}

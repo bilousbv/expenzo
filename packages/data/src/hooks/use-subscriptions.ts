@@ -9,7 +9,9 @@ import {
   deleteSubscription,
   listServices,
   listSubscriptions,
+  listUpcomingRenewals,
   updateSubscription,
+  type RenewalWindow,
   type ServiceRow,
   type SubscriptionRow,
 } from '../repositories/subscriptions';
@@ -20,6 +22,23 @@ export function useSubscriptions(householdId: string | undefined) {
   return useQuery<SubscriptionRow[]>({
     queryKey: queryKeys.subscriptions.all(householdId ?? ''),
     queryFn: () => listSubscriptions(db),
+    enabled: Boolean(householdId),
+  });
+}
+
+/**
+ * What bills inside the window, for the dashboard card.
+ *
+ * A query of its own rather than a slice of the full list: it is the narrow
+ * one the partial index serves, and the dashboard should not have to load
+ * every subscription the household has ever had to show the two due this week.
+ */
+export function useUpcomingRenewals(householdId: string | undefined, window: RenewalWindow) {
+  const db = useSupabase();
+
+  return useQuery<SubscriptionRow[]>({
+    queryKey: queryKeys.subscriptions.upcoming(householdId ?? '', window),
+    queryFn: () => listUpcomingRenewals(db, window),
     enabled: Boolean(householdId),
   });
 }

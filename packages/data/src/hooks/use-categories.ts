@@ -1,4 +1,4 @@
-import type { CreateCategoryInput, UpdateCategoryInput } from '@expenzo/domain';
+import type { CategoryKind, CreateCategoryInput, UpdateCategoryInput } from '@expenzo/domain';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '../keys';
@@ -19,12 +19,12 @@ import {
  * key without it would be shared across households and could serve one
  * household's list to another after a switch.
  */
-export function useCategories(householdId: string | undefined) {
+export function useCategories(householdId: string | undefined, kind: CategoryKind = 'expense') {
   const db = useSupabase();
 
   return useQuery<CategoryRow[]>({
-    queryKey: queryKeys.categories.all(householdId ?? ''),
-    queryFn: () => listCategories(db),
+    queryKey: queryKeys.categories.byKind(householdId ?? '', kind),
+    queryFn: () => listCategories(db, kind),
     enabled: Boolean(householdId),
   });
 }

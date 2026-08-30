@@ -20,6 +20,7 @@ export type Database = {
           icon: string | null
           id: string
           is_system: boolean
+          kind: Database["public"]["Enums"]["category_kind"]
           name: string
           parent_id: string | null
           slug: string
@@ -33,6 +34,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_system?: boolean
+          kind?: Database["public"]["Enums"]["category_kind"]
           name: string
           parent_id?: string | null
           slug: string
@@ -46,6 +48,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_system?: boolean
+          kind?: Database["public"]["Enums"]["category_kind"]
           name?: string
           parent_id?: string | null
           slug?: string
@@ -552,6 +555,8 @@ export type Database = {
           service_id: string | null
           started_on: string
           status: Database["public"]["Enums"]["subscription_status"]
+          trial_days: number | null
+          trial_ends_on: string | null
           updated_at: string
         }
         Insert: {
@@ -572,6 +577,8 @@ export type Database = {
           service_id?: string | null
           started_on: string
           status?: Database["public"]["Enums"]["subscription_status"]
+          trial_days?: number | null
+          trial_ends_on?: string | null
           updated_at?: string
         }
         Update: {
@@ -592,6 +599,8 @@ export type Database = {
           service_id?: string | null
           started_on?: string
           status?: Database["public"]["Enums"]["subscription_status"]
+          trial_days?: number | null
+          trial_ends_on?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -651,6 +660,7 @@ export type Database = {
       }
     }
     Enums: {
+      category_kind: "expense" | "subscription"
       expense_direction: "spend" | "income"
       expense_source: "manual" | "receipt_scan" | "email" | "wallet" | "import"
       invitation_status: "pending" | "accepted" | "revoked" | "expired"
@@ -792,6 +802,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      category_kind: ["expense", "subscription"],
       expense_direction: ["spend", "income"],
       expense_source: ["manual", "receipt_scan", "email", "wallet", "import"],
       invitation_status: ["pending", "accepted", "revoked", "expired"],
