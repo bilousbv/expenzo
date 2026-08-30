@@ -93,10 +93,22 @@ export default function SettingsTab() {
                     {member.displayName}
                   </Text>
                 </View>
-                <Text className="text-sm text-content-muted">{member.role}</Text>
+                <Text className="text-sm text-content-muted">
+                  {t(`household.roles.${member.role}`)}
+                </Text>
               </View>
             ))
           )}
+
+          {/* Read-only here. Inviting and changing what somebody is happen on
+              a screen of their own, so this tab stays a summary. */}
+          <Button
+            testID="open-household"
+            variant="secondary"
+            onPress={() => router.push('/household')}
+          >
+            {t('nav.manageHousehold')}
+          </Button>
         </Card>
 
         <Card className="gap-gutter">

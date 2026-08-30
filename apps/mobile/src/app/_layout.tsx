@@ -1,14 +1,15 @@
 import { SupabaseProvider } from '@expenzo/data';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useTranslation } from '@expenzo/i18n';
 
 import { SessionProvider, useSession } from '../features/auth/use-session';
+import { takePendingInvite } from '../features/household/pending-invite';
 import { LocaleProvider } from '../lib/i18n';
 import { ThemeProvider } from '../lib/theme';
 import { supabase } from '../lib/supabase';
@@ -20,6 +21,20 @@ import '../../global.css';
 function RootNavigator() {
   const { t } = useTranslation();
   const { session, loading } = useSession();
+
+  /*
+   * An invitation opened before signing in.
+   *
+   * `Stack.Protected` swaps the whole tree when the session arrives, so the
+   * screen that was holding the token is gone by then. Replaying it here is
+   * what makes "open the link, register, land in the household" one act.
+   */
+  useEffect(() => {
+    if (!session) return;
+
+    const token = takePendingInvite();
+    if (token) router.replace(`/invite/${token}`);
+  }, [session]);
 
   // Reading the stored session is asynchronous. Rendering the navigator before
   // it resolves would flash the sign-in screen at an already-signed-in user.
@@ -47,6 +62,19 @@ function RootNavigator() {
         <Stack.Screen
           name="profile"
           options={{ headerShown: true, title: t('profile.title'), presentation: 'modal' }}
+        />
+        {/* Also configuration: who is in the household and what they may do. */}
+        <Stack.Screen
+          name="household"
+          options={{ headerShown: true, title: t('household.title') }}
+        />
+        <Stack.Screen
+          name="household/invite"
+          options={{
+            headerShown: true,
+            title: t('household.inviteSomeone'),
+            presentation: 'modal',
+          }}
         />
         {/* Its own route because M6 deep-links straight here from a wallet
             payment: expenzo://expense/new. */}
@@ -76,6 +104,11 @@ function RootNavigator() {
 
       {/* Reachable either way: it is what completes the sign-in. */}
       <Stack.Screen name="(auth)/callback" />
+
+      {/* Also both ways, and for the same kind of reason: expenzo://invite/…
+          is opened by somebody who may not have an account yet, which is the
+          case the screen exists to handle. */}
+      <Stack.Screen name="invite/[token]" options={{ headerShown: false }} />
     </Stack>
   );
 }

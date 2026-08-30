@@ -276,6 +276,7 @@ export type Database = {
           household_id: string
           id: string
           invited_by: string
+          role: Database["public"]["Enums"]["member_role"]
           status: Database["public"]["Enums"]["invitation_status"]
           token_hash: string
         }
@@ -288,6 +289,7 @@ export type Database = {
           household_id: string
           id?: string
           invited_by: string
+          role?: Database["public"]["Enums"]["member_role"]
           status?: Database["public"]["Enums"]["invitation_status"]
           token_hash: string
         }
@@ -300,6 +302,7 @@ export type Database = {
           household_id?: string
           id?: string
           invited_by?: string
+          role?: Database["public"]["Enums"]["member_role"]
           status?: Database["public"]["Enums"]["invitation_status"]
           token_hash?: string
         }
@@ -641,7 +644,10 @@ export type Database = {
         }[]
       }
       create_household_invitation: {
-        Args: { invitee_email: string }
+        Args: {
+          invitee_email: string
+          invitee_role?: Database["public"]["Enums"]["member_role"]
+        }
         Returns: string
       }
       daily_net: {
@@ -658,6 +664,23 @@ export type Database = {
           total_minor: number
         }[]
       }
+      invitation_preview: {
+        Args: { token: string }
+        Returns: {
+          account_exists: boolean
+          household_name: string
+          invitee_email: string
+          invitee_role: string
+        }[]
+      }
+      remove_household_member: { Args: { member: string }; Returns: undefined }
+      set_member_role: {
+        Args: {
+          member: string
+          new_role: Database["public"]["Enums"]["member_role"]
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       category_kind: "expense" | "subscription"
@@ -665,7 +688,7 @@ export type Database = {
       expense_source: "manual" | "receipt_scan" | "email" | "wallet" | "import"
       invitation_status: "pending" | "accepted" | "revoked" | "expired"
       limit_period: "weekly" | "monthly" | "yearly"
-      member_role: "owner" | "adult" | "viewer"
+      member_role: "owner" | "adult" | "viewer" | "child"
       member_status: "active" | "removed"
       review_status: "confirmed" | "needs_review" | "rejected"
       subscription_cadence:
@@ -807,7 +830,7 @@ export const Constants = {
       expense_source: ["manual", "receipt_scan", "email", "wallet", "import"],
       invitation_status: ["pending", "accepted", "revoked", "expired"],
       limit_period: ["weekly", "monthly", "yearly"],
-      member_role: ["owner", "adult", "viewer"],
+      member_role: ["owner", "adult", "viewer", "child"],
       member_status: ["active", "removed"],
       review_status: ["confirmed", "needs_review", "rejected"],
       subscription_cadence: [

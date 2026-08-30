@@ -25,6 +25,8 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
   const { t } = useTranslation();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('next') ?? '/';
+  // Carried by an invitation link, which knows which address it was sent to.
+  const invitedEmail = searchParams.get('email') ?? '';
 
   const registering = mode === 'signUp';
 
@@ -84,7 +86,7 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
 
   return (
     <div className="flex flex-col gap-gutter">
-      <CredentialsForm mode={mode} onSubmit={submitCredentials} />
+      <CredentialsForm mode={mode} onSubmit={submitCredentials} initialEmail={invitedEmail} />
 
       <OAuthButtons providers={[...env().oauthProviders]} onSignIn={signInWithProvider} />
 

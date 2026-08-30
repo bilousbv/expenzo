@@ -4,12 +4,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { InviteForm } from './invite-form';
 
-const ORIGIN = 'https://expenzo.app';
-
 describe('InviteForm', () => {
   it('rejects a malformed address without calling the server', async () => {
     const onInvite = vi.fn();
-    render(<InviteForm onInvite={onInvite} origin={ORIGIN} />);
+    render(<InviteForm onInvite={onInvite} />);
 
     await userEvent.type(screen.getByLabelText(/email/i), 'nope');
     await userEvent.click(screen.getByRole('button', { name: /invite/i }));
@@ -18,39 +16,48 @@ describe('InviteForm', () => {
     expect(onInvite).not.toHaveBeenCalled();
   });
 
-  it('shows a shareable link built from the returned token', async () => {
-    const onInvite = vi.fn().mockResolvedValue('tok_abc123');
-    render(<InviteForm onInvite={onInvite} origin={ORIGIN} />);
+  it('invites an adult unless told otherwise', async () => {
+    const onInvite = vi.fn().mockResolvedValue(undefined);
+    render(<InviteForm onInvite={onInvite} />);
 
     await userEvent.type(screen.getByLabelText(/email/i), 'ben@example.com');
     await userEvent.click(screen.getByRole('button', { name: /invite/i }));
 
-    const link = await screen.findByTestId('invite-link');
-    expect(link).toHaveTextContent(`${ORIGIN}/invite/tok_abc123`);
-    expect(onInvite).toHaveBeenCalledWith('ben@example.com');
+    await waitFor(() =>
+      expect(onInvite).toHaveBeenCalledWith({ email: 'ben@example.com', role: 'adult' }),
+    );
   });
 
-  // The token is a bearer credential — anyone holding the link can join the
-  // household — so it must not be left on screen once it has been handed over.
-  it('can hide the link again once it has been shared', async () => {
-    const onInvite = vi.fn().mockResolvedValue('tok_abc123');
-    render(<InviteForm onInvite={onInvite} origin={ORIGIN} />);
+  it('sends the role that was chosen', async () => {
+    const onInvite = vi.fn().mockResolvedValue(undefined);
+    render(<InviteForm onInvite={onInvite} />);
+
+    await userEvent.type(screen.getByLabelText(/email/i), 'kid@example.com');
+    await userEvent.click(screen.getByTestId('invite-role-child'));
+    await userEvent.click(screen.getByRole('button', { name: /invite/i }));
+
+    await waitFor(() =>
+      expect(onInvite).toHaveBeenCalledWith({ email: 'kid@example.com', role: 'child' }),
+    );
+  });
+
+  // The token is a bearer credential and now exists only in the email. Showing
+  // it on the settings screen made the invitation as private as that screen.
+  it('confirms the send without showing a link', async () => {
+    const onInvite = vi.fn().mockResolvedValue(undefined);
+    render(<InviteForm onInvite={onInvite} />);
 
     await userEvent.type(screen.getByLabelText(/email/i), 'ben@example.com');
     await userEvent.click(screen.getByRole('button', { name: /invite/i }));
-    await screen.findByTestId('invite-link');
 
-    await userEvent.click(screen.getByRole('button', { name: /done/i }));
-
+    expect(await screen.findByTestId('invite-sent')).toHaveTextContent(/ben@example.com/);
     expect(screen.queryByTestId('invite-link')).not.toBeInTheDocument();
   });
 
   it('disables the button while the request is in flight', async () => {
     let release: () => void = () => {};
-    const onInvite = vi.fn(
-      () => new Promise<string>((resolve) => (release = () => resolve('tok'))),
-    );
-    render(<InviteForm onInvite={onInvite} origin={ORIGIN} />);
+    const onInvite = vi.fn(() => new Promise<void>((resolve) => (release = resolve)));
+    render(<InviteForm onInvite={onInvite} />);
 
     await userEvent.type(screen.getByLabelText(/email/i), 'ben@example.com');
     await userEvent.click(screen.getByRole('button', { name: /invit/i }));
@@ -61,7 +68,7 @@ describe('InviteForm', () => {
 
   it('surfaces a server failure', async () => {
     const onInvite = vi.fn().mockRejectedValue(new Error('Only an owner or adult can invite'));
-    render(<InviteForm onInvite={onInvite} origin={ORIGIN} />);
+    render(<InviteForm onInvite={onInvite} />);
 
     await userEvent.type(screen.getByLabelText(/email/i), 'ben@example.com');
     await userEvent.click(screen.getByRole('button', { name: /invite/i }));

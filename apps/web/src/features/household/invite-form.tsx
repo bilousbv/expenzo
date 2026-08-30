@@ -1,39 +1,53 @@
 'use client';
 
+import { invitableRoleSchema, inviteInput, type InvitableRole } from '@expenzo/domain';
 import { useTranslation } from '@expenzo/i18n';
 import { buttonContainerClass, buttonLabelClass, fieldInputClass } from '@expenzo/ui';
 import { useId, useState, type FormEvent } from 'react';
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-export interface InviteFormProps {
-  /** Returns the one-time invitation token. */
-  onInvite: (email: string) => Promise<string>;
-  origin: string;
+export interface InviteSubmission {
+  email: string;
+  role: InvitableRole;
 }
 
-export function InviteForm({ onInvite, origin }: InviteFormProps) {
+export interface InviteFormProps {
+  onInvite: (submission: InviteSubmission) => Promise<void>;
+}
+
+/**
+ * Asking somebody to join, and saying what they will be when they do.
+ *
+ * The token no longer comes back here. It used to be rendered as a link for
+ * someone to copy, which made the invitation exactly as private as the screen
+ * it was sitting on; now it goes straight into an email and this only ever
+ * learns that the send worked.
+ */
+export function InviteForm({ onInvite }: InviteFormProps) {
   const { t } = useTranslation();
   const emailId = useId();
   const [email, setEmail] = useState('');
-  const [token, setToken] = useState<string | null>(null);
+  const [role, setRole] = useState<InvitableRole>('adult');
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-
-    const trimmed = email.trim();
     setError(null);
 
-    if (!EMAIL_PATTERN.test(trimmed)) {
-      setError(t('auth.errors.invalidEmail'));
+    // The same schema the repository parses with, so a bad address is caught
+    // before a round trip rather than by the function at the far end of one.
+    const parsed = inviteInput.safeParse({ email, role });
+
+    if (!parsed.success) {
+      setError(t(parsed.error.issues[0]?.message ?? 'validation.email.invalid'));
       return;
     }
 
     setPending(true);
     try {
-      setToken(await onInvite(trimmed));
+      await onInvite({ email: parsed.data.email, role: parsed.data.role });
+      setSentTo(parsed.data.email);
       setEmail('');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t('household.errors.inviteFailed'));
@@ -42,28 +56,22 @@ export function InviteForm({ onInvite, origin }: InviteFormProps) {
     }
   }
 
-  if (token) {
-    const link = `${origin}/invite/${token}`;
-
+  if (sentTo) {
     return (
       <div className="flex flex-col gap-gutter">
-        <p className="text-sm text-content-muted">{t('household.linkExplainer')}</p>
+        <p data-testid="invite-sent" className="text-sm text-content">
+          {t('household.sent', { email: sentTo })}
+        </p>
+        <p className="text-sm text-content-muted">{t('household.sentExplainer')}</p>
 
-        <code
-          data-testid="invite-link"
-          className="break-all rounded-card bg-surface-muted px-4 py-3 text-sm text-content"
-        >
-          {link}
-        </code>
-
-        {/* The token is a bearer credential: anyone with the link can join, so
-            it should not sit on screen after it has been handed over. */}
         <button
           type="button"
-          onClick={() => setToken(null)}
+          onClick={() => setSentTo(null)}
           className={buttonContainerClass('secondary', 'md')}
         >
-          <span className={buttonLabelClass('secondary', 'md')}>{t('common.done')}</span>
+          <span className={buttonLabelClass('secondary', 'md')}>
+            {t('household.inviteSomeone')}
+          </span>
         </button>
       </div>
     );
@@ -86,6 +94,35 @@ export function InviteForm({ onInvite, origin }: InviteFormProps) {
         className={fieldInputClass()}
         placeholder={t('household.emailPlaceholder')}
       />
+
+      {/* Radios rather than a select: there are two, both need a sentence of
+          explanation, and the explanation is the point — "child" is a set of
+          permissions, not an age. */}
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-sm font-medium text-content-muted">
+          {t('household.joiningAs')}
+        </legend>
+
+        {invitableRoleSchema.options.map((option) => (
+          <label key={option} className="flex items-start gap-3">
+            <input
+              type="radio"
+              name="role"
+              value={option}
+              data-testid={`invite-role-${option}`}
+              checked={role === option}
+              onChange={() => setRole(option)}
+              className="mt-1"
+            />
+            <span className="flex flex-col">
+              <span className="text-sm text-content">{t(`household.roles.${option}`)}</span>
+              <span className="text-xs text-content-muted">
+                {t(`household.roleExplainer.${option}`)}
+              </span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
 
       <button
         type="submit"

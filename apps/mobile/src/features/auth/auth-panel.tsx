@@ -1,7 +1,7 @@
 import type { OAuthProvider } from '@expenzo/domain';
 import { Button } from '@expenzo/ui';
 import * as Linking from 'expo-linking';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
 import { useTranslation } from '@expenzo/i18n';
@@ -22,6 +22,13 @@ import {
  */
 export function AuthPanel({ mode }: { mode: CredentialsMode }) {
   const { t } = useTranslation();
+  /*
+   * Carried by an invitation link, which knows the address it was sent to.
+   * Signing in or registering as anybody else joins the wrong person to the
+   * household, so it is filled in — prefilled rather than fixed, since
+   * somebody who has to correct it should be able to.
+   */
+  const { email: invitedEmail } = useLocalSearchParams<{ email?: string }>();
   const [providerError, setProviderError] = useState<string | null>(null);
 
   const registering = mode === 'signUp';
@@ -95,7 +102,7 @@ export function AuthPanel({ mode }: { mode: CredentialsMode }) {
 
   return (
     <View className="gap-gutter">
-      <CredentialsForm mode={mode} onSubmit={submitCredentials} />
+      <CredentialsForm mode={mode} onSubmit={submitCredentials} initialEmail={invitedEmail} />
 
       {env().oauthProviders.map((provider) => (
         <Button

@@ -37,6 +37,14 @@ export interface CredentialsSubmission {
 export interface CredentialsFormProps {
   mode: CredentialsMode;
   onSubmit: (credentials: CredentialsSubmission) => Promise<void>;
+  /**
+   * Filled in when the visitor arrived from an invitation.
+   *
+   * The invitation is addressed to one account, so signing in or registering
+   * as anybody else joins the wrong person to the household. Prefilled rather
+   * than fixed: somebody who has to correct it should be able to.
+   */
+  initialEmail?: string;
 }
 
 const LABEL_KEY: Record<CredentialsMode, { idle: string; busy: string }> = {
@@ -57,7 +65,7 @@ function defaultCurrencyFor(language: string): string {
   return language.startsWith('uk') ? 'UAH' : 'USD';
 }
 
-export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
+export function CredentialsForm({ mode, onSubmit, initialEmail = '' }: CredentialsFormProps) {
   const { t, i18n } = useTranslation();
   const emailId = useId();
   const passwordId = useId();
@@ -65,7 +73,7 @@ export function CredentialsForm({ mode, onSubmit }: CredentialsFormProps) {
   const firstNameId = useId();
   const lastNameId = useId();
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [firstName, setFirstName] = useState('');

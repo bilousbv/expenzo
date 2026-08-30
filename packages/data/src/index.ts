@@ -56,10 +56,24 @@ export type { ExpenseCursor, ExpensePage, ExpenseRow } from './repositories/expe
 export { useCreateExpense, useDeleteExpense, useExpenses } from './hooks/use-expenses';
 export type { UseExpensesOptions } from './hooks/use-expenses';
 
+export {
+  acceptInvitation,
+  listPendingInvitations,
+  previewInvitation,
+  revokeInvitation,
+  sendInvitation,
+} from './repositories/invitations';
+export type { InvitationPreview, InvitationRow } from './repositories/invitations';
+
+export { removeMember, setMemberRole } from './repositories/members';
+
+export { useInvitations, useRevokeInvitation, useSendInvitation } from './hooks/use-invitations';
+export type { SendInvitationArgs } from './hooks/use-invitations';
+
 export { listHouseholdMembers } from './repositories/profiles';
 export type { HouseholdMember } from './repositories/profiles';
 
-export { useHouseholdMembers } from './hooks/use-members';
+export { useHouseholdMembers, useRemoveMember, useSetMemberRole } from './hooks/use-members';
 
 export { getCurrentHousehold } from './repositories/households';
 export type { HouseholdRow } from './repositories/households';
