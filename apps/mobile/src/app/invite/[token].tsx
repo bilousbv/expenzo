@@ -3,7 +3,7 @@ import { inviteMode } from '@expenzo/domain';
 import { useTranslation } from '@expenzo/i18n';
 import { Button, Card } from '@expenzo/ui';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -26,6 +26,16 @@ export default function AcceptInviteScreen() {
 
   const [error, setError] = useState<string | null>(null);
   const [joined, setJoined] = useState(false);
+  /**
+   * The token this screen has already spent, if any.
+   *
+   * Redeeming is one-shot against a one-shot token, and this effect re-runs
+   * whenever the session object changes — which it does on every token
+   * refresh. The second call is the database correctly refusing a link the
+   * first call spent, so without this the person who just joined is told the
+   * invitation had already been used.
+   */
+  const redeemed = useRef<string | null>(null);
 
   useEffect(() => {
     if (loading || !token) return;
@@ -50,8 +60,11 @@ export default function AcceptInviteScreen() {
       }
 
       if (mode === 'accept') {
+        if (redeemed.current === token) return;
+        redeemed.current = token;
+
         await acceptInvitation(db, token);
-        if (!cancelled) setJoined(true);
+        setJoined(true);
         return;
       }
 
