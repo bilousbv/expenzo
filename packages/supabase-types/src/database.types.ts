@@ -391,6 +391,155 @@ export type Database = {
         }
         Relationships: []
       }
+      limit_period_state: {
+        Row: {
+          breached_at: string
+          household_id: string
+          limit_id: string
+          period_start: string
+          spent_minor: number
+        }
+        Insert: {
+          breached_at?: string
+          household_id: string
+          limit_id: string
+          period_start: string
+          spent_minor: number
+        }
+        Update: {
+          breached_at?: string
+          household_id?: string
+          limit_id?: string
+          period_start?: string
+          spent_minor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "limit_period_state_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "limit_period_state_limit_id_fkey"
+            columns: ["limit_id"]
+            isOneToOne: false
+            referencedRelation: "spending_limits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_deliveries: {
+        Row: {
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string
+          household_id: string
+          id: string
+          job_id: string
+          read_at: string | null
+          status: Database["public"]["Enums"]["delivery_status"]
+          user_id: string
+        }
+        Insert: {
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          household_id: string
+          id?: string
+          job_id: string
+          read_at?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"]
+          user_id: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          household_id?: string
+          id?: string
+          job_id?: string
+          read_at?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_deliveries_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_deliveries_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "notification_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_jobs: {
+        Row: {
+          claimed_at: string | null
+          created_at: string
+          dedupe_key: string
+          household_id: string
+          id: string
+          kind: Database["public"]["Enums"]["notification_kind"]
+          payload: Json
+        }
+        Insert: {
+          claimed_at?: string | null
+          created_at?: string
+          dedupe_key: string
+          household_id: string
+          id?: string
+          kind: Database["public"]["Enums"]["notification_kind"]
+          payload?: Json
+        }
+        Update: {
+          claimed_at?: string | null
+          created_at?: string
+          dedupe_key?: string
+          household_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["notification_kind"]
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_jobs_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_preferences: {
+        Row: {
+          in_app_enabled: boolean
+          kind: Database["public"]["Enums"]["notification_kind"]
+          push_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          in_app_enabled?: boolean
+          kind: Database["public"]["Enums"]["notification_kind"]
+          push_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          in_app_enabled?: boolean
+          kind?: Database["public"]["Enums"]["notification_kind"]
+          push_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_path: string | null
@@ -667,6 +816,7 @@ export type Database = {
           occurred_on: string
         }[]
       }
+      deliver_notifications: { Args: never; Returns: number }
       expense_summary: {
         Args: { from_on: string; member?: string; to_on: string }
         Returns: {
@@ -698,6 +848,7 @@ export type Database = {
     }
     Enums: {
       category_kind: "expense" | "subscription"
+      delivery_status: "sent" | "suppressed" | "failed"
       expense_direction: "spend" | "income"
       expense_source:
         | "manual"
@@ -710,6 +861,8 @@ export type Database = {
       limit_period: "weekly" | "monthly" | "yearly"
       member_role: "owner" | "adult" | "viewer" | "child"
       member_status: "active" | "removed"
+      notification_channel: "in_app" | "push"
+      notification_kind: "limit_exceeded" | "renewal_upcoming" | "trial_ending"
       review_status: "confirmed" | "needs_review" | "rejected"
       subscription_cadence:
         | "weekly"
@@ -846,6 +999,7 @@ export const Constants = {
   public: {
     Enums: {
       category_kind: ["expense", "subscription"],
+      delivery_status: ["sent", "suppressed", "failed"],
       expense_direction: ["spend", "income"],
       expense_source: [
         "manual",
@@ -859,6 +1013,8 @@ export const Constants = {
       limit_period: ["weekly", "monthly", "yearly"],
       member_role: ["owner", "adult", "viewer", "child"],
       member_status: ["active", "removed"],
+      notification_channel: ["in_app", "push"],
+      notification_kind: ["limit_exceeded", "renewal_upcoming", "trial_ending"],
       review_status: ["confirmed", "needs_review", "rejected"],
       subscription_cadence: [
         "weekly",

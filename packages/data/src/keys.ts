@@ -76,6 +76,16 @@ export const queryKeys = {
   services: {
     all: () => ['services'] as const,
   },
+  notifications: {
+    all: (householdId: string) => ['notifications', householdId] as const,
+    inbox: (householdId: string) => ['notifications', householdId, 'inbox'] as const,
+    // Draining the queue sits behind a key so one visit drains once, the same
+    // shape as posting subscription charges.
+    pending: (householdId: string) => ['notifications', householdId, 'pending'] as const,
+    // Deliberately outside the household prefix: what somebody wants to be told
+    // about follows them, and switching household must not invalidate it.
+    preferences: (userId: string) => ['notification-preferences', userId] as const,
+  },
   summary: {
     all: (householdId: string) => ['summary', householdId] as const,
     period: (householdId: string, window: SummaryWindow) =>

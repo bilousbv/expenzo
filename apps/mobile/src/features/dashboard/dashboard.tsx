@@ -6,6 +6,7 @@ import {
   useDisplayCurrency,
   useHouseholdMembers,
   useLimits,
+  useDeliverNotifications,
   usePostSubscriptionCharges,
   useUpcomingRenewals,
 } from '@expenzo/data';
@@ -102,6 +103,14 @@ export function Dashboard() {
     return bounds ? { from: bounds.start, to: bounds.end } : null;
   }, [range, today]);
   usePostSubscriptionCharges(householdId, chargeWindow);
+
+  /*
+   * The phone has no persistent header, so the queue is drained here — the
+   * dashboard is the screen the app opens on. A notification that only came
+   * into existence once you visited the screen listing notifications would be
+   * no use at all.
+   */
+  useDeliverNotifications(householdId);
 
   /*
    * A cancelled subscription has no next renewal, so the null is dropped

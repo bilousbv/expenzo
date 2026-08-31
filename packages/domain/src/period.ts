@@ -309,3 +309,49 @@ export function shiftPeriod(range: DateRange, steps: number): DateRange {
 
   return { start: toIsoDate(year, 1, 1), end: toIsoDate(year, 12, 31) };
 }
+
+/**
+ * The periods a spending limit can run over.
+ *
+ * Lives here rather than with the limit schema because `limitPeriodBounds`
+ * below needs it and `schemas/` already depends on this module — the other
+ * direction would be a cycle. The zod enum is built from this list.
+ */
+export const LIMIT_PERIODS = ['weekly', 'monthly', 'yearly'] as const;
+
+/**
+ * The limit period of the given kind containing `on`, both ends inclusive.
+ *
+ * Mirrors `app.period_bounds`, and must keep agreeing with it: the dashboard
+ * reads "480 of 500" from this one, and the SQL decides whether a notification
+ * fires. Two answers to one question is how a screen and an alert come to
+ * contradict each other.
+ *
+ * Takes a date rather than an instant. `occurred_on` is already the
+ * household's local calendar date, frozen at write time, so there is no
+ * timezone left to apply.
+ */
+export function limitPeriodBounds(
+  period: (typeof LIMIT_PERIODS)[number],
+  on: IsoDate,
+  weekStartsOn: WeekStart = 1,
+): DateRange {
+  const { year, month, day } = parseIsoDate(on);
+
+  if (period === 'yearly') {
+    return { start: toIsoDate(year, 1, 1), end: toIsoDate(year, 12, 31) };
+  }
+
+  if (period === 'monthly') {
+    return {
+      start: toIsoDate(year, month, 1),
+      end: toIsoDate(year, month, daysInMonth(year, month)),
+    };
+  }
+
+  // Sunday at zero, matching households.week_starts_on and weekBounds.
+  const dayOfWeek = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  const start = addDays(on, -((dayOfWeek - weekStartsOn + 7) % 7));
+
+  return { start, end: addDays(start, 6) };
+}

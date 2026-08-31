@@ -5,6 +5,7 @@ import {
   shiftPeriod,
   describePeriod,
   isWholeMonth,
+  limitPeriodBounds,
   localDateIn,
   monthBounds,
   PERIOD_PRESETS,
@@ -391,6 +392,61 @@ describe('shiftPeriod', () => {
       { start: '2026-03-02', end: '2026-03-08' },
     ]) {
       expect(shiftPeriod(shiftPeriod(range, 1), -1)).toEqual(range);
+    }
+  });
+});
+
+/*
+ * Mirrors app.period_bounds. The two must agree: the dashboard reads
+ * "480 of 500" from this one, and the SQL decides whether a notification
+ * fires. Two answers to one question is how a screen and an alert come to
+ * contradict each other, and the pgTAP suite asserts the same cases.
+ *
+ * Takes a date rather than an instant, because occurred_on is already the
+ * household's local calendar date — there is no timezone left to apply.
+ */
+describe('limitPeriodBounds', () => {
+  it('runs a monthly period from the first to the last of the month', () => {
+    expect(limitPeriodBounds('monthly', '2026-03-15')).toEqual({
+      start: '2026-03-01',
+      end: '2026-03-31',
+    });
+  });
+
+  it('ends a monthly period on the last day, however short the month', () => {
+    expect(limitPeriodBounds('monthly', '2026-02-15').end).toBe('2026-02-28');
+    expect(limitPeriodBounds('monthly', '2028-02-10').end).toBe('2028-02-29');
+  });
+
+  it('runs a yearly period from January to December', () => {
+    expect(limitPeriodBounds('yearly', '2026-03-15')).toEqual({
+      start: '2026-01-01',
+      end: '2026-12-31',
+    });
+  });
+
+  it('runs a weekly period for seven days from the household week start', () => {
+    const week = limitPeriodBounds('weekly', '2026-03-15', 1);
+
+    expect(week.start).toBe('2026-03-09');
+    expect(week.end).toBe('2026-03-15');
+  });
+
+  // week_starts_on is 0 to 6 with Sunday at zero, the same convention as
+  // weekBounds and as the column on households.
+  it('honours a household that starts its week on Sunday', () => {
+    expect(limitPeriodBounds('weekly', '2026-03-15', 0)).toEqual({
+      start: '2026-03-15',
+      end: '2026-03-21',
+    });
+  });
+
+  it('contains the date it was asked about', () => {
+    for (const period of ['weekly', 'monthly', 'yearly'] as const) {
+      const bounds = limitPeriodBounds(period, '2026-12-31');
+
+      expect(bounds.start <= '2026-12-31').toBe(true);
+      expect(bounds.end >= '2026-12-31').toBe(true);
     }
   });
 });
