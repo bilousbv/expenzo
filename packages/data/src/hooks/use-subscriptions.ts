@@ -1,5 +1,6 @@
 import type { CreateSubscriptionInput, UpdateSubscriptionInput } from '@expenzo/domain';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 import { queryKeys } from '../keys';
 import { useSupabase } from '../provider';
@@ -10,6 +11,7 @@ import {
   listServices,
   listSubscriptions,
   listUpcomingRenewals,
+  postSubscriptionCharges,
   updateSubscription,
   type RenewalWindow,
   type ServiceRow,
@@ -105,4 +107,48 @@ export function useDeleteSubscription(householdId: string | undefined) {
     onSuccess: () =>
       client.invalidateQueries({ queryKey: queryKeys.subscriptions.all(householdId ?? '') }),
   });
+}
+
+/**
+ * Turns the subscription charges that fell due inside the window into
+ * expenses, as the screen holding this loads.
+ *
+ * A query rather than a mutation fired from an effect, deliberately. React
+ * runs an effect twice on mount in development, and a mutation would post,
+ * post again and race its own invalidation; a query key is deduped, held, and
+ * re-run only when the window changes. Posting is a write, so this is an
+ * unusual shape — the unique index behind it is what makes it a safe one.
+ *
+ * There is no scheduler in this project yet. Until there is, opening the app
+ * is what catches the ledger up.
+ */
+export function usePostSubscriptionCharges(
+  householdId: string | undefined,
+  window: RenewalWindow | null,
+) {
+  const db = useSupabase();
+  const client = useQueryClient();
+
+  const query = useQuery<number>({
+    queryKey: queryKeys.subscriptions.charges(householdId ?? '', window ?? { from: '', to: '' }),
+    queryFn: () => postSubscriptionCharges(db, window as RenewalWindow),
+    // A period that has not started has nothing to post, and asking anyway is a
+    // round trip for a certain zero.
+    enabled: Boolean(householdId) && window !== null,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const posted = query.data ?? 0;
+
+  useEffect(() => {
+    if (posted <= 0) return;
+
+    // Only when something was actually written. Invalidating on every load
+    // would refetch the whole dashboard a second time for nothing.
+    void client.invalidateQueries({ queryKey: queryKeys.expenses.all(householdId ?? '') });
+    void client.invalidateQueries({ queryKey: queryKeys.summary.all(householdId ?? '') });
+  }, [client, householdId, posted]);
+
+  return query;
 }

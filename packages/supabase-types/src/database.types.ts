@@ -165,6 +165,7 @@ export type Database = {
           receipt_id: string | null
           review_status: Database["public"]["Enums"]["review_status"]
           source: Database["public"]["Enums"]["expense_source"]
+          subscription_id: string | null
           updated_at: string
         }
         Insert: {
@@ -189,6 +190,7 @@ export type Database = {
           receipt_id?: string | null
           review_status?: Database["public"]["Enums"]["review_status"]
           source?: Database["public"]["Enums"]["expense_source"]
+          subscription_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -213,6 +215,7 @@ export type Database = {
           receipt_id?: string | null
           review_status?: Database["public"]["Enums"]["review_status"]
           source?: Database["public"]["Enums"]["expense_source"]
+          subscription_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -235,6 +238,13 @@ export type Database = {
             columns: ["receipt_id"]
             isOneToOne: false
             referencedRelation: "receipts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
             referencedColumns: ["id"]
           },
         ]
@@ -673,6 +683,10 @@ export type Database = {
           invitee_role: string
         }[]
       }
+      post_subscription_charges: {
+        Args: { from_on?: string; to_on?: string }
+        Returns: number
+      }
       remove_household_member: { Args: { member: string }; Returns: undefined }
       set_member_role: {
         Args: {
@@ -685,7 +699,13 @@ export type Database = {
     Enums: {
       category_kind: "expense" | "subscription"
       expense_direction: "spend" | "income"
-      expense_source: "manual" | "receipt_scan" | "email" | "wallet" | "import"
+      expense_source:
+        | "manual"
+        | "receipt_scan"
+        | "email"
+        | "wallet"
+        | "import"
+        | "subscription"
       invitation_status: "pending" | "accepted" | "revoked" | "expired"
       limit_period: "weekly" | "monthly" | "yearly"
       member_role: "owner" | "adult" | "viewer" | "child"
@@ -827,7 +847,14 @@ export const Constants = {
     Enums: {
       category_kind: ["expense", "subscription"],
       expense_direction: ["spend", "income"],
-      expense_source: ["manual", "receipt_scan", "email", "wallet", "import"],
+      expense_source: [
+        "manual",
+        "receipt_scan",
+        "email",
+        "wallet",
+        "import",
+        "subscription",
+      ],
       invitation_status: ["pending", "accepted", "revoked", "expired"],
       limit_period: ["weekly", "monthly", "yearly"],
       member_role: ["owner", "adult", "viewer", "child"],

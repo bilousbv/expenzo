@@ -8,6 +8,7 @@ import {
   listServices,
   listSubscriptions,
   listUpcomingRenewals,
+  postSubscriptionCharges,
   updateSubscription,
 } from './subscriptions';
 
@@ -356,5 +357,51 @@ describe('a subscription on trial', () => {
     await updateSubscription(db, { id: SUBSCRIPTION, trialDays: 7 });
 
     expect(recorder.updated).toMatchObject({ trial_days: 7 });
+  });
+});
+
+/*
+ * Posting is a database function rather than a client loop for the usual two
+ * reasons: it needs the subscription's author on the expense it writes, which
+ * the insert policy would not allow a client to set, and it has to be safe to
+ * run on every visit, which only the unique index behind it can guarantee.
+ */
+describe('postSubscriptionCharges', () => {
+  it('asks the database to post the window, and says how many landed', async () => {
+    const rpc = vi.fn(() => Promise.resolve({ data: 3, error: null }));
+    const db = { rpc } as unknown as Db;
+
+    await expect(
+      postSubscriptionCharges(db, { from: '2026-08-01', to: '2026-08-31' }),
+    ).resolves.toBe(3);
+
+    expect(rpc).toHaveBeenCalledWith('post_subscription_charges', {
+      from_on: '2026-08-01',
+      to_on: '2026-08-31',
+    });
+  });
+
+  // Running it a second time over the same window is the ordinary case — every
+  // dashboard visit does it — and nothing having been posted is not a failure.
+  it('reports nothing posted as zero rather than as null', async () => {
+    const db = {
+      rpc: vi.fn(() => Promise.resolve({ data: null, error: null })),
+    } as unknown as Db;
+
+    await expect(
+      postSubscriptionCharges(db, { from: '2026-08-01', to: '2026-08-31' }),
+    ).resolves.toBe(0);
+  });
+
+  it('throws what the database said', async () => {
+    const db = {
+      rpc: vi.fn(() =>
+        Promise.resolve({ data: null, error: { message: 'not a member of a household' } }),
+      ),
+    } as unknown as Db;
+
+    await expect(
+      postSubscriptionCharges(db, { from: '2026-08-01', to: '2026-08-31' }),
+    ).rejects.toThrow('not a member of a household');
   });
 });

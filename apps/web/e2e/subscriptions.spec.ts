@@ -208,3 +208,52 @@ test.describe('subscriptions', () => {
     await expect(row.getByTestId('renewal-when')).toContainText(/trial ends/i);
   });
 });
+
+/*
+ * The ledger and the subscriptions list used to be two unconnected screens: a
+ * household paying for eight services read a monthly total with none of them
+ * in it. A subscription that has billed is money that left, so it becomes an
+ * expense filed under Subscriptions.
+ */
+test.describe('subscription charges', () => {
+  test('posts a billed subscription into the ledger', async ({ page }) => {
+    const name = uniqueName('Charged');
+
+    await page.goto('/subscriptions');
+    // The form starts on today, so this one bills immediately.
+    await addSubscription(page, { name, amount: '15.99' });
+
+    await page.goto('/');
+
+    // Posting happens as the dashboard loads and the rollup refetches behind
+    // it, so this is the barrier the rest of the assertions wait on.
+    const row = page.getByTestId('category-row').filter({ hasText: 'Subscriptions' });
+    await expect(row).toBeVisible();
+
+    await row.click();
+    await expect(page.getByTestId('category-title')).toHaveText('Subscriptions');
+
+    const expense = page.getByTestId('expense-row').filter({ hasText: name });
+    await expect(expense).toBeVisible();
+    await expect(expense.getByTestId('expense-amount')).toHaveText('$15.99');
+  });
+
+  // Opening the dashboard twice is the ordinary case, and the second visit
+  // must not charge the household again.
+  test('does not post the same charge twice', async ({ page }) => {
+    const name = uniqueName('Once');
+
+    await page.goto('/subscriptions');
+    await addSubscription(page, { name, amount: '9.99' });
+
+    await page.goto('/');
+    await expect(
+      page.getByTestId('category-row').filter({ hasText: 'Subscriptions' }),
+    ).toBeVisible();
+
+    await page.reload();
+    await page.getByTestId('category-row').filter({ hasText: 'Subscriptions' }).click();
+
+    await expect(page.getByTestId('expense-row').filter({ hasText: name })).toHaveCount(1);
+  });
+});

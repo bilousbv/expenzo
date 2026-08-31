@@ -36,6 +36,7 @@ export {
   daysUntil,
   nextRenewalOn,
   renewalWindow,
+  subscriptionChargeWindow,
   trialEndsOn,
   upcomingRenewals,
   RENEWAL_WINDOW_DAYS,

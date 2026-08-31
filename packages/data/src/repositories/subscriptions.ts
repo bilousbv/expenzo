@@ -214,3 +214,27 @@ export async function deleteSubscription(db: Db, id: string): Promise<void> {
 
   if (error) throw new Error(error.message);
 }
+
+/**
+ * Turns the charges that fell due inside the window into expenses, and says
+ * how many were written.
+ *
+ * A database function rather than a loop here for two reasons. The expense is
+ * attributed to whoever entered the subscription, which the insert policy will
+ * not let a client do for somebody else; and this runs on every visit to the
+ * dashboard, so it has to be safe to repeat — which only the unique index
+ * behind it can guarantee.
+ *
+ * Nothing posted is the ordinary outcome, not a failure: it means the window
+ * has already been caught up.
+ */
+export async function postSubscriptionCharges(db: Db, window: RenewalWindow): Promise<number> {
+  const { data, error } = await db.rpc('post_subscription_charges', {
+    from_on: window.from,
+    to_on: window.to,
+  });
+
+  if (error) throw new Error(error.message);
+
+  return data ?? 0;
+}
