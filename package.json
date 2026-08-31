@@ -18,6 +18,8 @@
     "db:start": "supabase start",
     "db:stop": "supabase stop",
     "db:status": "supabase status",
+    "db:up": "supabase migration up --local",
+    "db:seed": "supabase db query --local -f supabase/seed.sql",
     "db:reset": "supabase db reset",
     "db:diff": "supabase db diff -f",
     "db:lint": "supabase db lint",

@@ -87,11 +87,19 @@ The backend is Supabase, run locally in Docker. Docker must be running first.
 ```bash
 pnpm db:start    # boot the stack (first run pulls images)
 pnpm db:status   # URLs and keys for your .env files
-pnpm db:reset    # replay every migration from zero, then seed
+pnpm db:up       # apply the migrations this database has not seen yet
+pnpm db:seed     # load supabase/seed.sql; safe to re-run
 pnpm db:lint     # schema linter
 pnpm db:test     # pgTAP tests, including row-level security
 pnpm db:stop
 ```
+
+`pnpm db:up` is how the local database moves forward. There is also a
+`pnpm db:reset`, which replays every migration from zero and re-seeds — it
+**destroys the accounts and ledger you have built up in dev**, so reach for it
+only when you actually want an empty database. Nothing in the verification path
+needs it: `db:up` applies what is pending, and pgTAP runs inside a transaction
+it rolls back. CI is what proves the migrations replay cleanly from empty.
 
 Ports are **54421–54424**, not Supabase's usual 54321–54324, so this stack can
 run alongside another local Supabase project. Studio is on
