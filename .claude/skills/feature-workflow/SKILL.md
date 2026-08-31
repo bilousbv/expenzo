@@ -6,7 +6,7 @@ description: >-
   "finish the feature", "ship it", "wrap this up", or asks to open a PR for work
   in progress. Also use it automatically, without being asked, the moment you
   begin executing an approved implementation plan in this repo, before writing
-  the first line of code. Start feature means sync master, cut a short-named
+  the first line of code. Start feature means sync development, cut a short-named
   branch, write failing unit and e2e tests, then implement until green. Finish
   feature means run format, lint, types and tests, then commit and open a pull
   request, degrading gracefully when there is no git remote or no gh CLI, and
@@ -46,7 +46,7 @@ Run these before the first git command in a session. Read
 git rev-parse --is-inside-work-tree
 git symbolic-ref --quiet --short HEAD      # fails when HEAD is detached
 git status --porcelain                     # empty means a clean worktree
-git log --oneline master..HEAD             # commits ahead of master
+git log --oneline development..HEAD             # commits ahead of development
 git remote                                 # empty means no remote at all
 ```
 
@@ -55,24 +55,26 @@ The short version of the decision table:
 | State                              | Do this                                            |
 | ---------------------------------- | -------------------------------------------------- |
 | Detached HEAD                      | Stop, report, ask. Never check out on your own.    |
-| On master, clean                   | Proceed.                                           |
-| On master, dirty                   | Ask before touching the edits. Never discard them. |
+| On development, clean              | Proceed.                                           |
+| On development, dirty              | Ask before touching the edits. Never discard them. |
 | On a feature branch, dirty         | Ask: finish that feature first, or park it?        |
 | On a feature branch, commits ahead | Say so, and ask before starting another.           |
 
-Derive the trunk branch name rather than assuming `master` — check
-`refs/heads/master`, then `refs/heads/main`.
+The trunk is `development`, and merging into it deploys. Derive the name rather
+than assuming it: prefer `refs/remotes/origin/HEAD`, then `refs/heads/development`,
+then `refs/heads/master`, then `refs/heads/main`. `master` still exists as
+history and nothing is cut from it any more.
 
 ## Start feature
 
 1. State the task in one sentence and confirm that understanding matches.
 2. Detect state as above. Resolve anything the table flags.
 3. Sync the trunk. With a remote: `git fetch origin`, then
-   `git merge --ff-only origin/master`. Without one, skip this step and say so.
+   `git merge --ff-only origin/development`. Without one, skip this step and say so.
    Never `git pull` with an implicit merge or rebase; if the fast-forward
-   fails, master has diverged and that is the user's call.
+   fails, development has diverged and that is the user's call.
 4. Cut the branch as `type/slug` — see the naming rules below. Announce the
-   name before creating it: _"Branching `feat/monthly-budget-cap` off master."_
+   name before creating it: _"Branching `feat/monthly-budget-cap` off development."_
 5. **Write the tests first.** Read `references/testing-patterns.md` to pick the
    layers. Run them and quote the failing test name and assertion back to the
    user. A test that passes before the implementation exists is not testing the
@@ -98,8 +100,8 @@ dates, no author names. If the branch already exists, append `-2`, `-3`.
 
 ## Finish feature
 
-1. Refuse when on master, or when the worktree is clean and nothing is ahead of
-   master — there is nothing to finish.
+1. Refuse when on development, or when the worktree is clean and nothing is ahead of
+   development — there is nothing to finish.
 2. Run the gate from the repo root, in this order, stopping at the first
    failure:
 
@@ -222,7 +224,7 @@ Never do any of these:
 - `git reset --hard`, `git clean -fd`, `git checkout -- .`, `git stash drop`
 - `git commit --no-verify`, or `--amend` on a commit that has been pushed
 - delete a branch, local or remote
-- commit directly on master
+- commit directly on development
 - edit `.git/config`, add or change a remote, or run `gh auth login` — tell the
   user the command and let them run it
 - merge a PR

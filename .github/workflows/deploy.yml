@@ -1,0 +1,107 @@
+name: Deploy
+
+# What lands on `development` goes live.
+#
+# The web app is not deployed from here. Vercel's own Git integration watches
+# this branch and builds it — no token in this repository, and every pull
+# request gets a preview deployment for free. What Vercel cannot do is move the
+# database forward, which is what this workflow is for.
+#
+# Triggered by CI finishing rather than by the push itself. Applying migrations
+# from a branch whose tests are red is the one failure this pipeline must not
+# have, and `workflow_run` is the only way one workflow can wait for another.
+#
+# A consequence worth knowing: Vercel starts building on the push, so the new
+# build can be live for a minute or two before the migrations it expects have
+# landed. Migrations in this repository are additive, so the window is survivable
+# — but if a change ever needs the schema first, turn off automatic deployment
+# for this project in Vercel and trigger a deploy hook from a job that `needs`
+# the one below.
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [development]
+    types: [completed]
+
+# Never cancel a run in progress: the thing it is in the middle of is a
+# migration against production.
+concurrency:
+  group: deploy-development
+  cancel-in-progress: false
+
+env:
+  SUPABASE_CLI_VERSION: 2.115.0
+  # Not a secret. It is the host in NEXT_PUBLIC_SUPABASE_URL, which is inlined
+  # into the client bundle and served to every visitor.
+  SUPABASE_PROJECT_REF: aaythzrlvsxaludckljr
+
+jobs:
+  migrate:
+    name: Apply migrations
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Gate the production secrets behind an environment, so a fork or a
+    # workflow edited on a branch cannot reach them.
+    environment: production
+
+    steps:
+      # workflow_run checks out the default branch unless told otherwise, and
+      # the commit that passed CI is the one whose migrations should be applied.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Apply pending migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref "$SUPABASE_PROJECT_REF"
+          supabase db push --yes
+
+      # supabase/seed.sql is deliberately not run here. It is local-only
+      # fixtures: plausible exchange rates so foreign-currency expenses can be
+      # entered offline. `expenses_set_base_amount` freezes whatever rate it
+      # finds into every row at write time, so seeding invented rates into
+      # production would bake wrong figures into real ledgers permanently.
+      # Production gets real rates from the job below.
+
+  rates:
+    name: Refresh exchange rates
+    needs: migrate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+
+    steps:
+      - name: POST /api/fx/sync
+        env:
+          FX_SYNC_SECRET: ${{ secrets.FX_SYNC_SECRET }}
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+        run: |
+          set -euo pipefail
+
+          # Retried, because Vercel may still be swapping the deployment in.
+          response=$(curl --fail-with-body --silent --show-error \
+            --retry 10 --retry-delay 15 --retry-all-errors \
+            -X POST "${PRODUCTION_URL%/}/api/fx/sync" \
+            -H "Authorization: Bearer $FX_SYNC_SECRET")
+
+          echo "$response"
+
+          # Rates come from two feeds, and one of them failing is a 200 with
+          # that source named in `failed` — the feed that did answer is worth
+          # filing, and app.fx_rate_on reaches back a week. So this is a
+          # warning, not a failure. What is not survivable is a source down for
+          # longer than that window: its currencies then stop converting and
+          # expenses in them refuse to save. This annotation is the only place
+          # that becomes visible, so a run that keeps showing one is the signal.
+          failed=$(printf '%s' "$response" | jq -r '.failed // [] | join(", ")')
+          if [ -n "$failed" ]; then
+            echo "::warning::Exchange-rate feed did not answer: $failed"
+          fi
