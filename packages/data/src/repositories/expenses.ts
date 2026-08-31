@@ -22,10 +22,11 @@ export type ExpenseRow = Pick<
   | 'merchant'
   | 'note'
   | 'occurred_on'
+  | 'created_at'
 >;
 
 const COLUMNS =
-  'id, household_id, created_by, direction, amount_minor, currency, base_amount_minor, category_id, merchant, note, occurred_on';
+  'id, household_id, created_by, direction, amount_minor, currency, base_amount_minor, category_id, merchant, note, occurred_on, created_at';
 
 export const DEFAULT_PAGE_SIZE = 25;
 
@@ -38,6 +39,15 @@ export const DEFAULT_PAGE_SIZE = 25;
  */
 export interface ExpenseCursor {
   occurredOn: string;
+  /**
+   * When the row was written, which is what orders same-day expenses.
+   *
+   * `occurred_on` is a date, so everything entered today ties on it. The
+   * tiebreak used to be the id — a random uuid — so past a full page of
+   * same-day rows, whether the expense somebody had just added appeared at all
+   * was decided by a coin toss on its uuid.
+   */
+  createdAt: string;
   id: string;
 }
 
@@ -67,10 +77,22 @@ export async function listExpenses(
   if (memberId) query = query.eq('created_by', memberId);
 
   if (cursor) {
-    // Strictly after the cursor in (occurred_on desc, id desc) order: an
-    // earlier date, or the same date with a smaller id.
+    // Strictly after the cursor in (occurred_on desc, created_at desc, id desc)
+    // order: an earlier date, or the same date written earlier, or both equal
+    // with a smaller id. One branch per ordering term — a keyset that compares
+    // fewer columns than it sorts by can loop or skip rows.
+    //
+    // The timestamp is quoted: it carries a '+' and colons, which PostgREST
+    // would otherwise read as part of the filter grammar.
+    const day = `occurred_on.eq.${cursor.occurredOn}`;
+    const at = `"${cursor.createdAt}"`;
+
     query = query.or(
-      `occurred_on.lt.${cursor.occurredOn},and(occurred_on.eq.${cursor.occurredOn},id.lt.${cursor.id})`,
+      [
+        `occurred_on.lt.${cursor.occurredOn}`,
+        `and(${day},created_at.lt.${at})`,
+        `and(${day},created_at.eq.${at},id.lt.${cursor.id})`,
+      ].join(','),
     );
   }
 
@@ -78,6 +100,7 @@ export async function listExpenses(
   // without a second count query.
   const { data, error } = await query
     .order('occurred_on', { ascending: false })
+    .order('created_at', { ascending: false })
     .order('id', { ascending: false })
     .limit(pageSize + 1);
 
@@ -90,7 +113,10 @@ export async function listExpenses(
 
   return {
     rows,
-    nextCursor: hasMore && last ? { occurredOn: last.occurred_on, id: last.id } : null,
+    nextCursor:
+      hasMore && last
+        ? { occurredOn: last.occurred_on, createdAt: last.created_at, id: last.id }
+        : null,
   };
 }
 
