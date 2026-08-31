@@ -199,9 +199,18 @@ test.describe('dashboard', () => {
   for (const preset of ['this-quarter', 'this-year', 'this-week']) {
     test(`steps by the unit of ${preset}`, async ({ page }) => {
       await page.goto('/');
-      await choosePreset(page, preset);
 
       const dates = page.getByTestId('period-dates');
+      // The label the dashboard opens on. Closing the dialog is not the same
+      // moment as the label changing — the period goes through router.replace
+      // and comes back as a search param, so under load the old month's range
+      // is still on screen for a tick. Reading `before` then made the test
+      // step away from one period and assert it had returned to another.
+      const opened = await dates.textContent();
+
+      await choosePreset(page, preset);
+      await expect(dates).not.toHaveText(opened ?? '');
+
       const before = await dates.textContent();
 
       // Present at all is the point: a quarter or a year used to hide them.

@@ -142,6 +142,51 @@ pnpm --filter @expenzo/web exec playwright install chromium
 It runs against `next start` on port 3100 — deliberately not 3000, so a running
 `pnpm dev` is never hijacked.
 
+## Deployment
+
+The trunk is **`development`**. Feature branches are cut from it and merge back
+into it, and what lands there goes live.
+
+Two things happen on a merge, and only one of them is in this repository.
+
+**The web app** is built by Vercel's own Git integration, which watches
+`development` as the production branch. Nothing here holds a Vercel token, and
+every pull request gets a preview deployment for free.
+
+**The database** is moved forward by `.github/workflows/deploy.yml`. It is
+triggered by CI _finishing successfully_ rather than by the push, because
+applying migrations from a branch whose tests are red is the one failure this
+pipeline must not have. It runs `supabase db push` against the linked project
+and then posts to `/api/fx/sync` so production has real exchange rates.
+
+`supabase/seed.sql` is deliberately **not** part of that. It is local-only
+fixtures — plausible rates so foreign-currency expenses can be entered offline
+— and `expenses_set_base_amount` freezes whatever rate it finds into every row
+at write time, so seeding invented rates into production would bake wrong
+figures into real ledgers permanently. Anything production genuinely needs goes
+in a migration.
+
+One ordering caveat: Vercel starts building on the push while the migration job
+waits for CI, so a new build can be live for a minute or two before the schema
+it expects. Migrations here are additive, which makes that window survivable.
+If a change ever needs the schema first, turn off automatic deployment for the
+project in Vercel and trigger a deploy hook from a job that `needs` the
+migration one.
+
+Repository secrets the migration workflow needs, under the `production`
+environment:
+
+| Name                    | What it is                                        |
+| ----------------------- | ------------------------------------------------- |
+| `SUPABASE_ACCESS_TOKEN` | a CLI access token from the Supabase account page |
+| `SUPABASE_DB_PASSWORD`  | the linked project's Postgres password            |
+| `FX_SYNC_SECRET`        | must match `FX_SYNC_SECRET` in the Vercel project |
+
+Plus one repository **variable**, `PRODUCTION_URL` — the origin the app is
+served from, used to reach the sync route. The project ref itself is not a
+secret and is written into the workflow: it is the host in
+`NEXT_PUBLIC_SUPABASE_URL`, which ships in the client bundle.
+
 ## Notes
 
 - pnpm uses `nodeLinker: hoisted` (see `pnpm-workspace.yaml`) because Metro does

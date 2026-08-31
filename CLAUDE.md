@@ -16,6 +16,8 @@ Feature work goes through the `feature-workflow` skill in [.claude/skills/featur
 
 Start it automatically when beginning execution of an approved plan, before the first edit. Its rules in brief: branch per feature off the trunk, tests written before the implementation and observed failing first, and the full gate green before anything is committed. Pushes and pull requests always need explicit confirmation.
 
+The trunk is **`development`**, not `master`. Merging into it deploys: Vercel builds the web app from that branch, and `.github/workflows/deploy.yml` applies the migrations once CI has gone green — see the README's Deployment section. `master` is no longer the branch anything is cut from or merged into.
+
 ### Constraints worth remembering
 
 - pnpm runs with `nodeLinker: hoisted`; Metro breaks under the default symlinked store.

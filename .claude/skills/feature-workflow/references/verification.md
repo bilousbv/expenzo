@@ -25,7 +25,7 @@ Only when the branch's diff touches `apps/web/**` or `packages/ui/**`. Determine
 it from:
 
 ```bash
-git diff --name-only master...HEAD
+git diff --name-only development...HEAD
 git status --porcelain
 ```
 

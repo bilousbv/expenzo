@@ -1,12 +1,13 @@
 import { z } from 'zod';
 
+import { LIMIT_PERIODS } from '../period';
 import { uuidSchema } from './expense';
 
 /**
  * Weekly and yearly cost nothing to carry and are expensive to retrofit, so the
  * schema knows all three even while the UI offers only monthly.
  */
-export const limitPeriodSchema = z.enum(['weekly', 'monthly', 'yearly']);
+export const limitPeriodSchema = z.enum(LIMIT_PERIODS);
 
 export type LimitPeriod = z.infer<typeof limitPeriodSchema>;
 

@@ -85,6 +85,7 @@ function row(overrides: Partial<ExpenseRow> = {}): ExpenseRow {
     merchant: 'Blue Bottle',
     note: null,
     occurred_on: '2026-08-25',
+    created_at: '2026-08-25T09:00:00+00:00',
     ...overrides,
   };
 }
@@ -98,15 +99,26 @@ describe('listExpenses', () => {
     expect(recorder.filters).toContainEqual(['is', 'deleted_at', null]);
   });
 
-  // The index is (household_id, occurred_on desc), and row-level security
-  // already restricts the household, so this ordering is what it can serve.
-  it('orders newest first, breaking ties by id', async () => {
+  /*
+   * Newest day first, then most recently written, then id.
+   *
+   * The middle term is the one that matters. `occurred_on` is a date, so
+   * everything entered today ties on it, and the tiebreak used to be the id —
+   * a random uuid. Past a full page of same-day rows, whether the expense just
+   * added appeared at all was decided by a coin toss on its uuid. `created_at`
+   * is monotonic, so the row written last sorts first.
+   *
+   * The id stays as the final term: two rows can share a timestamp, and a
+   * keyset cursor needs a total order or it can loop or skip.
+   */
+  it('orders newest first, then by when the row was written', async () => {
     const { db, recorder } = fakeDb({ data: [row()], error: null });
 
     await listExpenses(db, {});
 
     expect(recorder.orders).toEqual([
       ['occurred_on', false],
+      ['created_at', false],
       ['id', false],
     ]);
   });
@@ -144,9 +156,24 @@ describe('listExpenses', () => {
   it('pages from a cursor rather than an offset', async () => {
     const { db, recorder } = fakeDb({ data: [row()], error: null });
 
-    await listExpenses(db, {}, { occurredOn: '2026-08-20', id: 'e9' });
+    await listExpenses(
+      db,
+      {},
+      {
+        occurredOn: '2026-08-20',
+        createdAt: '2026-08-20T09:00:00+00:00',
+        id: 'e9',
+      },
+    );
 
-    expect(recorder.or).toBe('occurred_on.lt.2026-08-20,and(occurred_on.eq.2026-08-20,id.lt.e9)');
+    // Three branches, matching the three ordering terms. The timestamp is
+    // quoted because it carries a '+' and colons, which PostgREST would
+    // otherwise read as part of the filter grammar.
+    expect(recorder.or).toBe(
+      'occurred_on.lt.2026-08-20,' +
+        'and(occurred_on.eq.2026-08-20,created_at.lt."2026-08-20T09:00:00+00:00"),' +
+        'and(occurred_on.eq.2026-08-20,created_at.eq."2026-08-20T09:00:00+00:00",id.lt.e9)',
+    );
   });
 
   it('asks for one row more than the page, to know whether there is another', async () => {
@@ -174,7 +201,11 @@ describe('listExpenses', () => {
 
     expect(page.rows.map((r) => r.id)).toEqual(['a', 'b']);
     // The cursor is the last row of the page, not the row that was trimmed.
-    expect(page.nextCursor).toEqual({ occurredOn: '2026-08-25', id: 'b' });
+    expect(page.nextCursor).toEqual({
+      occurredOn: '2026-08-25',
+      createdAt: '2026-08-25T09:00:00+00:00',
+      id: 'b',
+    });
   });
 
   it('throws the database message', async () => {

@@ -118,3 +118,33 @@ describe('subscription charge keys', () => {
     ]);
   });
 });
+
+describe('notification keys', () => {
+  it('nests the inbox under the household so one invalidation reaches it', () => {
+    const all = queryKeys.notifications.all(HOUSEHOLD);
+
+    expect(queryKeys.notifications.inbox(HOUSEHOLD).slice(0, all.length)).toEqual([...all]);
+    expect(queryKeys.notifications.pending(HOUSEHOLD).slice(0, all.length)).toEqual([...all]);
+  });
+
+  // Draining the queue and reading the inbox are different questions. Sharing a
+  // key would serve the drain count to the list.
+  it('separates draining from reading', () => {
+    expect(queryKeys.notifications.pending(HOUSEHOLD)).not.toEqual([
+      ...queryKeys.notifications.inbox(HOUSEHOLD),
+    ]);
+  });
+
+  /*
+   * Preferences sit outside the household prefix on purpose. What somebody
+   * wants to be told about follows the person, not the household, so switching
+   * household must not throw it away — and it is the one thing here that is
+   * not household data at all.
+   */
+  it('keeps preferences out of the household prefix', () => {
+    const preferences = queryKeys.notifications.preferences(HOUSEHOLD);
+
+    expect(preferences[0]).not.toBe('notifications');
+    expect(preferences).not.toContain(HOUSEHOLD.concat('-household'));
+  });
+});
