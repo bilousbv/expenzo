@@ -15,8 +15,8 @@ own when something disagrees.
 git rev-parse --is-inside-work-tree                     # 1 sanity check
 git symbolic-ref --quiet --short HEAD                   # 2 branch; fails when detached
 git status --porcelain                                  # 3 empty means clean
-git rev-parse --verify --quiet refs/heads/master        # 4 trunk exists locally
-git log --oneline master..HEAD                          # 5 commits ahead of trunk
+git rev-parse --verify --quiet refs/heads/development        # 4 trunk exists locally
+git log --oneline development..HEAD                          # 5 commits ahead of trunk
 git remote                                              # 6 empty means no remote
 git rev-parse --abbrev-ref --symbolic-full-name '@{u}'  # 7 fails when no upstream
 git log --oneline '@{u}..HEAD'                          # 8 only when 7 succeeded
@@ -24,15 +24,18 @@ git log --oneline '@{u}..HEAD'                          # 8 only when 7 succeede
 
 ### Finding the trunk branch
 
-Do not hardcode `master`. In order:
+Do not hardcode `development`. In order:
 
 1. `git symbolic-ref --quiet --short refs/remotes/origin/HEAD` when a remote
    exists — strip the `origin/` prefix.
-2. `git rev-parse --verify --quiet refs/heads/master`
-3. `git rev-parse --verify --quiet refs/heads/main`
+2. `git rev-parse --verify --quiet refs/heads/development`
+3. `git rev-parse --verify --quiet refs/heads/master`
+4. `git rev-parse --verify --quiet refs/heads/main`
 
-This repo uses `master` today; detecting it keeps the workflow working through a
-future rename.
+This repo uses `development`, and merging into it deploys. `master` still exists
+as history and will still be found by step 3 — which is exactly why step 1 comes
+first: `origin/HEAD` is authoritative and is what a `git remote set-head origin -a`
+keeps current. Nothing is cut from `master` or merged into it any more.
 
 ## Decision table
 
@@ -66,7 +69,7 @@ The same instructions cover all four. Nothing needs editing when a remote or
 
 ### Mode A — no remote (the current state of this repo)
 
-- **Start feature:** skip the fetch. `git switch master && git switch -c branch`.
+- **Start feature:** skip the fetch. `git switch development && git switch -c branch`.
   Say that the sync was skipped and why.
 - **Finish feature:** run the gate, `git add`, `git commit`, then **stop**.
 - **Tell the user:** "No git remote is configured, so I committed on `branch`
@@ -76,8 +79,8 @@ The same instructions cover all four. Nothing needs editing when a remote or
 
 ### Mode B — remote present, `gh` missing
 
-- **Start feature:** `git fetch origin`, `git switch master`,
-  `git merge --ff-only origin/master`, `git switch -c branch`.
+- **Start feature:** `git fetch origin`, `git switch development`,
+  `git merge --ff-only origin/development`, `git switch -c branch`.
 - **Finish feature:** gate, commit, ask, `git push -u origin branch`, then
   derive and print the compare URL.
 - **Tell the user:** "Pushed. `gh` isn't installed, so open the PR here:
@@ -98,7 +101,7 @@ Gate, commit, ask, push, then show the exact title, base, head and body and ask
 before running:
 
 ```bash
-gh pr create --base master --head branch --title "..." --body "..."
+gh pr create --base development --head branch --title "..." --body "..."
 ```
 
 Print the resulting PR URL. Never open a draft PR as a way of skipping the
@@ -114,7 +117,7 @@ Parse `git remote get-url origin`, handling both forms:
 Strip the `.git` suffix, then build:
 
 ```
-https://github.com/owner/repo/compare/master...branch?expand=1
+https://github.com/owner/repo/compare/development...branch?expand=1
 ```
 
 When the host is not `github.com`, say so and skip the URL rather than emitting
