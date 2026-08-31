@@ -5,6 +5,7 @@ import {
   daysUntil,
   nextRenewalOn,
   renewalWindow,
+  subscriptionChargeWindow,
   trialEndsOn,
   upcomingRenewals,
 } from './renewal';
@@ -180,5 +181,47 @@ describe('billingStartsOn', () => {
   it('is the start date when there is not', () => {
     expect(billingStartsOn('2026-08-01')).toBe('2026-08-01');
     expect(billingStartsOn('2026-08-01', undefined)).toBe('2026-08-01');
+  });
+});
+
+/*
+ * Which part of a period a subscription charge may be posted into.
+ *
+ * A renewal date is a promise until the day arrives, so posting an expense for
+ * one that has not happened yet would put money in the ledger that nobody has
+ * paid. The window a poster is given is therefore the period being looked at,
+ * cut off at today.
+ */
+describe('subscriptionChargeWindow', () => {
+  it('is the period itself once it is entirely in the past', () => {
+    expect(
+      subscriptionChargeWindow({ start: '2026-07-01', end: '2026-07-31' }, '2026-08-31'),
+    ).toEqual({ start: '2026-07-01', end: '2026-07-31' });
+  });
+
+  it('stops at today inside the current period', () => {
+    expect(
+      subscriptionChargeWindow({ start: '2026-08-01', end: '2026-08-31' }, '2026-08-12'),
+    ).toEqual({ start: '2026-08-01', end: '2026-08-12' });
+  });
+
+  it('includes today itself, because a charge due today has been taken', () => {
+    expect(
+      subscriptionChargeWindow({ start: '2026-08-12', end: '2026-08-31' }, '2026-08-12'),
+    ).toEqual({ start: '2026-08-12', end: '2026-08-12' });
+  });
+
+  // Stepping the period bar forward is an ordinary thing to do, and there is
+  // nothing to post in a month that has not started.
+  it('is null for a period that has not begun', () => {
+    expect(
+      subscriptionChargeWindow({ start: '2026-09-01', end: '2026-09-30' }, '2026-08-31'),
+    ).toBeNull();
+  });
+
+  it('refuses a range that ends before it starts', () => {
+    expect(() =>
+      subscriptionChargeWindow({ start: '2026-08-31', end: '2026-08-01' }, '2026-08-31'),
+    ).toThrow(/ends before it starts/i);
   });
 });

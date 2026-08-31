@@ -13,6 +13,7 @@ export {
   listServices,
   listSubscriptions,
   listUpcomingRenewals,
+  postSubscriptionCharges,
   updateSubscription,
 } from './repositories/subscriptions';
 export type { RenewalWindow, ServiceRow, SubscriptionRow } from './repositories/subscriptions';
@@ -30,6 +31,7 @@ export {
   useCancelSubscription,
   useCreateSubscription,
   useDeleteSubscription,
+  usePostSubscriptionCharges,
   useServices,
   useSubscriptions,
   useUpcomingRenewals,

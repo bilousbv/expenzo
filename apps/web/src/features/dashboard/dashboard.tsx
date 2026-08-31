@@ -10,6 +10,7 @@ import {
   useLimits,
   usePeriodSummary,
   useSupportedCurrencies,
+  usePostSubscriptionCharges,
   useUpcomingRenewals,
 } from '@expenzo/data';
 import {
@@ -20,6 +21,7 @@ import {
   presetRange,
   renewalWindow,
   shiftPeriod,
+  subscriptionChargeWindow,
   type CreateExpenseInput,
   type DateRange,
 } from '@expenzo/domain';
@@ -123,6 +125,19 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
     return { from: window.start, to: window.end };
   }, [today]);
   const renewals = useUpcomingRenewals(householdId, renewalRange);
+
+  /*
+   * A subscription that has billed is money that left, so it is caught up into
+   * the ledger as this screen loads — over the period on screen, cut off at
+   * today. There is no scheduler in this project yet; opening the app is what
+   * posts the charges, and the unique index behind it is what makes doing that
+   * on every visit harmless.
+   */
+  const chargeWindow = useMemo(() => {
+    const bounds = subscriptionChargeWindow(range, today);
+    return bounds ? { from: bounds.start, to: bounds.end } : null;
+  }, [range, today]);
+  usePostSubscriptionCharges(householdId, chargeWindow);
 
   const options: CategoryOption[] = (categories.data ?? []).map((category) => ({
     id: category.id,

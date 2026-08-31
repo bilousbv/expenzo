@@ -143,3 +143,25 @@ export function trialEndsOn(startedOn: IsoDate, trialDays: number): IsoDate {
 export function billingStartsOn(startedOn: IsoDate, trialDays?: number): IsoDate {
   return trialDays === undefined ? startedOn : trialEndsOn(startedOn, trialDays);
 }
+
+/**
+ * The slice of a period that subscription charges may be posted into.
+ *
+ * A renewal date is a promise until the day arrives, so the far end is cut off
+ * at today: posting an expense for a charge that has not been taken would put
+ * money in the ledger nobody has paid, and it would sit there being counted
+ * against the month's budget until the day it became true.
+ *
+ * Null for a period that has not started, which is what stepping the period
+ * bar forward produces — there is nothing to post in a month that has not
+ * begun, and asking the database anyway is a round trip for a certain zero.
+ */
+export function subscriptionChargeWindow(range: DateRange, today: IsoDate): DateRange | null {
+  if (range.end < range.start) {
+    throw new Error(`A period ends before it starts: ${range.start} to ${range.end}`);
+  }
+
+  if (today < range.start) return null;
+
+  return { start: range.start, end: range.end < today ? range.end : today };
+}

@@ -65,6 +65,11 @@ export const queryKeys = {
     // dashboard card and the subscriptions screen together.
     upcoming: (householdId: string, window: { from: string; to: string }) =>
       ['subscriptions', householdId, 'upcoming', window] as const,
+    // Posting is a write behind a query key so that one visit does it once:
+    // React Query dedupes concurrent callers and holds the result, which is
+    // exactly the behaviour an effect firing twice would not have given.
+    charges: (householdId: string, window: { from: string; to: string }) =>
+      ['subscriptions', householdId, 'charges', window] as const,
   },
   // The catalogue is the same for every household and only a migration
   // changes it, so this key carries no household segment.

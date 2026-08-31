@@ -87,3 +87,34 @@ describe('queryKeys', () => {
     expect(byKind.slice(0, all.length)).toEqual([...all]);
   });
 });
+
+describe('subscription charge keys', () => {
+  // Posting sits behind a query key so one visit posts once. Sharing the key
+  // with the upcoming-renewals card would serve that card's rows to the poster
+  // as soon as either had been read.
+  it('is distinct from the upcoming-renewals key for the same window', () => {
+    const window = { from: '2026-08-01', to: '2026-08-31' };
+
+    expect(queryKeys.subscriptions.charges(HOUSEHOLD, window)).not.toEqual([
+      ...queryKeys.subscriptions.upcoming(HOUSEHOLD, window),
+    ]);
+  });
+
+  it('nests under the subscriptions key so one invalidation reaches it', () => {
+    const all = queryKeys.subscriptions.all(HOUSEHOLD);
+    const charges = queryKeys.subscriptions.charges(HOUSEHOLD, {
+      from: '2026-08-01',
+      to: '2026-08-31',
+    });
+
+    expect(charges.slice(0, all.length)).toEqual([...all]);
+  });
+
+  it('separates one period from another', () => {
+    expect(
+      queryKeys.subscriptions.charges(HOUSEHOLD, { from: '2026-07-01', to: '2026-07-31' }),
+    ).not.toEqual([
+      ...queryKeys.subscriptions.charges(HOUSEHOLD, { from: '2026-08-01', to: '2026-08-31' }),
+    ]);
+  });
+});
