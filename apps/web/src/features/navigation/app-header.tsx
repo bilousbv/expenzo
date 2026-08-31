@@ -3,6 +3,8 @@
 import { useTranslation } from '@expenzo/i18n';
 import Link from 'next/link';
 
+import { NotificationBell } from './notification-bell';
+
 /**
  * The site-wide header.
  *
@@ -36,7 +38,9 @@ export function AppHeader() {
           {t('common.appName')}
         </Link>
 
-        <div className="flex flex-row flex-wrap gap-4">
+        <div className="flex flex-row flex-wrap items-baseline gap-4">
+          <NotificationBell />
+
           {links.map((link) => (
             <Link
               key={link.href}

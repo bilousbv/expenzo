@@ -58,6 +58,11 @@ function RootNavigator() {
         />
         {/* One category's expenses, reached from the dashboard rollup. */}
         <Stack.Screen name="category/[categoryId]" options={{ headerShown: true, title: '' }} />
+        {/* Pushed from Settings, and from the dashboard's own alert row. */}
+        <Stack.Screen
+          name="notifications"
+          options={{ headerShown: true, title: t('notifications.title') }}
+        />
         {/* Pushed from Settings, like the categories screen. */}
         <Stack.Screen
           name="profile"

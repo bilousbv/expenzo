@@ -38,6 +38,25 @@ export {
   useUpdateSubscription,
 } from './hooks/use-subscriptions';
 export { useBudgetSummary, useCategorySpend, usePeriodSummary } from './hooks/use-summary';
+
+export {
+  deliverNotifications,
+  listNotificationPreferences,
+  listNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  setNotificationPreference,
+} from './repositories/notifications';
+export type { NotificationPreferenceRow, NotificationRow } from './repositories/notifications';
+
+export {
+  useDeliverNotifications,
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotificationPreferences,
+  useNotifications,
+  useSetNotificationPreference,
+} from './hooks/use-notifications';
 export type { BudgetSummaryResult } from './hooks/use-summary';
 
 export {

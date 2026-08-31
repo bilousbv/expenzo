@@ -79,6 +79,7 @@ export const en = {
     primary: 'Main',
     profile: 'You',
     settings: 'Settings',
+    notifications: 'Alerts',
     subscriptions: 'Subscriptions',
     notFound: 'Not found',
     newExpense: 'New expense',
@@ -95,6 +96,8 @@ export const en = {
     categories: 'Categories · Expenzo',
     household: 'Household · Expenzo',
     limits: 'Limits · Expenzo',
+    notifications: 'Alerts · Expenzo',
+    notificationSettings: 'Alert settings · Expenzo',
     signIn: 'Sign in · Expenzo',
     magicLink: 'Sign-in link · Expenzo',
     register: 'Create an account · Expenzo',
@@ -273,6 +276,30 @@ export const en = {
     errors: {
       invalid: 'That is not a limit.',
       setFailed: 'Could not set the limit.',
+    },
+  },
+
+  notifications: {
+    title: 'Alerts',
+    empty: 'Nothing to report. You will hear from us when a limit is crossed.',
+    markAllRead: 'Mark all as read',
+    unread_one: '{{count}} unread',
+    unread_other: '{{count}} unread',
+    unreadLabel: 'Unread',
+    limitExceeded: {
+      title: 'Over budget',
+      overall: 'Everything (household-wide)',
+      line: '{{name}}: {{spent}} of {{limit}}',
+    },
+    preferences: {
+      title: 'Alerts',
+      explainer:
+        'These are yours alone. Turning one off does not change what anybody else in the household is told.',
+      inApp: 'In the app',
+      push: 'On your phone',
+      pushSoon: 'Push notifications arrive with the next release.',
+      limit_exceeded: 'When the household goes over a spending limit',
+      saveFailed: 'Could not save that preference.',
     },
   },
 

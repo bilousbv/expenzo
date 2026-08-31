@@ -43,6 +43,21 @@ export {
 } from './renewal';
 export type { RenewalCadence, RenewalSchedule } from './renewal';
 
+export { LIMIT_PERIODS, limitPeriodBounds } from './period';
+export {
+  NOTIFICATION_KINDS,
+  SETTABLE_KINDS,
+  deliveryStatusSchema,
+  limitBreachPayload,
+  notificationKindSchema,
+  parseLimitBreach,
+} from './schemas/notification';
+export type {
+  BreachedLimit,
+  DeliveryStatus,
+  LimitBreachPayload,
+  NotificationKind,
+} from './schemas/notification';
 export { matchScore, normalizeMerchant, stringSimilarity } from './dedup';
 export type { MatchCandidate } from './dedup';
 

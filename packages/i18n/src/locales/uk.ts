@@ -16,6 +16,7 @@ import type { Messages } from './en';
 export const uk: Messages & {
   expenses: { count_few: string; count_many: string };
   renewals: { inDays_few: string; inDays_many: string };
+  notifications: { unread_few: string; unread_many: string };
 } = {
   common: {
     appName: 'Expenzo',
@@ -85,6 +86,7 @@ export const uk: Messages & {
     primary: 'Головне',
     profile: 'Ви',
     settings: 'Налаштування',
+    notifications: 'Сповіщення',
     subscriptions: 'Підписки',
     notFound: 'Не знайдено',
     newExpense: 'Нова витрата',
@@ -101,6 +103,8 @@ export const uk: Messages & {
     categories: 'Категорії · Expenzo',
     household: 'Домогосподарство · Expenzo',
     limits: 'Ліміти · Expenzo',
+    notifications: 'Сповіщення · Expenzo',
+    notificationSettings: 'Налаштування сповіщень · Expenzo',
     signIn: 'Вхід · Expenzo',
     magicLink: 'Посилання для входу · Expenzo',
     register: 'Створення акаунта · Expenzo',
@@ -280,6 +284,32 @@ export const uk: Messages & {
     errors: {
       invalid: 'Це не ліміт.',
       setFailed: 'Не вдалося встановити ліміт.',
+    },
+  },
+
+  notifications: {
+    title: 'Сповіщення',
+    empty: 'Поки нічого. Ми повідомимо, коли ліміт буде перевищено.',
+    markAllRead: 'Позначити всі як прочитані',
+    unread_one: '{{count}} непрочитане',
+    unread_few: '{{count}} непрочитані',
+    unread_many: '{{count}} непрочитаних',
+    unread_other: '{{count}} непрочитані',
+    unreadLabel: 'Непрочитане',
+    limitExceeded: {
+      title: 'Перевищено бюджет',
+      overall: 'Усе (на все домогосподарство)',
+      line: '{{name}}: {{spent}} з {{limit}}',
+    },
+    preferences: {
+      title: 'Сповіщення',
+      explainer:
+        'Ці налаштування — лише ваші. Вимкнення не змінює того, що отримують інші учасники домогосподарства.',
+      inApp: 'У застосунку',
+      push: 'На телефон',
+      pushSoon: 'Push-сповіщення з’являться в наступному випуску.',
+      limit_exceeded: 'Коли домогосподарство перевищує ліміт витрат',
+      saveFailed: 'Не вдалося зберегти налаштування.',
     },
   },
 

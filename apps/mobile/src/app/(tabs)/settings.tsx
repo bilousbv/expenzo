@@ -119,6 +119,17 @@ export default function SettingsTab() {
         </Card>
 
         <Card className="gap-gutter">
+          <Text className="text-lg font-semibold text-content">{t('notifications.title')}</Text>
+          <Button
+            testID="open-notifications"
+            variant="secondary"
+            onPress={() => router.push('/notifications')}
+          >
+            {t('notifications.preferences.title')}
+          </Button>
+        </Card>
+
+        <Card className="gap-gutter">
           <LanguageSwitcher />
           <ThemeSwitcher />
         </Card>
