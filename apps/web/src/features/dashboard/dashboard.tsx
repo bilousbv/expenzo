@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  useBudgetSummary,
   useCategories,
   useCategorySpend,
   useCreateExpense,
@@ -8,9 +9,8 @@ import {
   useDisplayCurrency,
   useHouseholdMembers,
   useLimits,
-  usePeriodSummary,
-  useSupportedCurrencies,
   usePostSubscriptionCharges,
+  useSupportedCurrencies,
   useUpcomingRenewals,
 } from '@expenzo/data';
 import {
@@ -111,7 +111,7 @@ export function Dashboard({ userId }: { userId: string | undefined }) {
   const limits = useLimits(householdId);
   // Held for a day: rates change daily, the set of quoted currencies does not.
   const currencies = useSupportedCurrencies(household.data?.base_currency);
-  const summary = usePeriodSummary(householdId, window);
+  const summary = useBudgetSummary(householdId, window);
   const categorySpend = useCategorySpend(householdId, window);
   const create = useCreateExpense(householdId, userId);
 

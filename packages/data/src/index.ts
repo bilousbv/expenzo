@@ -37,7 +37,8 @@ export {
   useUpcomingRenewals,
   useUpdateSubscription,
 } from './hooks/use-subscriptions';
-export { useCategorySpend, usePeriodSummary } from './hooks/use-summary';
+export { useBudgetSummary, useCategorySpend, usePeriodSummary } from './hooks/use-summary';
+export type { BudgetSummaryResult } from './hooks/use-summary';
 
 export {
   archiveCategory,

@@ -1,11 +1,11 @@
 import {
+  useBudgetSummary,
   useCategories,
   useCategorySpend,
   useCurrentHousehold,
   useDisplayCurrency,
   useHouseholdMembers,
   useLimits,
-  usePeriodSummary,
   usePostSubscriptionCharges,
   useUpcomingRenewals,
 } from '@expenzo/data';
@@ -76,7 +76,7 @@ export function Dashboard() {
   const members = useHouseholdMembers(householdId);
   const categories = useCategories(householdId);
   const limits = useLimits(householdId);
-  const summary = usePeriodSummary(householdId, window);
+  const summary = useBudgetSummary(householdId, window);
   const categorySpend = useCategorySpend(householdId, window);
 
   /*
