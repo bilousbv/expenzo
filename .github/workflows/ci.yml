@@ -2,7 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [development]
+    # Deploy waits on a CI run from one of these two, so a branch missing
+    # here is a branch that silently never deploys.
+    branches: [development, master]
   pull_request:
 
 concurrency:

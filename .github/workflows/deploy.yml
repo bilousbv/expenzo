@@ -20,7 +20,10 @@ name: Deploy
 on:
   workflow_run:
     workflows: [CI]
-    branches: [development]
+    # Both branches deploy, and which one it was decides which environment the
+    # jobs below read their secrets and URL from. `development` is the one that
+    # moves day to day; `master` is the release branch and is usually behind it.
+    branches: [development, master]
     types: [completed]
 
 # Never cancel a run in progress: the thing it is in the middle of is a
@@ -33,6 +36,9 @@ env:
   SUPABASE_CLI_VERSION: 2.115.0
   # Not a secret. It is the host in NEXT_PUBLIC_SUPABASE_URL, which is inlined
   # into the client bundle and served to every visitor.
+  # One project behind both deployments, deliberately: preview and production
+  # share a database today. Splitting them means a second project, its own keys
+  # in the preview environment, and this moving to an environment variable.
   SUPABASE_PROJECT_REF: aaythzrlvsxaludckljr
 
 jobs:
@@ -41,9 +47,13 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Gate the production secrets behind an environment, so a fork or a
-    # workflow edited on a branch cannot reach them.
-    environment: production
+    # Gated behind an environment so a fork, or a workflow edited on a branch,
+    # cannot reach the secrets — and the environment is chosen by the branch
+    # that was merged. Everything that differs between the two deployments is an
+    # environment-scoped secret or variable, so nothing below has to branch on
+    # it a second time.
+    environment:
+      name: ${{ github.event.workflow_run.head_branch == 'master' && 'production' || 'preview' }}
 
     steps:
       # workflow_run checks out the default branch unless told otherwise, and
@@ -64,6 +74,16 @@ jobs:
           supabase link --project-ref "$SUPABASE_PROJECT_REF"
           supabase db push --yes
 
+      # The functions are deployed from the same commit as the migrations they
+      # run against. Left out, they are simply never deployed at all: nothing
+      # else in this repo pushes them, and the only symptom is supabase-js
+      # answering “Edge Function returned a non-2xx status code” for a 404 —
+      # which reads as the function failing rather than as it being absent.
+      - name: Deploy edge functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF"
+
       # supabase/seed.sql is deliberately not run here. It is local-only
       # fixtures: plausible exchange rates so foreign-currency expenses can be
       # entered offline. `expenses_set_base_amount` freezes whatever rate it
@@ -76,20 +96,24 @@ jobs:
     needs: migrate
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment: production
+    environment:
+      name: ${{ github.event.workflow_run.head_branch == 'master' && 'production' || 'preview' }}
 
     steps:
       - name: POST /api/fx/sync
         env:
           FX_SYNC_SECRET: ${{ secrets.FX_SYNC_SECRET }}
-          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+          # Named for what it is rather than for one of the two deployments: it
+          # holds whichever origin this environment is, and the environment was
+          # already chosen above.
+          APP_URL: ${{ vars.APP_URL }}
         run: |
           set -euo pipefail
 
           # Retried, because Vercel may still be swapping the deployment in.
           response=$(curl --fail-with-body --silent --show-error \
             --retry 10 --retry-delay 15 --retry-all-errors \
-            -X POST "${PRODUCTION_URL%/}/api/fx/sync" \
+            -X POST "${APP_URL%/}/api/fx/sync" \
             -H "Authorization: Bearer $FX_SYNC_SECRET")
 
           echo "$response"
